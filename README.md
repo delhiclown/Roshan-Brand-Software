@@ -22,6 +22,10 @@ Responsive storefront with Google customer sign-in, a transactional Supabase wal
 
 Products and store settings are public-read. Customers can only read their own wallet, transactions, top-up requests, and orders. Wallet balances cannot be changed through table writes: purchases, top-up approvals, refunds, and admin adjustments run through transactional, row-locking Supabase RPC functions. Pending UPI top-ups require admin verification. The database functions can later be replaced by a payment-provider webhook calling a similarly trusted server-side credit function.
 
+## Deploy to Vercel
+
+Import this GitHub repository as a Vercel project with the repository root as the project root and no build command. Add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as Vercel environment variables for the environments you use; never add a service-role key. Vercel serves the storefront and admin page from `public/` and exposes the public configuration endpoint at `/api/config`. Add your deployed store URL to Supabase's allowed redirect URLs and configure the Google OAuth redirect URLs as described above.
+
 Admins can review top-ups, refund orders once, and add or deduct customer balances with an audit note. In each product editor, admins can upload a JPG, PNG, WebP, or GIF photo (up to 5 MB) and set that product's HTTP/HTTPS download link. Product photos are public; download links are kept in an admin-only table and are copied into a customer's order only when the wallet purchase succeeds. Products with a saved download link are marked delivered immediately, and the customer sees the named download link under that product and in **My Orders**. Products without a download link continue to use manual order delivery.
 
 Product and settings changes are reflected on the store through Supabase Realtime and periodic refresh.
