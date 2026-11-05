@@ -71,10 +71,11 @@
     .orders-trigger svg{width:18px;height:18px;flex:none}
     .orders-icon-wrap{position:relative;display:grid;place-items:center}
     .orders-dot{position:absolute;right:-3px;top:-3px;width:8px;height:8px;border:1px solid var(--card);border-radius:50%;background:var(--gold);box-shadow:0 0 8px #f5c04a99}
-    .orders-panel{position:fixed;inset:0;z-index:140}
-    .orders-panel:not(.hidden){display:block}
-    .orders-backdrop{display:none}
-    .orders-card{position:absolute;top:80px;right:24px;width:min(360px,calc(100vw - 32px));max-height:420px;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 16px 48px #000b}
+    .orders-panel{position:fixed;inset:0;z-index:140;padding:20px;place-items:center}
+    .orders-panel:not(.hidden){display:grid}
+    .orders-backdrop{position:absolute;inset:0;display:block;width:100%;height:100%;border:0;background:#02050bcc;cursor:pointer}
+    .orders-card{position:relative;width:min(440px,100%);max-height:min(80dvh,680px);display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line);border-radius:20px;background:var(--card);box-shadow:0 24px 70px #000b;animation:orders-dialog-in .2s ease both}
+    @keyframes orders-dialog-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
     .orders-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;border-bottom:1px solid var(--line);flex:none}
     .orders-panel-head h2{margin:0;font-size:15px}
     .orders-panel-close{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:#0b1429;color:var(--text);font-size:20px;line-height:1;cursor:pointer}
@@ -301,8 +302,8 @@
       .wallet-chip svg{width:18px;height:18px}
       .orders-trigger{width:40px;min-width:40px;height:40px;padding:0;border-radius:50%}
       .orders-trigger-label{display:none}
-      .orders-backdrop{position:absolute;inset:0;display:block;width:100%;height:100%;border:0;background:#02050bcc;cursor:pointer}
-      .orders-card{position:fixed;top:auto!important;right:0!important;bottom:0;left:0;width:100%;max-height:min(82dvh,720px);border-radius:20px 20px 0 0;border-bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);animation:orders-sheet-in .28s ease both}
+      .orders-panel{padding:16px}
+      .orders-card{width:100%;max-height:min(82dvh,720px);padding-bottom:env(safe-area-inset-bottom,0px)}
       .orders-panel-head{padding:17px 18px}
       .orders-panel-head h2{font-size:17px}
       .orders-panel-close{width:44px;height:44px}
@@ -317,7 +318,6 @@
       .orders-item-detail .orders-copy{min-height:48px}
       .orders-signin p,.orders-empty p{font-size:14px}
       .orders-signin button,.orders-empty button,.orders-retry{min-height:48px;font-size:14px}
-      @keyframes orders-sheet-in{from{transform:translateY(100%)}to{transform:translateY(0)}}
       .avatar-button img{width:100%;height:100%}
       .profile-menu:not(.hidden){position:fixed;right:0!important;left:0;top:auto!important;bottom:0;width:100%;max-width:none;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));border-radius:20px 20px 0 0;border-bottom:0;transform:translateY(0);animation:account-sheet-in .28s ease both}
       .profile-menu:not(.hidden):before{content:"";position:fixed;inset:0;background:#02050bcc;z-index:-1}
@@ -1267,12 +1267,6 @@
       $('orders-panel').setAttribute('aria-hidden','false');
       $('orders-trigger')?.setAttribute('aria-expanded','true');
       document.body.style.overflow='hidden';
-      if(window.matchMedia('(min-width: 640px)').matches){
-        const rect=$('orders-trigger').getBoundingClientRect();
-        const card=$('orders-panel').querySelector('.orders-card');
-        card.style.top=`${rect.bottom+8}px`;
-        card.style.right=`${Math.max(16,window.innerWidth-rect.right)}px`;
-      }
       renderOrdersPanel();
       if(state.user&&(state.myOrders===null||state.myOrdersError))refreshMyOrders();
     }
@@ -1627,12 +1621,6 @@
     });
     window.addEventListener('resize',()=>{
       if(window.innerWidth>=640)closeMobileMenu();
-      if(state.ordersPanelOpen&&window.innerWidth>=640){
-        const rect=$('orders-trigger').getBoundingClientRect();
-        const card=$('orders-panel').querySelector('.orders-card');
-        card.style.top=`${rect.bottom+8}px`;
-        card.style.right=`${Math.max(16,window.innerWidth-rect.right)}px`;
-      }
       const menu=$('profile-menu');
       if(menu&&!menu.classList.contains('hidden')&&window.matchMedia('(min-width: 640px)').matches){
         const rect=$('avatar-button').getBoundingClientRect();
