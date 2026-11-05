@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#060b17">
+  <title>Store Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    try {
+      document.documentElement.dataset.theme = localStorage.getItem('roshan-theme') === 'light' ? 'light' : 'dark';
+    } catch (error) {
+      document.documentElement.dataset.theme = 'dark';
+      console.warn('Could not read the saved color theme:', error);
+    }
+  </script>
+  <style>
+    :root{color-scheme:dark;--bg:#060b17;--card:#0a1226;--line:#1a2340;--gold:#f5c04a;--gold2:#e0a82a;--text:#f4f6fc;--muted:#98a3bd;--red:#ff6d79;--surface-raised:#101a30;--font-heading:"Sora","Space Grotesk",sans-serif;--font-body:"Inter",sans-serif}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px var(--font-body);min-height:100vh}
+    button,input,textarea,select{font:inherit}button{cursor:pointer}.wrap{width:min(1100px,calc(100% - 36px));margin:0 auto}
+    header{border-bottom:1px solid var(--line);padding:19px 0}.bar{display:flex;align-items:center;justify-content:space-between;gap:15px}.brand{font-size:17px;font-weight:700}.brand span{color:var(--gold)}
+    h1,h2,h3{font-family:var(--font-heading)}h1{font-size:23px;margin:0}h2{font-size:18px;margin:0 0 5px}h3{font-size:15px;margin:0 0 14px}
+    main{padding:34px 0 70px}.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:17px}
+    #login-panel{max-width:430px;margin:8vh auto}.sub{color:var(--muted);font-size:12px;line-height:1.7;margin:4px 0 19px}
+    .field{margin-bottom:13px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+    input,textarea,select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#080f20;color:var(--text);outline:none}
+    input:focus,textarea:focus,select:focus{border-color:var(--gold)}textarea{min-height:76px;resize:vertical}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:600;font-size:12px}
+    .gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#191200}.ghost{background:#111b32;border:1px solid var(--line);color:var(--text)}.danger{background:#371922;color:#ffb5bb}.btn:hover{filter:brightness(1.1)}
+    .error{color:#ff858e;font-size:12px;min-height:18px;margin-top:8px}.hidden{display:none!important}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:23px 0 16px}.tabs button{background:#0b1429;border:1px solid var(--line);color:var(--muted);padding:9px 13px;border-radius:10px;font-size:12px}.tabs button.active{border-color:#6d5727;color:var(--gold);background:#1b1920}
+    .admin-grid{display:grid;grid-template-columns:minmax(260px,.75fr) minmax(0,1.5fr);gap:17px;align-items:start}.product-list{display:grid;gap:9px}
+    .finance-list{display:grid;gap:10px}.finance-row{border:1px solid var(--line);border-radius:13px;padding:14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}.finance-row strong{overflow-wrap:anywhere}.finance-row small{display:block;color:var(--muted);font-size:11px;margin-top:4px;overflow-wrap:anywhere}.finance-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:end}.finance-controls input{width:125px;padding:8px;font-size:12px}.finance-controls .note-input{width:170px}.amount{color:var(--gold);font-weight:700}
+    .order-tools{display:grid;grid-template-columns:minmax(200px,1fr) auto;gap:10px;margin-bottom:12px}.order-filters{display:flex;gap:6px;flex-wrap:wrap}.order-filter{background:#0b1429;border:1px solid var(--line);color:var(--muted);padding:8px 11px;border-radius:9px;font-size:11px}.order-filter.active{border-color:#6d5727;color:var(--gold);background:#1b1920}
+    .order-row{color:var(--text);background:#0b1429;border:1px solid var(--line);border-radius:13px;padding:14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}.order-row:hover{border-color:#6d5727}.order-row.pending{border-color:#6d5727;background:#171609}.order-open{width:100%;text-align:left;color:inherit;background:transparent;border:0;padding:0;display:grid;grid-template-columns:70px minmax(0,1.3fr) minmax(0,1fr) auto;gap:12px;align-items:center;cursor:pointer;min-width:0}.order-cell{min-width:0}.order-cell small{display:block;color:var(--muted);font-size:11px;margin-top:4px;overflow-wrap:anywhere}.status-badge{font-size:10px;border:1px solid var(--line);border-radius:999px;padding:5px 9px;color:var(--muted);white-space:nowrap}.status-badge.pending{color:var(--gold);border-color:#6d5727}.status-badge.delivered{color:#84e4b6;border-color:#23563f}.status-badge.rejected,.status-badge.refunded{color:#ffb5bb;border-color:#71303b}
+    .order-drawer{position:fixed;inset:0;z-index:20;display:flex;justify-content:flex-end;overflow:hidden;visibility:hidden;pointer-events:none}.order-drawer.open{visibility:visible;pointer-events:auto}.order-overlay{position:absolute;inset:0;border:0;background:#02050bcc;opacity:0;transition:opacity .2s}.order-drawer.open .order-overlay{opacity:1}.order-panel{position:relative;width:min(620px,100%);height:100%;overflow:auto;background:var(--card);border-left:1px solid var(--line);padding:23px;box-shadow:-18px 0 50px #0008;transform:translateX(100%);transition:transform .25s}.order-drawer.open .order-panel{transform:translateX(0)}.order-panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.order-details{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}.order-detail{min-width:0;border:1px solid var(--line);border-radius:10px;padding:11px}.order-detail small{display:block;color:var(--muted);font-size:10px;margin-bottom:4px}.order-detail strong{font-size:12px;overflow-wrap:anywhere}.delivery-text{min-height:220px;white-space:pre-wrap;overflow-wrap:anywhere}.order-panel-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+    .product-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:13px;padding:13px}
+    .product-row strong{display:block;overflow-wrap:anywhere}.product-row small{color:var(--muted);display:block;margin-top:4px}
+    .actions{display:flex;align-items:center;justify-content:end;gap:6px;flex-wrap:wrap}.actions .btn{padding:8px 10px}
+    .pill{font-size:10px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;color:var(--muted)}.pill.live{color:#84e4b6;border-color:#23563f}.pill.pinned{color:var(--gold);border-color:#665325}
+    .check{display:flex;gap:9px;align-items:center;color:var(--muted);font-size:12px;margin:9px 0 15px}.check input{width:auto;accent-color:var(--gold)}
+    .settings{max-width:620px}.empty{border:1px dashed var(--line);border-radius:12px;padding:20px;color:var(--muted);text-align:center;font-size:12px}
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#14213a;border:1px solid var(--line);border-radius:11px;padding:12px 17px;box-shadow:0 12px 40px #0008;z-index:4;font-size:12px}
+    :root[data-theme="light"]{color-scheme:light;--bg:#edf2fa;--card:#f8faff;--line:#d5deed;--gold:#a56b00;--gold2:#c18100;--text:#17233a;--muted:#60708c;--red:#c13f50;--surface-raised:#fff}
+    html{scroll-behavior:smooth;scroll-padding-top:90px}
+    .theme-toggle{width:40px;height:40px;flex:none;display:grid;place-items:center;border:1px solid rgba(137,157,197,.25);border-radius:50%;background:linear-gradient(145deg,rgba(24,38,64,.92),rgba(9,16,31,.94));color:#ffdc88;font-size:19px;cursor:pointer;box-shadow:inset 0 1px rgba(255,255,255,.12),0 7px 17px rgba(0,0,0,.22);transition:transform .2s,border-color .2s,box-shadow .2s}
+    .theme-toggle:hover{transform:translateY(-2px) rotate(8deg);border-color:rgba(245,192,74,.65)}
+    .page-enter{animation:page-enter .55s cubic-bezier(.2,.7,.2,1) both}
+    @keyframes page-enter{from{transform:translateY(7px)}to{transform:translateY(0)}}
+    .reveal{opacity:0;transform:translateY(18px) scale(.99);transition:opacity .65s cubic-bezier(.2,.7,.2,1),transform .65s cubic-bezier(.2,.7,.2,1)}
+    .reveal.is-visible{opacity:1;transform:translateY(0) scale(1)}
+    :root[data-theme="light"] body{background:radial-gradient(ellipse at 50% -18%,#d5e4fb 0,transparent 48%),linear-gradient(180deg,#f7f9fd 0%,#edf2fa 55%,#e9eff8 100%)}
+    :root[data-theme="light"] body:before{background:radial-gradient(ellipse at 8% 30%,rgba(41,128,220,.07),transparent 30%),radial-gradient(ellipse at 92% 70%,rgba(220,162,50,.07),transparent 30%)}
+    :root[data-theme="light"] header{background:rgba(248,250,255,.84);border-color:#d5deed;box-shadow:0 10px 32px rgba(38,59,94,.1)}
+    :root[data-theme="light"] .theme-toggle{background:linear-gradient(145deg,#fff,#edf3fc);color:#516581;border-color:#d1dceb;box-shadow:inset 0 1px #fff,0 7px 17px rgba(38,59,94,.12)}
+    :root[data-theme="light"] .panel{border-color:rgba(169,185,211,.62);background:linear-gradient(145deg,#fff,#f0f4fb);box-shadow:0 18px 38px rgba(38,59,94,.12),inset 0 1px #fff}
+    :root[data-theme="light"] .panel:before{background:linear-gradient(135deg,rgba(255,255,255,.78),transparent 38%,transparent 76%,rgba(41,152,255,.025))}
+    :root[data-theme="light"] .product-row,:root[data-theme="light"] .finance-row,:root[data-theme="light"] .order-row,:root[data-theme="light"] .order-detail{border-color:#dce4ef;background:linear-gradient(145deg,#fff,#f2f6fc);box-shadow:inset 0 1px #fff,0 9px 20px rgba(38,59,94,.08)}
+    :root[data-theme="light"] .product-row:hover,:root[data-theme="light"] .finance-row:hover,:root[data-theme="light"] .order-row:hover,:root[data-theme="light"] .order-detail:hover{border-color:rgba(180,126,24,.5);box-shadow:0 15px 28px rgba(38,59,94,.14),inset 0 1px #fff}
+    :root[data-theme="light"] input,:root[data-theme="light"] textarea,:root[data-theme="light"] select{color:#17233a;background:#fff;border-color:#d5deed;box-shadow:inset 0 2px 6px rgba(38,59,94,.06)}
+    :root[data-theme="light"] .ghost,:root[data-theme="light"] .tabs button,:root[data-theme="light"] .order-filter{color:#34445f;background:linear-gradient(145deg,#fff,#edf2f9);border-color:#d5deed}
+    :root[data-theme="light"] .tabs button.active,:root[data-theme="light"] .order-filter.active{color:#805400;background:linear-gradient(145deg,#fff7df,#f5ebd2);border-color:#d8bf82}
+    :root[data-theme="light"] .danger{color:#9e2637;background:#fdebee;border:1px solid #efc7ce}
+    :root[data-theme="light"] .status-badge.delivered,:root[data-theme="light"] .pill.live{color:#08734d;border-color:#b4dfc6;background:#e8f7ef}
+    :root[data-theme="light"] .status-badge.pending,:root[data-theme="light"] .pill.pinned{color:#805400;border-color:#e4d3a7;background:#fff8e6}
+    :root[data-theme="light"] .status-badge.rejected,:root[data-theme="light"] .status-badge.refunded{color:#9e2637;border-color:#efc7ce;background:#fdebee}
+    :root[data-theme="light"] .error{color:#b42336}
+    :root[data-theme="light"] .order-row.pending{background:linear-gradient(145deg,#fff9e9,#f7f1df);border-color:#e4d3a7}
+    :root[data-theme="light"] .order-panel{background:linear-gradient(145deg,#fff,#f0f4fb);box-shadow:-24px 0 60px rgba(35,52,81,.22),inset 1px 0 #fff}
+    :root[data-theme="light"] .order-overlay{background:rgba(30,45,68,.4)}
+    :root[data-theme="light"] .toast{color:#17233a;background:linear-gradient(145deg,#fff,#f0f4fb);border-color:#d5deed;box-shadow:0 16px 38px rgba(35,52,81,.2),inset 0 1px #fff}
+    :root[data-theme="light"] .empty{color:#60708c;border-color:#c8d4e5;background:rgba(255,255,255,.55)}
+    :where(a,button,input,textarea,select):focus-visible{outline:2px solid rgba(193,129,0,.85);outline-offset:3px}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.page-enter{animation:none}.reveal{opacity:1;transform:none;transition:none}*,*:before,*:after{transition-duration:.01ms!important}}
+    @media(max-width:780px){.admin-grid{grid-template-columns:1fr}.row{grid-template-columns:1fr 1fr}}
+    @media(max-width:520px){.wrap{width:calc(100% - 26px)}main{padding-top:22px}.panel{padding:16px}.row{grid-template-columns:1fr}.product-row,.finance-row{grid-template-columns:1fr}.actions,.finance-controls{justify-content:start}.finance-controls input,.finance-controls .note-input{width:100%}.bar{flex-wrap:wrap}.bar h1{font-size:18px;flex:1;text-align:right}}
+    body{background:radial-gradient(ellipse at 50% -18%,#1b2b4a 0,transparent 45%),linear-gradient(180deg,#080e1d 0%,#060b17 50%,#080d19 100%)}
+    body:before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse at 8% 30%,rgba(41,152,255,.07),transparent 30%),radial-gradient(ellipse at 92% 70%,rgba(245,192,74,.06),transparent 30%);pointer-events:none}
+    header{position:sticky;top:0;z-index:10;background:rgba(7,12,25,.82);backdrop-filter:blur(16px);box-shadow:0 10px 32px rgba(0,0,0,.2)}
+    .brand{text-shadow:0 0 20px rgba(245,192,74,.16)}
+    .panel{position:relative;overflow:hidden;border-color:rgba(111,132,174,.22);background:linear-gradient(145deg,rgba(17,29,53,.96),rgba(8,15,32,.98));box-shadow:0 18px 38px rgba(0,0,0,.27),inset 0 1px rgba(255,255,255,.065)}
+    .panel:before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,.055),transparent 35%,transparent 75%,rgba(41,152,255,.025));pointer-events:none}
+    #login-panel{box-shadow:0 26px 56px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.09)}
+    .tabs button,.order-filter{box-shadow:inset 0 1px rgba(255,255,255,.06),0 6px 15px rgba(0,0,0,.2);transition:transform .18s,border-color .18s,box-shadow .18s,background .18s}
+    .tabs button:hover,.order-filter:hover{transform:translateY(-2px);border-color:rgba(245,192,74,.42);box-shadow:0 10px 20px rgba(0,0,0,.25)}
+    .tabs button.active,.order-filter.active{box-shadow:inset 0 1px rgba(255,255,255,.1),0 7px 18px rgba(245,192,74,.09)}
+    .product-row,.finance-row,.order-row,.order-detail{background:linear-gradient(145deg,rgba(18,30,54,.96),rgba(9,16,32,.98));box-shadow:inset 0 1px rgba(255,255,255,.055),0 9px 20px rgba(0,0,0,.18);transition:transform .2s,border-color .2s,box-shadow .2s}
+    .product-row:hover,.finance-row:hover,.order-row:hover,.order-detail:hover{transform:translateY(-2px);border-color:rgba(245,192,74,.4);box-shadow:0 15px 28px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.075)}
+    input,textarea,select{box-shadow:inset 0 3px 9px rgba(0,0,0,.24),0 1px rgba(255,255,255,.025);transition:border-color .18s,box-shadow .18s}
+    input:focus,textarea:focus,select:focus{border-color:var(--gold);box-shadow:inset 0 2px 6px rgba(0,0,0,.2),0 0 0 3px rgba(245,192,74,.1)}
+    .btn{box-shadow:inset 0 1px rgba(255,255,255,.12),0 5px 0 rgba(0,0,0,.25),0 9px 18px rgba(0,0,0,.18);transition:transform .16s,filter .16s,box-shadow .16s}
+    .btn:hover{transform:translateY(-2px);filter:brightness(1.09);box-shadow:inset 0 1px rgba(255,255,255,.16),0 7px 0 rgba(0,0,0,.25),0 13px 22px rgba(0,0,0,.22)}
+    .btn:active{transform:translateY(2px);box-shadow:inset 0 1px rgba(255,255,255,.1),0 2px 0 rgba(0,0,0,.25)}
+    .gold{box-shadow:inset 0 1px rgba(255,255,255,.42),0 5px 0 #9c701d,0 10px 20px rgba(245,192,74,.16)}
+    .gold:hover{box-shadow:inset 0 1px rgba(255,255,255,.5),0 7px 0 #9c701d,0 14px 24px rgba(245,192,74,.22)}
+    .order-panel{background:linear-gradient(145deg,#101a30,#080f20);box-shadow:-24px 0 60px rgba(0,0,0,.42),inset 1px 0 rgba(255,255,255,.06)}
+    .toast{background:linear-gradient(145deg,#172541,#0c1528);box-shadow:0 16px 38px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.08)}
+    :where(a,button,input,textarea,select):focus-visible{outline:2px solid rgba(245,192,74,.9);outline-offset:3px}
+    @media(max-width:640px){.product-row:hover,.finance-row:hover,.order-row:hover,.order-detail:hover{transform:none}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition-duration:.01ms!important}}
+    @media(max-width:640px){.order-tools{grid-template-columns:1fr}.order-row{grid-template-columns:1fr auto}.order-open{grid-template-columns:1fr auto}.order-cell:nth-child(3){grid-column:1}.order-details{grid-template-columns:1fr}.order-panel{padding:18px}.order-drawer{justify-content:stretch}.order-panel{width:100%;border-left:0}}
+    :root{--card-surface:#091426;--card-surface-2:#101b31}
+    :root[data-theme="light"]{--card-surface:#fff;--card-surface-2:#eef3fa}
+    [data-card-tone="software"]{--card-accent:#F5B83D;--card-accent-2:#FF8A00}
+    [data-card-tone="vps"]{--card-accent:#3B82F6;--card-accent-2:#06B6D4}
+    [data-card-tone="proxy"]{--card-accent:#8B5CF6;--card-accent-2:#D946EF}
+    [data-card-tone="residential"]{--card-accent:#10B981;--card-accent-2:#84CC16}
+    [data-card-tone="fast"]{--card-accent:#FF6B35;--card-accent-2:#F43F5E}
+    [data-card-tone="support"]{--card-accent:#14B8A6;--card-accent-2:#22D3EE}
+    [data-card-tone="pink"]{--card-accent:#EC4899;--card-accent-2:#F973A8}
+    [data-card-tone="indigo"]{--card-accent:#6366F1;--card-accent-2:#A78BFA}
+    [data-card-tone="lime"]{--card-accent:#84CC16;--card-accent-2:#22C55E}
+    [data-card-tone="cyan"]{--card-accent:#06B6D4;--card-accent-2:#3B82F6}
+    [data-card-tone="track"]{--card-accent:#A855F7;--card-accent-2:#6366F1}
+    .panel,.product-row,.finance-row,.order-row,.order-detail{
+      position:relative;isolation:isolate;overflow:hidden;
+      border:1px solid transparent;
+      background:linear-gradient(145deg,color-mix(in srgb,var(--card-accent) 15%,var(--card-surface)),color-mix(in srgb,var(--card-accent-2) 12%,var(--card-surface-2))) padding-box,linear-gradient(135deg,color-mix(in srgb,var(--card-accent) 78%,white),color-mix(in srgb,var(--card-accent-2) 82%,transparent)) border-box;
+      box-shadow:0 18px 34px rgba(0,0,0,.24),0 0 24px color-mix(in srgb,var(--card-accent) 13%,transparent),inset 0 1px rgba(255,255,255,.16);
+      backdrop-filter:blur(14px);transform-style:preserve-3d;transition:transform .25s,border-color .25s,box-shadow .25s
+    }
+    .product-row:nth-child(8n+1),.finance-row:nth-child(8n+1),.order-row:nth-child(8n+1){--card-accent:#F5B83D;--card-accent-2:#FF8A00}
+    .product-row:nth-child(8n+2),.finance-row:nth-child(8n+2),.order-row:nth-child(8n+2){--card-accent:#3B82F6;--card-accent-2:#06B6D4}
+    .product-row:nth-child(8n+3),.finance-row:nth-child(8n+3),.order-row:nth-child(8n+3){--card-accent:#8B5CF6;--card-accent-2:#D946EF}
+    .product-row:nth-child(8n+4),.finance-row:nth-child(8n+4),.order-row:nth-child(8n+4){--card-accent:#10B981;--card-accent-2:#84CC16}
+    .product-row:nth-child(8n+5),.finance-row:nth-child(8n+5),.order-row:nth-child(8n+5){--card-accent:#EC4899;--card-accent-2:#F973A8}
+    .product-row:nth-child(8n+6),.finance-row:nth-child(8n+6),.order-row:nth-child(8n+6){--card-accent:#6366F1;--card-accent-2:#A78BFA}
+    .product-row:nth-child(8n+7),.finance-row:nth-child(8n+7),.order-row:nth-child(8n+7){--card-accent:#84CC16;--card-accent-2:#22C55E}
+    .product-row:nth-child(8n),.finance-row:nth-child(8n),.order-row:nth-child(8n){--card-accent:#14B8A6;--card-accent-2:#22D3EE}
+    .order-detail:nth-child(4n+1){--card-accent:#EC4899;--card-accent-2:#F973A8}
+    .order-detail:nth-child(4n+2){--card-accent:#6366F1;--card-accent-2:#A78BFA}
+    .order-detail:nth-child(4n+3){--card-accent:#84CC16;--card-accent-2:#22C55E}
+    .order-detail:nth-child(4n){--card-accent:#14B8A6;--card-accent-2:#22D3EE}
+    .panel h2,.panel h3,.panel .amount{color:var(--card-accent)}
+    .product-row:hover,.finance-row:hover,.order-row:hover,.order-detail:hover{border-color:color-mix(in srgb,var(--card-accent) 75%,transparent);box-shadow:0 22px 40px rgba(0,0,0,.28),0 0 30px color-mix(in srgb,var(--card-accent) 24%,transparent),inset 0 1px rgba(255,255,255,.2)}
+    .panel .gold{background:linear-gradient(135deg,var(--card-accent),var(--card-accent-2));box-shadow:inset 0 1px rgba(255,255,255,.48),0 5px 0 color-mix(in srgb,var(--card-accent) 55%,#111827),0 10px 20px color-mix(in srgb,var(--card-accent) 20%,transparent)}
+    .order-panel{--card-accent:#6366F1;--card-accent-2:#A78BFA;border-color:color-mix(in srgb,var(--card-accent) 55%,transparent)}
+    .toast{--card-accent:#FF6B35;--card-accent-2:#F43F5E;border-color:color-mix(in srgb,var(--card-accent) 55%,transparent);box-shadow:0 16px 38px color-mix(in srgb,var(--card-accent) 20%,transparent),inset 0 1px rgba(255,255,255,.15)}
+    .tabs button:nth-child(4n+1),.order-filter:nth-child(4n+1){--card-accent:#F5B83D;--card-accent-2:#FF8A00}
+    .tabs button:nth-child(4n+2),.order-filter:nth-child(4n+2){--card-accent:#3B82F6;--card-accent-2:#06B6D4}
+    .tabs button:nth-child(4n+3),.order-filter:nth-child(4n+3){--card-accent:#8B5CF6;--card-accent-2:#D946EF}
+    .tabs button:nth-child(4n),.order-filter:nth-child(4n){--card-accent:#10B981;--card-accent-2:#84CC16}
+    .tabs button,.order-filter{border-color:color-mix(in srgb,var(--card-accent) 44%,transparent);box-shadow:inset 0 1px rgba(255,255,255,.16),0 6px 14px color-mix(in srgb,var(--card-accent) 14%,transparent)}
+    .tabs button.active,.order-filter.active{color:var(--card-accent-2);border-color:var(--card-accent-2);background:linear-gradient(145deg,color-mix(in srgb,var(--card-accent) 23%,var(--card-surface)),color-mix(in srgb,var(--card-accent-2) 17%,var(--card-surface-2)))}
+    :root[data-theme="light"] .panel,:root[data-theme="light"] .product-row,:root[data-theme="light"] .finance-row,:root[data-theme="light"] .order-row,:root[data-theme="light"] .order-detail{
+      border-color:color-mix(in srgb,var(--card-accent) 48%,transparent);
+      background:linear-gradient(145deg,color-mix(in srgb,var(--card-accent) 12%,#fff),color-mix(in srgb,var(--card-accent-2) 9%,#eef3fa));
+      box-shadow:0 16px 34px rgba(38,59,94,.12),0 0 24px color-mix(in srgb,var(--card-accent) 13%,transparent),inset 0 1px #fff
+    }
+    :root[data-theme="light"] .panel:before,:root[data-theme="light"] .product-row:before,:root[data-theme="light"] .finance-row:before,:root[data-theme="light"] .order-row:before,:root[data-theme="light"] .order-detail:before{background:linear-gradient(150deg,rgba(255,255,255,.8),transparent 30%,transparent 72%,color-mix(in srgb,var(--card-accent-2) 8%,transparent))}
+    :root[data-theme="light"] .panel h2,:root[data-theme="light"] .panel h3{color:color-mix(in srgb,var(--card-accent) 82%,#17233a)}
+    :root[data-theme="light"] .order-panel{background:linear-gradient(145deg,color-mix(in srgb,var(--card-accent) 10%,#fff),color-mix(in srgb,var(--card-accent-2) 7%,#eef3fa));border-color:color-mix(in srgb,var(--card-accent) 48%,transparent)}
+    :root[data-theme="light"] .toast{background:linear-gradient(145deg,color-mix(in srgb,var(--card-accent) 9%,#fff),color-mix(in srgb,var(--card-accent-2) 7%,#eef3fa));border-color:color-mix(in srgb,var(--card-accent) 48%,transparent)}
+    .panel:after,.product-row:after,.finance-row:after,.order-row:after,.order-detail:after{
+      content:"";position:absolute;inset:-45%;z-index:2;pointer-events:none;transform:translateX(-130%) rotate(18deg);
+      background:linear-gradient(90deg,transparent 38%,rgba(255,255,255,.18) 49%,transparent 60%);transition:transform .65s cubic-bezier(.2,.7,.2,1)
+    }
+    .panel:before,.product-row:before,.finance-row:before,.order-row:before,.order-detail:before{
+      content:"";position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;
+      background:linear-gradient(150deg,rgba(255,255,255,.14),transparent 30%,transparent 72%,color-mix(in srgb,var(--card-accent-2) 10%,transparent));
+      transform:perspective(1000px) translateZ(0);transition:transform .28s cubic-bezier(.2,.8,.2,1)
+    }
+    html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+    body,button,input,textarea,select{font-family:var(--font-body)}
+    h1,h2,h3,.brand,.tabs button,.order-filter{font-family:var(--font-heading)}
+    .title-premium{font-family:var(--font-heading);font-weight:800;letter-spacing:-.01em;line-height:1.2}
+    .desc-premium{font-family:var(--font-body);font-weight:500;line-height:1.6;color:color-mix(in srgb,var(--text) 76%,transparent)}
+    .badge-premium{font-family:var(--font-body);font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase}
+    .brand{font-weight:800;letter-spacing:.015em}
+    #page-title{font-size:clamp(20px,2.4vw,27px);font-weight:800;letter-spacing:-.035em}
+    .panel h2,.panel h3,.product-row strong,.finance-row strong,.order-row strong,.order-detail strong{
+      position:relative;font-family:var(--font-heading);font-weight:800;letter-spacing:-.01em;line-height:1.25;
+      background-image:linear-gradient(105deg,var(--text) 8%,var(--card-title-accent,var(--card-accent)) 100%);
+      background-clip:text;-webkit-background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+      filter:drop-shadow(0 2px 8px color-mix(in srgb,var(--card-accent) 18%,transparent));transition:filter .25s,background-image .25s
+    }
+    [data-card-tone]{--card-title-accent:var(--card-accent);--card-title-accent-2:var(--card-accent-2)}
+    :root[data-theme="light"] [data-card-tone]{--card-title-accent:color-mix(in srgb,var(--card-accent) 68%,#17233a);--card-title-accent-2:color-mix(in srgb,var(--card-accent-2) 65%,#17233a)}
+    .panel h2:after,.panel h3:after{content:"";position:absolute;left:0;bottom:-7px;width:42px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--card-accent),var(--card-accent-2));box-shadow:0 0 10px color-mix(in srgb,var(--card-accent) 45%,transparent);transition:width .25s}
+    .panel:hover h2:after,.panel:hover h3:after{width:72px}
+    .panel h2.title-premium,.panel h3.title-premium{display:table}
+    .panel h2.title-premium:after,.panel h3.title-premium:after{width:42px}
+    .panel h2.title-premium:hover:after,.panel h3.title-premium:hover:after{width:72px}
+    .panel p,.product-row small,.finance-row small,.order-cell small,.sub{font-family:var(--font-body);font-weight:500;line-height:1.6}
+    .status-badge,.pill,.order-filter{font-family:var(--font-body);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
+    .field label,.check{font-family:var(--font-body);font-weight:600;letter-spacing:.015em}
+    .btn,.tabs button{font-family:var(--font-body);font-size:12px;font-weight:700;letter-spacing:.04em}
+    .btn{text-transform:uppercase}
+    .ghost,.danger{letter-spacing:.04em}
+    .order-open{font-family:var(--font-body)}
+    :root[data-theme="light"] .panel h2,:root[data-theme="light"] .panel h3,:root[data-theme="light"] .product-row strong,:root[data-theme="light"] .finance-row strong,:root[data-theme="light"] .order-row strong,:root[data-theme="light"] .order-detail strong{
+      filter:drop-shadow(0 2px 6px color-mix(in srgb,var(--card-accent) 11%,transparent))
+    }
+    @media(max-width:520px){.panel h2,.panel h3,.product-row strong,.finance-row strong,.order-row strong,.order-detail strong{overflow-wrap:anywhere}}
+    @media(prefers-reduced-motion:reduce){.hero-title-shimmer,.title-premium:after,.panel h2:after,.panel h3:after{animation:none;transition:none}}
+    .panel>*,.product-row>*,.finance-row>*,.order-row>*,.order-detail>*{position:relative;z-index:1}
+    .panel:hover:after,.product-row:hover:after,.finance-row:hover:after,.order-row:hover:after,.order-detail:hover:after{transform:translateX(130%) rotate(18deg)}
+    .panel:hover:before,.product-row:hover:before,.finance-row:hover:before,.order-row:hover:before,.order-detail:hover:before{transform:perspective(1000px) rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg)) translateY(-4px) translateZ(10px) scale(1.02)}
+    @media(hover:hover) and (pointer:fine){
+      .panel:hover,.product-row:hover,.finance-row:hover,.order-row:hover,.order-detail:hover{transform:none}
+    }
+    @media(max-width:640px){.panel:hover,.product-row:hover,.finance-row:hover,.order-row:hover,.order-detail:hover{transform:none}.panel:before,.product-row:before,.finance-row:before,.order-row:before,.order-detail:before{transform:none}}
+    @media(prefers-reduced-motion:reduce){.panel:before,.product-row:before,.finance-row:before,.order-row:before,.order-detail:before{transform:none!important}.panel:after,.product-row:after,.finance-row:after,.order-row:after,.order-detail:after{display:none}}
+  </style>
+</head>
+<body>
+  <header><div class="wrap bar"><div class="brand">STORE <span>ADMIN</span></div><h1 id="page-title">Admin login</h1><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch to light theme"><span id="theme-toggle-icon" aria-hidden="true">☼</span></button><button id="logout" class="btn ghost hidden">Sign out</button></div></header>
+  <main class="wrap page-enter">
+    <section id="login-panel" class="panel" data-card-tone="software">
+      <h2>Sign in</h2><p class="sub">Use the admin email and password created in your Supabase project.</p>
+      <form id="login-form">
+        <div class="field"><label for="email">Admin email</label><input id="email" type="email" autocomplete="username" required></div>
+        <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div>
+        <button class="btn gold" type="submit" style="width:100%">Sign in</button><div class="error" id="login-error"></div>
+      </form>
+    </section>
+    <section id="dashboard" class="hidden">
+      <nav class="tabs" id="tabs"></nav>
+      <div id="products-panel">
+        <div class="admin-grid">
+          <section class="panel" data-card-tone="software">
+            <h2 class="title-premium" id="form-title">Add product</h2><p class="sub desc-premium">Manage product details and availability.</p>
+            <form id="product-form">
+              <div class="field"><label for="product-name">Name</label><input id="product-name" maxlength="120" required></div>
+              <div class="field"><label for="description">Description</label><textarea id="description" maxlength="500"></textarea></div>
+              <div class="field"><label for="product-image">Product photo</label><input id="product-image" type="file" accept="image/jpeg,image/png,image/webp,image/gif"><label class="check"><input id="remove-image" type="checkbox"> Remove current photo</label><img id="image-preview" class="hidden" alt="Product photo preview" style="width:100%;max-height:180px;object-fit:contain;border:1px solid var(--line);border-radius:10px;background:#080f20"><input id="image-url" type="hidden"></div>
+              <div class="field"><label for="download-url">Software download link</label><input id="download-url" type="url" maxlength="2048" placeholder="https://..."><small class="sub" style="display:block;margin:5px 0 0">Shown to a customer only after their purchase is complete.</small></div>
+              <div class="row"><div class="field"><label for="price">Price (₹)</label><input id="price" type="number" min="0" step="0.01" required></div><div class="field"><label for="unit">Optional unit</label><input id="unit" placeholder="month, IP, GB" maxlength="30"></div></div>
+              <label class="check"><input id="in-stock" type="checkbox" checked> In stock</label>
+              <button class="btn gold" type="submit" id="save-product">Add product</button>
+              <button class="btn ghost hidden" type="button" id="cancel-edit">Cancel</button>
+              <div class="error" id="product-error"></div>
+            </form>
+          </section>
+          <section class="panel" data-card-tone="vps"><div class="bar" style="margin-bottom:15px"><div><h2 class="title-premium" id="list-title">Products</h2><p class="sub desc-premium" style="margin:3px 0 0">Use arrows to reorder; pinned products stay at the top.</p></div><button id="refresh" class="btn ghost">Refresh</button></div><div class="product-list" id="product-list"></div></section>
+        </div>
+      </div>
+      <section id="spin-panel" class="panel hidden" data-card-tone="pink">
+        <div class="bar" style="margin-bottom:16px"><div><h2 class="title-premium">Spin &amp; Win</h2><p class="sub desc-premium">Manage reward labels, discount percentages, and probability weights for the wheel.</p></div><button id="reset-spin-prizes" class="btn ghost" type="button">Reset defaults</button></div>
+        <div id="spin-prize-list" class="product-list"></div>
+      </section>
+      <section id="settings-panel" class="panel settings hidden" data-card-tone="support">
+        <h2 class="title-premium">Store settings</h2><p class="sub desc-premium">These settings are displayed on the public store.</p>
+        <form id="settings-form">
+          <div class="field"><label for="site-title">Site title</label><input id="site-title" maxlength="80" required></div>
+          <div class="field"><label for="upi-id">UPI ID for wallet top-ups</label><input id="upi-id" maxlength="120" placeholder="roshanbrand@airtel" required></div>
+          <div class="field"><label for="whatsapp">WhatsApp number (country code, digits only)</label><input id="whatsapp" inputmode="tel" placeholder="919876543210"></div>
+          <div class="field"><label for="telegram">Telegram link</label><input id="telegram" type="url" placeholder="https://t.me/yourchannel"></div>
+          <button class="btn gold" type="submit">Save settings</button><div class="error" id="settings-error"></div>
+        </form>
+      </section>
+      <section id="finance-panel" class="panel hidden" data-card-tone="indigo"><div class="bar" style="margin-bottom:15px"><div><h2 class="title-premium" id="finance-title"></h2><p class="sub desc-premium" id="finance-description" style="margin:3px 0 0"></p></div><button id="finance-refresh" class="btn ghost">Refresh</button></div><div id="order-tools" class="order-tools hidden"><input id="order-search" type="search" placeholder="Search order, product or customer"><div class="order-filters" id="order-filters"></div></div><div class="finance-list" id="finance-list"></div></section>
+    </section>
+  </main>
+  <div class="order-drawer" id="order-drawer" aria-hidden="true">
+    <button class="order-overlay" id="order-overlay" type="button" aria-label="Close order details"></button>
+    <section class="order-panel" role="dialog" aria-modal="true" aria-labelledby="order-panel-title">
+      <div class="order-panel-head"><h2 id="order-panel-title">Order details</h2><button class="btn ghost" id="close-order" type="button">Close</button></div>
+      <div class="order-details" id="order-details"></div>
+      <div class="field"><label for="delivery-text">Delivery details</label><textarea class="delivery-text" id="delivery-text" maxlength="100000" placeholder="Paste access details, product keys or IP information. Line breaks are preserved."></textarea></div>
+      <div class="field"><label for="delivery-link">Download link (optional)</label><input id="delivery-link" type="url" maxlength="2048" placeholder="https://..."></div>
+      <div class="field"><label for="delivery-note">Note to customer (optional)</label><textarea id="delivery-note" maxlength="4000" placeholder="Add a note for the customer"></textarea></div>
+      <div class="error" id="delivery-error"></div>
+      <div class="order-panel-actions"><button class="btn gold" id="deliver-order" type="button">Deliver</button><button class="btn ghost" id="save-delivery-draft" type="button">Save draft</button><button class="btn danger" id="reject-order" type="button">Reject</button></div>
+    </section>
+  </div>
+  <div class="toast hidden" id="toast" role="status"></div>
+  <script>
+    const categories=[{id:'software',title:'Software'},{id:'vps',title:'Linux VPS'},{id:'proxy',title:'Linux Proxy'},{id:'residential',title:'Residential Proxies'}];
+    const DEFAULT_SPIN_PRIZES=[{code:'SAVE20',label:'20%',type:'percent',value:20,color:'#dc3434',maxDiscountAmount:500,weight:15},{code:'SAVE50',label:'50%',type:'percent',value:50,color:'#1a4ea8',maxDiscountAmount:500,weight:10},{code:'SAVE100',label:'100%',type:'percent',value:100,color:'#f4d77a',maxDiscountAmount:500,weight:4},{code:'SAVE200',label:'200%',type:'percent',value:200,color:'#dc3434',maxDiscountAmount:500,weight:1},{code:'TRY_AGAIN',label:'TRY AGAIN',type:'tryAgain',value:0,color:'#4a4a4a',maxDiscountAmount:0,weight:45},{code:'SAVE10',label:'10%',type:'percent',value:10,color:'#1a4ea8',maxDiscountAmount:500,weight:25}];
+    const state={client:null,category:'software',products:[],editing:null,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null};
+    const $=id=>document.getElementById(id);
+    const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const money=value=>new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(Number(value)||0);
+    const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let revealObserver=null;
+    if('IntersectionObserver' in window&&!reducedMotion){
+      revealObserver=new IntersectionObserver(entries=>{
+        entries.forEach(entry=>{
+          if(!entry.isIntersecting)return;
+          entry.target.classList.add('is-visible');
+          revealObserver.unobserve(entry.target);
+        });
+      },{threshold:.12,rootMargin:'0px 0px -30px 0px'});
+    }
+    function revealAdmin(root=document){
+      root.querySelectorAll('#login-panel,#dashboard .tabs,#dashboard .admin-grid,#dashboard>section,.product-row,.finance-row,.order-row').forEach(element=>{
+        if(element.classList.contains('hidden')||element.closest('.hidden')||element.classList.contains('reveal'))return;
+        const bounds=element.getBoundingClientRect();
+        if(reducedMotion||!revealObserver||(bounds.top<window.innerHeight&&bounds.bottom>0))return;
+        element.classList.add('reveal');
+        revealObserver.observe(element);
+      });
+    }
+    function setTheme(theme){
+      const nextTheme=theme==='light'?'light':'dark';
+      document.documentElement.dataset.theme=nextTheme;
+      const light=nextTheme==='light';
+      const toggle=$('theme-toggle');
+      toggle.setAttribute('aria-label',`Switch to ${light?'dark':'light'} theme`);
+      toggle.title=`Switch to ${light?'dark':'light'} theme`;
+      $('theme-toggle-icon').textContent=light?'☾':'☼';
+      document.querySelector('meta[name="theme-color"]').content=light?'#edf2fa':'#060b17';
+      try{
+        localStorage.setItem('roshan-theme',nextTheme);
+      }catch(error){
+        console.warn('Could not save the color theme preference:',error);
+      }
+    }
+    let toastTimer;
+    function getSpinPrizeCatalog(){
+      try {
+        const stored=JSON.parse(localStorage.getItem('roshan-spin-prizes-admin')||'null');
+        if(Array.isArray(stored)&&stored.length){
+          return stored.map(item=>({code:String(item.code||'SAVE10').toUpperCase(),label:String(item.label||`${Number(item.value)||0}%`),type:item.type==='tryAgain'?'tryAgain':'percent',value:Number(item.value)||0,color:item.color||'#1a4ea8',maxDiscountAmount:Number(item.maxDiscountAmount)||0,weight:Number(item.weight)||0}));
+        }
+      } catch (error) {
+        console.warn('Could not read stored spin prizes:', error);
+      }
+      return DEFAULT_SPIN_PRIZES;
+    }
+    function notify(message){$('toast').textContent=message;$('toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),2600)}
+    function setError(id,message=''){$(id).textContent=message}
+    function renderTabs(){
+      $('tabs').innerHTML=categories.map(category=>`<button type="button" data-category="${category.id}" class="${state.activeView===category.id?'active':''}">${category.title}</button>`).join('')+'<button type="button" data-spin="true" class="'+(state.activeView==='spin'?'active':'')+'">Spin &amp; Win</button><button type="button" data-finance="topups" class="'+(state.activeView==='topups'?'active':'')+'">Top-up Requests</button><button type="button" data-finance="orders" class="'+(state.activeView==='orders'?'active':'')+'">Orders</button><button type="button" data-finance="users" class="'+(state.activeView==='users'?'active':'')+'">Users</button><button type="button" data-settings="true" class="'+(state.activeView==='settings'?'active':'')+'">Settings</button>';
+      $('tabs').querySelectorAll('[data-category]').forEach(button=>button.addEventListener('click',()=>selectCategory(button.dataset.category)));
+      $('tabs').querySelectorAll('[data-finance]').forEach(button=>button.addEventListener('click',()=>showFinance(button.dataset.finance)));
+      $('tabs').querySelector('[data-spin]').addEventListener('click',showSpinWin);
+      $('tabs').querySelector('[data-settings]').addEventListener('click',showSettings);
+    }
+    function selectCategory(category){
+      state.category=category;state.activeView=category;
+      $('products-panel').classList.remove('hidden');$('spin-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');
+      $('page-title').textContent=categories.find(item=>item.id===category).title;
+      $('list-title').textContent=`${categories.find(item=>item.id===category).title} products`;
+      renderTabs();renderProducts();resetForm();
+    }
+    function showSettings(){
+      state.activeView='settings';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('settings-panel').classList.remove('hidden');$('finance-panel').classList.add('hidden');$('page-title').textContent='Settings';
+      renderTabs();loadSettings().catch(error=>setError('settings-error',error.message));
+    }
+    function showSpinWin(){
+      state.activeView='spin';$('products-panel').classList.add('hidden');$('spin-panel').classList.remove('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('page-title').textContent='Spin & Win';
+      renderTabs();renderSpinPrizeEditor();
+    }
+    async function showFinance(tab){
+      state.activeView=tab;$('products-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.remove('hidden');
+      const titles={topups:['Top-up Requests','Review customer UPI payments before crediting wallets.'],orders:['Orders','Deliver customer purchases manually or issue a wallet refund.'],users:['Users','Manage customer wallet balances with an audit note.']};
+      $('page-title').textContent=titles[tab][0];$('finance-title').textContent=titles[tab][0];$('finance-description').textContent=titles[tab][1];renderTabs();await renderFinance(tab);
+    }
+    async function renderProducts(){
+      const result=await state.client.from('products').select('*').eq('category',state.category).order('pinned',{ascending:false}).order('sort_order').order('created_at');
+      if(result.error){$('product-list').innerHTML=`<div class="empty">${escapeHtml(result.error.message)}</div>`;return}
+      state.products=result.data||[];
+      $('product-list').innerHTML=state.products.length?state.products.map((product,index)=>`
+        <article class="product-row">
+          <div><strong>${escapeHtml(product.name)}</strong><small>₹${money(product.price)}${product.unit?` / ${escapeHtml(product.unit)}`:''} · ${escapeHtml(product.description||'No description')}</small><div style="display:flex;gap:6px;margin-top:8px"><span class="pill ${product.in_stock?'live':''}">${product.in_stock?'In stock':'Out of stock'}</span>${product.pinned?'<span class="pill pinned">Pinned</span>':''}</div></div>
+          <div class="actions"><button class="btn ghost" data-up="${index}" aria-label="Move up" ${index===0?'disabled':''}>↑</button><button class="btn ghost" data-down="${index}" aria-label="Move down" ${index===state.products.length-1?'disabled':''}>↓</button><button class="btn ghost" data-pin="${product.id}">${product.pinned?'Unpin':'Pin'}</button><button class="btn ghost" data-edit="${product.id}">Edit</button><button class="btn danger" data-delete="${product.id}">Delete</button></div>
+        </article>`).join(''):'<div class="empty">No products in this category yet.</div>';
+      $('product-list').querySelectorAll('[data-edit]').forEach(button=>button.addEventListener('click',()=>editProduct(button.dataset.edit)));
+      $('product-list').querySelectorAll('[data-delete]').forEach(button=>button.addEventListener('click',()=>deleteProduct(button.dataset.delete)));
+      $('product-list').querySelectorAll('[data-pin]').forEach(button=>button.addEventListener('click',()=>togglePin(button.dataset.pin)));
+      $('product-list').querySelectorAll('[data-up]').forEach(button=>button.addEventListener('click',()=>moveProduct(Number(button.dataset.up),-1)));
+      $('product-list').querySelectorAll('[data-down]').forEach(button=>button.addEventListener('click',()=>moveProduct(Number(button.dataset.down),1)));
+      revealAdmin($('product-list'));
+    }
+    function renderSpinPrizeEditor(){
+      const rewards=getSpinPrizeCatalog();
+      const totalWeight=rewards.reduce((sum,reward)=>sum+(Number(reward.weight)||0),0) || 1;
+      $('spin-prize-list').innerHTML = rewards.map((reward,index)=>{
+        const chance=((Number(reward.weight)||0)/totalWeight*100).toFixed(1);
+        return `<article class="product-row" style="grid-template-columns:1fr auto;align-items:start">
+          <div style="display:grid;gap:10px;min-width:0">
+            <div><strong>${escapeHtml(reward.label || 'Prize')}</strong> <span class="pill ${reward.type==='tryAgain'?'pinned':''}" style="margin-left:6px">${chance}% chance</span></div>
+            <div class="row">
+              <div class="field"><label>Code</label><input data-spin-field="code" data-spin-index="${index}" value="${escapeHtml(reward.code)}"></div>
+              <div class="field"><label>Label</label><input data-spin-field="label" data-spin-index="${index}" value="${escapeHtml(reward.label)}"></div>
+            </div>
+            <div class="row">
+              <div class="field"><label>Discount %</label><input data-spin-field="value" data-spin-index="${index}" type="number" min="0" max="1000" step="1" value="${Number(reward.value)||0}"></div>
+              <div class="field"><label>Max discount ₹</label><input data-spin-field="maxDiscountAmount" data-spin-index="${index}" type="number" min="0" step="1" value="${Number(reward.maxDiscountAmount)||0}"></div>
+            </div>
+            <div class="row">
+              <div class="field"><label>Weight</label><input data-spin-field="weight" data-spin-index="${index}" type="number" min="0" step="1" value="${Number(reward.weight)||0}"></div>
+              <div class="field"><label>Color</label><input data-spin-field="color" data-spin-index="${index}" type="color" value="${reward.color||'#1a4ea8'}"></div>
+            </div>
+          </div>
+          <div class="actions" style="align-self:stretch;justify-content:flex-start;flex-direction:column"><button class="btn ghost" type="button" data-save-spin="${index}">Save</button></div>
+        </article>`;
+      }).join('');
+      $('spin-prize-list').querySelectorAll('[data-save-spin]').forEach(button=>button.addEventListener('click',()=>saveSpinPrize(button.dataset.saveSpin)));
+      $('spin-prize-list').querySelectorAll('[data-spin-field]').forEach(input=>input.addEventListener('input',()=>{
+        const index=Number(input.dataset.spinIndex);
+        const rewards=getSpinPrizeCatalog();
+        const current=rewards[index];
+        if(!current)return;
+        const field=input.dataset.spinField;
+        const newValue = field === 'code' || field === 'label' || field === 'color' ? input.value : Number(input.value) || 0;
+        current[field]=newValue;
+      }));
+    }
+    function saveSpinPrize(index){
+      const rewards=getSpinPrizeCatalog();
+      const current=rewards[index];
+      if(!current)return;
+      const fields=$('spin-prize-list').querySelectorAll(`[data-spin-index="${CSS.escape(String(index))}"]`);
+      const updated={...current};
+      fields.forEach(field=>{
+        const key=field.dataset.spinField;
+        const value = key === 'code' || key === 'label' || key === 'color' ? field.value : Number(field.value) || 0;
+        updated[key]=value;
+      });
+      updated.code=String(updated.code||'SAVE10').trim().toUpperCase() || 'SAVE10';
+      updated.label=String(updated.label||`${Number(updated.value)||0}%`).trim() || `${Number(updated.value)||0}%`;
+      if(updated.type === 'tryAgain'){
+        updated.value=0;updated.maxDiscountAmount=0;
+      } else {
+        updated.value = Number(updated.value) || 0;
+        updated.maxDiscountAmount = Number(updated.maxDiscountAmount) || 0;
+      }
+      updated.weight = Math.max(0, Number(updated.weight) || 0);
+      rewards[index]=updated;
+      localStorage.setItem('roshan-spin-prizes-admin', JSON.stringify(rewards));
+      notify('Spin prize settings saved.');
+      renderSpinPrizeEditor();
+    }
+    function resetSpinPrizes(){
+      localStorage.removeItem('roshan-spin-prizes-admin');
+      notify('Spin wheel defaults restored.');
+      renderSpinPrizeEditor();
+    }
+    function resetForm(){
+      state.editing=null;$('product-form').reset();$('in-stock').checked=true;$('image-url').value='';$('image-preview').removeAttribute('src');$('image-preview').classList.add('hidden');$('form-title').textContent='Add product';$('save-product').textContent='Add product';$('cancel-edit').classList.add('hidden');setError('product-error');
+    }
+    async function editProduct(id){
+      const product=state.products.find(item=>item.id===id);if(!product)return;
+      state.editing=id;$('product-name').value=product.name;$('description').value=product.description||'';$('price').value=product.price;$('unit').value=product.unit||'';$('in-stock').checked=product.in_stock;$('image-url').value=product.image_url||'';$('remove-image').checked=false;
+      if(product.image_url){$('image-preview').src=product.image_url;$('image-preview').classList.remove('hidden')}else{$('image-preview').removeAttribute('src');$('image-preview').classList.add('hidden')}
+      $('product-image').value='';$('download-url').value='';
+      const {data:download,error}=await state.client.from('product_download_links').select('download_url').eq('product_id',id).maybeSingle();
+      if(error){setError('product-error',`Could not load this product's download link: ${error.message}`);return}
+      $('download-url').value=download?.download_url||'';
+      $('form-title').textContent='Edit product';$('save-product').textContent='Save changes';$('cancel-edit').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});
+    }
+    async function uploadProductImage(file){
+      const extensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
+      if(!extensions[file.type])throw new Error('Choose a JPG, PNG, WebP, or GIF image.');
+      if(file.size>5*1024*1024)throw new Error('Product images must be 5 MB or smaller.');
+      const path=`${state.category}/${crypto.randomUUID()}.${extensions[file.type]}`;
+      const {error}=await state.client.storage.from('product-images').upload(path,file,{contentType:file.type,cacheControl:'3600',upsert:false});
+      if(error)throw error;
+      const {data}=state.client.storage.from('product-images').getPublicUrl(path);
+      return data.publicUrl;
+    }
+    async function saveProduct(event){
+      event.preventDefault();setError('product-error');
+      const downloadUrl=$('download-url').value.trim();
+      if(downloadUrl){try{const url=new URL(downloadUrl);if(!['http:','https:'].includes(url.protocol))throw new Error();}catch{setError('product-error','Enter a valid HTTP or HTTPS download link.');return}}
+      const product={category:state.category,name:$('product-name').value.trim(),description:$('description').value.trim(),price:Number($('price').value),unit:$('unit').value.trim()||null,in_stock:$('in-stock').checked,image_url:$('image-url').value||null};
+      if(!product.name||!Number.isFinite(product.price)||product.price<0){setError('product-error','Enter a product name and a valid non-negative price.');return}
+      const file=$('product-image').files[0];
+      try{
+        if(file)product.image_url=await uploadProductImage(file);
+      }catch(error){setError('product-error',`Could not upload product photo: ${error.message}`);return}
+      if($('remove-image').checked)product.image_url=null;
+      const request=state.editing
+        ? state.client.from('products').update(product).eq('id',state.editing).select('id').single()
+        : state.client.from('products').insert({...product,sort_order:Math.max(0,...state.products.map(item=>Number(item.sort_order)||0))+1}).select('id').single();
+      const result=await request;
+      if(result.error){setError('product-error',result.error.message);return}
+      const productId=state.editing||result.data.id;
+      const linkResult=downloadUrl
+        ? await state.client.from('product_download_links').upsert({product_id:productId,download_url:downloadUrl})
+        : await state.client.from('product_download_links').delete().eq('product_id',productId);
+      if(linkResult.error){await renderProducts();await editProduct(productId);setError('product-error',`Product saved, but its download link could not be saved: ${linkResult.error.message}`);return}
+      resetForm();await renderProducts();notify('Product saved.');
+    }
+    async function deleteProduct(id){
+      if(!confirm('Delete this product?'))return;
+      const result=await state.client.from('products').delete().eq('id',id);
+      if(result.error){notify(result.error.message);return}
+      await renderProducts();notify('Product deleted.');
+    }
+    async function togglePin(id){
+      const product=state.products.find(item=>item.id===id);if(!product)return;
+      const result=await state.client.from('products').update({pinned:!product.pinned}).eq('id',id);
+      if(result.error){notify(result.error.message);return}
+      await renderProducts();
+    }
+    async function moveProduct(index,direction){
+      const next=index+direction;if(next<0||next>=state.products.length)return;
+      const updated=[...state.products];[updated[index],updated[next]]=[updated[next],updated[index]];
+      for(let position=0;position<updated.length;position++){
+        const result=await state.client.from('products').update({sort_order:position+1}).eq('id',updated[position].id);
+        if(result.error){notify(result.error.message);await renderProducts();return}
+      }
+      await renderProducts();
+    }
+    async function loadSettings(){
+      const {data,error}=await state.client.from('settings').select('*').eq('id',true).single();
+      if(error)throw error;
+      $('site-title').value=data.site_title||'';$('upi-id').value=data.upi_id||'roshanbrand@airtel';$('whatsapp').value=data.whatsapp_number||'';$('telegram').value=data.telegram_link||'';
+    }
+    async function saveSettings(event){
+      event.preventDefault();setError('settings-error');
+      const whatsapp=$('whatsapp').value.replace(/\D/g,'');
+      const telegram=$('telegram').value.trim();
+      const upiId=$('upi-id').value.trim();
+      if(telegram&&!/^https:\/\/t\.me\//i.test(telegram)){setError('settings-error','Use a Telegram link beginning with https://t.me/.');return}
+      if(!/^[\w.-]+@[\w.-]+$/.test(upiId)){setError('settings-error','Enter a valid UPI ID.');return}
+      const {error}=await state.client.from('settings').upsert({id:true,site_title:$('site-title').value.trim(),upi_id:upiId,whatsapp_number:whatsapp,telegram_link:telegram});
+      if(error){setError('settings-error',error.message);return}
+      notify('Settings saved.');state.client.channel('admin-store-refresh').send({type:'broadcast',event:'store-updated',payload:{}}).catch(()=>{});
+    }
+    async function renderFinance(tab){
+      $('finance-list').innerHTML='<div class="empty">Loading…</div>';
+      $('order-tools').classList.toggle('hidden',tab!=='orders');
+      const functions={topups:'admin_list_topups',orders:'admin_list_orders',users:'admin_list_users'};
+      const {data,error}=await state.client.rpc(functions[tab]);
+      if(error){$('finance-list').innerHTML=`<div class="empty">${escapeHtml(error.message)}</div>`;return}
+      if(tab==='topups')renderTopups(data||[]);
+      if(tab==='orders')renderOrders(data||[]);
+      if(tab==='users')renderUsers(data||[]);
+      revealAdmin($('finance-list'));
+    }
+    function renderTopups(requests){
+      $('finance-list').innerHTML=requests.length?requests.map(request=>`<article class="finance-row"><div><strong>${escapeHtml(request.user_email)}</strong><small>UTR: ${escapeHtml(request.utr)} · ${formatDate(request.created_at)} · Request #${request.id}</small><div class="amount">₹${money(request.amount)}</div></div><div class="finance-controls"><button class="btn gold" data-approve="${request.id}">Approve</button><button class="btn danger" data-reject="${request.id}">Reject</button></div></article>`).join(''):'<div class="empty">No pending top-up requests.</div>';
+      $('finance-list').querySelectorAll('[data-approve]').forEach(button=>button.addEventListener('click',()=>reviewTopup(button.dataset.approve,true)));
+      $('finance-list').querySelectorAll('[data-reject]').forEach(button=>button.addEventListener('click',()=>reviewTopup(button.dataset.reject,false)));
+    }
+    function renderOrders(orders){
+      state.orders=orders;
+      $('order-filters').innerHTML=['all','pending','delivered','rejected'].map(filter=>`<button class="order-filter ${state.orderFilter===filter?'active':''}" type="button" data-order-filter="${filter}">${filter[0].toUpperCase()+filter.slice(1)}</button>`).join('');
+      $('order-filters').querySelectorAll('[data-order-filter]').forEach(button=>button.addEventListener('click',()=>{
+        state.orderFilter=button.dataset.orderFilter;
+        renderOrders(state.orders);
+      }));
+      const query=$('order-search').value.trim().toLowerCase();
+      const filtered=orders.filter(order=>{
+        const status=order.status==='completed'?'pending':order.status;
+        const matchesStatus=state.orderFilter==='all'||status===state.orderFilter;
+        const text=[order.id,order.user_email,order.product_name,order.product_type].join(' ').toLowerCase();
+        return matchesStatus&&text.includes(query);
+      });
+      $('finance-list').innerHTML=filtered.length?filtered.map(order=>{
+        const status=order.status==='completed'?'pending':order.status;
+        const badge=['pending','delivered','rejected','refunded'].includes(status)?status:'pending';
+        return `<article class="order-row ${status==='pending'?'pending':''}"><button type="button" class="order-open" data-open-order="${order.id}"><span class="order-cell"><strong>#${order.id}</strong><small>${formatDate(order.created_at)}</small></span><span class="order-cell"><strong>${escapeHtml(order.product_name)}</strong><small>${escapeHtml(order.product_type||'Product')} · ${escapeHtml(order.user_email||'')}</small></span><span class="order-cell"><strong class="amount">₹${money(order.price)}</strong><small>Wallet purchase</small></span><span class="status-badge ${badge}">${escapeHtml(status[0].toUpperCase()+status.slice(1))}</span></button>${status==='refunded'?'<span class="pill">Refunded</span>':`<button type="button" class="btn danger" data-refund="${order.id}">Refund</button>`}</article>`;
+      }).join(''):'<div class="empty">No orders match this filter.</div>';
+      $('finance-list').querySelectorAll('[data-open-order]').forEach(button=>button.addEventListener('click',()=>openOrderEditor(button.dataset.openOrder)));
+      $('finance-list').querySelectorAll('[data-refund]').forEach(button=>button.addEventListener('click',()=>refundOrder(button.dataset.refund)));
+    }
+    function indianDate(value){
+      return new Date(value).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
+    }
+    function openOrderEditor(id){
+      const order=state.orders.find(item=>String(item.id)===String(id));
+      if(!order)return;
+      state.selectedOrder=order;
+      const status=order.status==='completed'?'pending':order.status;
+      $('order-panel-title').textContent=`Order #${order.id}`;
+      const detailRows=[
+        ['Customer',order.user_email||'—'],['Contact','Wallet account email'],['UTR','Not applicable · wallet purchase'],
+        ['Product',order.product_name],['Product type',order.product_type||'—'],['Amount',`₹${money(order.price)}`],
+        ['Placed',indianDate(order.created_at)],['Status',status]
+      ];
+      $('order-details').innerHTML=detailRows.map(([label,value])=>`<div class="order-detail"><small>${label}</small><strong>${escapeHtml(value)}</strong></div>`).join('');
+      $('delivery-text').value=order.delivery_text||'';
+      $('delivery-link').value=order.delivery_link||'';
+      $('delivery-note').value=order.delivery_note||'';
+      $('delivery-error').textContent='';
+      $('deliver-order').textContent=status==='delivered'?'Update delivery':'Deliver';
+      $('deliver-order').disabled=status==='rejected'||status==='refunded';
+      $('save-delivery-draft').disabled=status==='rejected'||status==='refunded';
+      $('reject-order').disabled=status==='rejected'||status==='refunded';
+      $('order-drawer').classList.add('open');
+      $('order-drawer').setAttribute('aria-hidden','false');
+      document.body.style.overflow='hidden';
+    }
+    function closeOrderEditor(){
+      $('order-drawer').classList.remove('open');
+      $('order-drawer').setAttribute('aria-hidden','true');
+      document.body.style.overflow='';
+    }
+    async function saveOrderDelivery(deliver){
+      const order=state.selectedOrder;
+      if(!order)return;
+      $('delivery-error').textContent='';
+      const link=$('delivery-link').value.trim();
+      if(link&&!/^https?:\/\/\S+$/i.test(link)){
+        $('delivery-error').textContent='Download link must start with http:// or https://.';
+        return;
+      }
+      const {data,error}=await state.client.rpc('admin_save_order_delivery',{
+        p_order_id:Number(order.id),p_text:$('delivery-text').value,p_link:link,
+        p_note:$('delivery-note').value.trim(),p_deliver:deliver
+      });
+      if(error||!data?.ok){$('delivery-error').textContent=error?.message||data?.message||'Could not save order delivery.';return}
+      notify(deliver?'Order delivery saved.':'Draft saved.');
+      closeOrderEditor();
+      await renderFinance('orders');
+    }
+    async function rejectSelectedOrder(){
+      const order=state.selectedOrder;
+      if(!order||!confirm(`Reject order #${order.id}? You can still issue a wallet refund from the order list.`))return;
+      const {data,error}=await state.client.rpc('admin_reject_order',{p_order_id:Number(order.id)});
+      if(error||!data?.ok){$('delivery-error').textContent=error?.message||data?.message||'Could not reject this order.';return}
+      notify(`Order #${order.id} rejected.`);
+      closeOrderEditor();
+      await renderFinance('orders');
+    }
+    function renderUsers(users){
+      $('finance-list').innerHTML=users.length?users.map(user=>`<article class="finance-row"><div><strong>${escapeHtml(user.email)}</strong><small>User ${escapeHtml(user.user_id)}</small><div class="amount">Balance ₹${money(user.balance)}</div></div><div class="finance-controls"><input type="number" min="0.01" step="0.01" placeholder="Amount" data-amount="${escapeHtml(user.user_id)}"><input class="note-input" maxlength="240" placeholder="Adjustment note" data-note="${escapeHtml(user.user_id)}"><button class="btn gold" data-credit="${escapeHtml(user.user_id)}">Add balance</button><button class="btn danger" data-debit="${escapeHtml(user.user_id)}">Deduct</button></div></article>`).join(''):'<div class="empty">No registered users yet.</div>';
+      $('finance-list').querySelectorAll('[data-credit]').forEach(button=>button.addEventListener('click',()=>adjustWallet(button.dataset.credit,'admin_credit')));
+      $('finance-list').querySelectorAll('[data-debit]').forEach(button=>button.addEventListener('click',()=>adjustWallet(button.dataset.debit,'admin_debit')));
+    }
+    async function reviewTopup(id,approve){
+      const action=approve?'approve this top-up and credit the wallet':'reject this top-up request';
+      if(!confirm(`Are you sure you want to ${action}?`))return;
+      const {data,error}=await state.client.rpc('admin_review_topup',{p_request_id:Number(id),p_approve:approve});
+      if(error||!data?.ok){notify(error?.message||data?.message||'Could not review top-up.');return}
+      notify(approve?'Top-up approved and wallet credited.':'Top-up request rejected.');
+      await renderFinance('topups');
+    }
+    async function refundOrder(id){
+      if(!confirm('Refund this order to the customer wallet? This action can only happen once.'))return;
+      const {data,error}=await state.client.rpc('admin_refund_order',{p_order_id:Number(id)});
+      if(error||!data?.ok){notify(error?.message||data?.message||'Could not refund this order.');return}
+      notify(`Refunded ₹${money(data.amount)} to the customer wallet.`);
+      await renderFinance('orders');
+    }
+    async function adjustWallet(userId,type){
+      const amountInput=$(`finance-list`).querySelector(`[data-amount="${CSS.escape(userId)}"]`);
+      const noteInput=$(`finance-list`).querySelector(`[data-note="${CSS.escape(userId)}"]`);
+      const amount=Number(amountInput.value),note=noteInput.value.trim();
+      if(!Number.isFinite(amount)||amount<=0||!note){notify('Enter a positive amount and an adjustment note.');return}
+      const {data,error}=await state.client.rpc('admin_adjust_wallet',{p_user_id:userId,p_type:type,p_amount:amount,p_note:note});
+      if(error||!data?.ok){notify(error?.message||data?.message||'Wallet adjustment failed.');return}
+      notify(type==='admin_credit'?'Wallet balance added.':'Wallet balance deducted.');
+      await renderFinance('users');
+    }
+    function formatDate(value){return indianDate(value)}
+    async function enterDashboard(session){
+      const {data,error}=await state.client.from('admin_users').select('id').eq('id',session.user.id).maybeSingle();
+      if(error||!data){await state.client.auth.signOut();throw new Error('This account is not authorized to access the store admin.')}
+      $('login-panel').classList.add('hidden');$('dashboard').classList.remove('hidden');$('logout').classList.remove('hidden');
+      renderTabs();revealAdmin($('dashboard'));await renderProducts();state.client.channel('admin-live-updates').on('postgres_changes',{event:'*',schema:'public',table:'products'},()=>{if(categories.some(category=>category.id===state.activeView))renderProducts()}).on('postgres_changes',{event:'*',schema:'public',table:'topup_requests'},()=>{if(state.activeView==='topups')renderFinance('topups')}).on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>{if(state.activeView==='orders')renderFinance('orders')}).subscribe();
+    }
+    $('login-form').addEventListener('submit',async event=>{
+      event.preventDefault();setError('login-error');
+      const {data,error}=await state.client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
+      if(error){setError('login-error','Sign in failed. Check your email and password.');return}
+      try{await enterDashboard(data.session)}catch(failure){setError('login-error',failure.message)}
+    });
+    $('product-form').addEventListener('submit',saveProduct);
+    $('cancel-edit').addEventListener('click',resetForm);
+    $('product-image').addEventListener('change',()=>{
+      const file=$('product-image').files[0];
+      if(!file)return;
+      $('remove-image').checked=false;
+      $('image-preview').src=URL.createObjectURL(file);
+      $('image-preview').classList.remove('hidden');
+    });
+    $('remove-image').addEventListener('change',()=>{
+      if($('remove-image').checked){$('product-image').value='';$('image-preview').classList.add('hidden')}
+      else if(!$('product-image').files[0]&&$('image-url').value){$('image-preview').src=$('image-url').value;$('image-preview').classList.remove('hidden')}
+    });
+    $('settings-form').addEventListener('submit',saveSettings);
+    $('refresh').addEventListener('click',()=>renderProducts());
+    $('reset-spin-prizes').addEventListener('click',resetSpinPrizes);
+    $('finance-refresh').addEventListener('click',()=>renderFinance(state.activeView));
+    $('order-search').addEventListener('input',()=>renderOrders(state.orders));
+    $('close-order').addEventListener('click',closeOrderEditor);
+    $('order-overlay').addEventListener('click',closeOrderEditor);
+    $('deliver-order').addEventListener('click',()=>saveOrderDelivery(true));
+    $('save-delivery-draft').addEventListener('click',()=>saveOrderDelivery(false));
+    $('reject-order').addEventListener('click',rejectSelectedOrder);
+    document.addEventListener('keydown',event=>{if(event.key==='Escape')closeOrderEditor()});
+    $('theme-toggle').addEventListener('click',()=>setTheme(document.documentElement.dataset.theme==='light'?'dark':'light'));
+    setTheme(document.documentElement.dataset.theme);
+    revealAdmin();
+    if(window.matchMedia('(hover: hover) and (pointer: fine)').matches&&!reducedMotion){
+      let pointerFrame=0;
+      let pointerEvent=null;
+      let activeTiltCard=null;
+      let activeTiltBounds=null;
+      document.addEventListener('pointermove',event=>{
+        pointerEvent=event;
+        if(pointerFrame)return;
+        pointerFrame=requestAnimationFrame(()=>{
+          pointerFrame=0;
+          if(!pointerEvent)return;
+          const target=pointerEvent.target;
+          const card=target instanceof Element?target.closest('.panel,.product-row,.finance-row,.order-row,.order-detail'):null;
+          if(card!==activeTiltCard){
+            activeTiltCard?.style.removeProperty('--tilt-x');
+            activeTiltCard?.style.removeProperty('--tilt-y');
+            activeTiltCard=card;
+            activeTiltBounds=card?.getBoundingClientRect()||null;
+          }
+          if(!card)return;
+          const tiltX=Math.max(-8,Math.min(8,(.5-(pointerEvent.clientY-activeTiltBounds.top)/activeTiltBounds.height)*16));
+          const tiltY=Math.max(-8,Math.min(8,((pointerEvent.clientX-activeTiltBounds.left)/activeTiltBounds.width-.5)*16));
+          card.style.setProperty('--tilt-x',`${tiltX.toFixed(2)}deg`);
+          card.style.setProperty('--tilt-y',`${tiltY.toFixed(2)}deg`);
+        });
+      },{passive:true});
+      document.addEventListener('pointerout',event=>{
+        const card=event.target instanceof Element?event.target.closest('.panel,.product-row,.finance-row,.order-row,.order-detail'):null;
+        if(card&&!(event.relatedTarget instanceof Node&&card.contains(event.relatedTarget))){
+          card.style.removeProperty('--tilt-x');
+          card.style.removeProperty('--tilt-y');
+          if(activeTiltCard===card){activeTiltCard=null;activeTiltBounds=null}
+        }
+      },{passive:true});
+    }
+    $('logout').addEventListener('click',async()=>{await state.client.auth.signOut();location.reload()});
+    (async function init(){
+      try{
+        const response=await fetch('/api/config');if(!response.ok)throw new Error('Could not load admin configuration.');
+        const config=await response.json();if(!config.supabaseUrl||!config.supabaseAnonKey)throw new Error('Add SUPABASE_URL and SUPABASE_ANON_KEY to .env before signing in.');
+        if(!window.supabase)throw new Error('Could not load the Supabase client. Check your internet connection.');
+        state.client=window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey);
+        const {data,error}=await state.client.auth.getSession();if(error)throw error;
+        if(data.session){try{await enterDashboard(data.session)}catch(failure){setError('login-error',failure.message)}}
+      }catch(error){setError('login-error',error.message)}
+    })();
+  </script>
+</body>
+</html>
