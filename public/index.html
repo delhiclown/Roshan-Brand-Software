@@ -374,7 +374,8 @@
     .checkout-coupon{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin:12px 0}
     .checkout-coupon label{grid-column:1/-1;color:var(--muted);font-size:11px}
     .checkout-coupon input,.checkout-utr{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:#080f20;color:var(--text);padding:11px;font:inherit}
-    .checkout-coupon .modal-primary{min-height:42px}
+    .checkout-coupon input{height:40px;padding:8px 11px;font-size:12px}
+    .checkout-coupon .modal-primary{min-height:40px;padding:9px 12px}
     .checkout-coupon-message{grid-column:1/-1;min-height:16px;font-size:11px}
     .checkout-coupon-message.success{color:#74dfaa}.checkout-coupon-message.error{color:#ff929a}
     .checkout-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
@@ -384,8 +385,8 @@
     .checkout-panel h3{margin:0 0 8px;font-size:14px}
     .checkout-panel .wallet-balance{margin:0 0 12px}
     .checkout-note{margin:8px 0 0;color:var(--muted);font-size:11px;line-height:1.55}
-    .checkout-panel .qr-box{width:min(220px,100%);min-height:220px;padding:10px;margin:12px auto}
-    .checkout-panel .qr-box img,.checkout-panel .qr-box canvas{width:min(195px,100%);height:auto;max-width:100%}
+    .checkout-panel .qr-box{width:min(180px,100%);min-height:180px;padding:8px;margin:10px auto}
+    .checkout-panel .qr-box img,.checkout-panel .qr-box canvas{width:min(160px,100%);height:auto;max-width:100%}
     .checkout-submit{width:100%;margin-top:10px}
     .checkout-utr-step{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:11px;background:rgba(8,15,32,.55)}
     .checkout-utr-step strong{display:block;font-size:12px}
@@ -396,7 +397,7 @@
     .checkout-app-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
     .checkout-app-links a{min-height:44px;display:grid;place-items:center;border:1px solid var(--line);border-radius:10px;background:#101a31;color:var(--text);font-size:11px;font-weight:700}
     .checkout-app-links a:hover{border-color:var(--gold);color:var(--gold)}
-    @media(max-width:639.98px){.modal{padding:8px;align-items:center}.checkout-dialog{width:100%;max-height:calc(100dvh - 16px);padding:16px}.checkout-panel{padding:11px}.checkout-panel .qr-box{width:min(190px,100%);min-height:190px;padding:8px}.checkout-panel .qr-box img,.checkout-panel .qr-box canvas{width:min(170px,100%)}.checkout-tabs{gap:5px}.checkout-tab{font-size:10px;padding:8px 4px}}
+    @media(max-width:639.98px){.modal{padding:8px;align-items:center}.checkout-dialog{width:100%;max-height:calc(100dvh - 16px);padding:16px}.checkout-panel{padding:11px}.checkout-panel .qr-box{width:min(158px,100%);min-height:158px;padding:7px}.checkout-panel .qr-box img,.checkout-panel .qr-box canvas{width:min(142px,100%)}.checkout-tabs{gap:5px}.checkout-tab{font-size:10px;padding:8px 4px}}
     .upi-app-options{display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
     .upi-app-link,.upi-qr-toggle{min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center;border:1px solid var(--line);border-radius:11px;background:#101a31;color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
     .upi-app-link:hover,.upi-qr-toggle:hover{border-color:var(--gold);color:var(--gold)}
@@ -704,6 +705,7 @@
       box-shadow:0 20px 38px rgba(0,0,0,.24),0 0 26px color-mix(in srgb,var(--card-accent) 13%,transparent),inset 0 1px rgba(255,255,255,.16);
       transition:transform .28s cubic-bezier(.2,.8,.2,1),border-color .25s,box-shadow .25s,background .25s
     }
+    .dialog.checkout-dialog{overflow-x:hidden;overflow-y:auto}
     .why-card[data-card-tone="software"]{
       background-image:linear-gradient(90deg,rgba(18,15,12,.94) 0%,rgba(18,15,12,.82) 42%,rgba(18,15,12,.58) 100%),url("/assets/feature-premium-bg.svg?v=20261107"),linear-gradient(145deg,color-mix(in srgb,var(--card-accent) 15%,var(--card-surface)),color-mix(in srgb,var(--card-accent-2) 12%,var(--card-surface-2))),linear-gradient(135deg,color-mix(in srgb,var(--card-accent) 78%,white),color-mix(in srgb,var(--card-accent-2) 82%,transparent));
       background-size:cover,cover,auto,auto;background-position:center,right center,center,center;background-repeat:no-repeat;background-origin:padding-box,padding-box,padding-box,border-box;background-clip:padding-box,padding-box,padding-box,border-box
@@ -2551,7 +2553,7 @@
         const canPay=state.balance>=pricing.finalPrice;
         paymentPanel=`<section class="checkout-panel"><h3>Pay from Wallet</h3><div class="wallet-balance"><small>Available wallet balance</small><strong>₹${money(state.balance)}</strong></div><p class="checkout-note">Coupons apply to QR / UPI payments only.</p>${canPay?`<button class="modal-primary checkout-submit" id="checkout-wallet-pay" type="button">Pay with Wallet · ₹${money(pricing.finalPrice)}</button>`:`<div class="modal-error">Insufficient balance. Add money to your wallet to continue.</div><button class="modal-primary checkout-submit" id="checkout-add-money" type="button">Add money to wallet</button>`}</section>`;
       }else if(method==='upi_qr'){
-        paymentPanel=`<section class="checkout-panel"><h3>Scan QR (UPI)</h3><p class="checkout-note">Scan with a UPI app and pay exactly ₹${money(pricing.finalPrice)}.</p>${qrMarkup}<div class="checkout-utr-step"><strong>After payment</strong><p class="checkout-note">Enter the 12-digit UTR / transaction ID from your payment app.</p><label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID</label><input class="checkout-utr" id="checkout-utr" type="text" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error" aria-live="polite">${escapeHtml(checkout.paymentError||'')}</div></div><button class="modal-primary checkout-submit checkout-upi-submit" id="checkout-submit-payment" type="button">Paid</button></section>`;
+        paymentPanel=`<section class="checkout-panel"><h3>Scan QR (UPI)</h3><p class="checkout-note">Scan with a UPI app and pay exactly ₹${money(pricing.finalPrice)}.</p>${qrMarkup}<div class="checkout-utr-step"><strong>After payment</strong><p class="checkout-note">Enter the 12-digit UTR / transaction ID to place your order. Payment stays pending until verified.</p><label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID</label><input class="checkout-utr" id="checkout-utr" type="text" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error" aria-live="polite">${escapeHtml(checkout.paymentError||'')}</div></div><button class="modal-primary checkout-submit checkout-upi-submit" id="checkout-submit-payment" type="button">Submit UTR &amp; Place Order</button></section>`;
       }else if(method==='upi_app'){
         const deepLinks=[
           ['Google Pay','gpay://upi/pay'],
@@ -2559,7 +2561,7 @@
           ['Paytm','paytmmp://pay'],
           ['Other UPI app','upi://pay']
         ].map(([label,scheme])=>`<a href="${scheme}?${qrParams.toString()}" target="_blank" rel="noopener">${label}</a>`).join('');
-        paymentPanel=`<section class="checkout-panel"><h3>Pay with UPI ID / UPI App</h3><div class="checkout-upi-id"><strong>${escapeHtml(upiId||'UPI ID not configured')}</strong><button class="btn ghost" id="copy-checkout-upi" type="button" ${upiId?'':'disabled'}>Copy UPI ID</button></div><div class="checkout-app-links">${deepLinks}</div><p class="checkout-note">Pay exactly ₹${money(pricing.finalPrice)} using your UPI app.</p><div class="checkout-utr-step"><strong>After payment</strong><p class="checkout-note">Enter the 12-digit UTR / transaction ID from your payment app.</p><label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID</label><input class="checkout-utr" id="checkout-utr" type="text" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error" aria-live="polite">${escapeHtml(checkout.paymentError||'')}</div></div><button class="modal-primary checkout-submit checkout-upi-submit" id="checkout-submit-payment" type="button">Paid</button></section>`;
+        paymentPanel=`<section class="checkout-panel"><h3>Pay with UPI ID / UPI App</h3><div class="checkout-upi-id"><strong>${escapeHtml(upiId||'UPI ID not configured')}</strong><button class="btn ghost" id="copy-checkout-upi" type="button" ${upiId?'':'disabled'}>Copy UPI ID</button></div><div class="checkout-app-links">${deepLinks}</div><p class="checkout-note">Pay exactly ₹${money(pricing.finalPrice)} using your UPI app.</p><div class="checkout-utr-step"><strong>After payment</strong><p class="checkout-note">Enter the 12-digit UTR / transaction ID to place your order. Payment stays pending until verified.</p><label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID</label><input class="checkout-utr" id="checkout-utr" type="text" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error" aria-live="polite">${escapeHtml(checkout.paymentError||'')}</div></div><button class="modal-primary checkout-submit checkout-upi-submit" id="checkout-submit-payment" type="button">Submit UTR &amp; Place Order</button></section>`;
       }else{
         paymentPanel='<section class="checkout-panel"><p class="modal-error">No payment methods are currently available. Please contact the store.</p></section>';
       }
@@ -2595,7 +2597,10 @@
         }
         renderCheckout();
       });
-      $('checkout-utr')?.addEventListener('input',event=>{checkout.utr=event.currentTarget.value.replace(/\D/g,'').slice(0,12)});
+      $('checkout-utr')?.addEventListener('input',event=>{
+        checkout.utr=event.currentTarget.value.replace(/\D/g,'').slice(0,12);
+        if(checkout.utr.length===12)submitUpiProductPayment();
+      });
       $('checkout-wallet-pay')?.addEventListener('click',purchaseWithWallet);
       $('checkout-add-money')?.addEventListener('click',openWalletTopup);
       $('checkout-submit-payment')?.addEventListener('click',submitUpiProductPayment);
@@ -2608,7 +2613,7 @@
         }catch(error){showNotice('Could not copy the UPI ID. Please copy it manually.')}
       });
       if(method==='upi_qr'&&window.QRCode){
-        new QRCode($('product-payment-qr'),{text:`upi://pay?${qrParams.toString()}`,width:230,height:230,colorDark:'#060b17',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+        new QRCode($('product-payment-qr'),{text:`upi://pay?${qrParams.toString()}`,width:160,height:160,colorDark:'#060b17',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
       }else if(method==='upi_qr'){
         const qrImageUrl=safeHttpUrl(state.settings.upi_qr_image_url);
         $('product-payment-qr').innerHTML=qrImageUrl
@@ -2672,7 +2677,7 @@
 
     async function submitUpiProductPayment(){
       const checkout=state.checkout;
-      if(!checkout)return;
+      if(!checkout||checkout.submittingPayment)return;
       checkout.paymentError='';
       const utr=String(checkout.utr||'').trim();
       if(!/^\d{12}$/.test(utr)){
@@ -2683,7 +2688,8 @@
       }
       const pricing=checkoutPrice();
       const submit=$('checkout-submit-payment');
-      if(submit)submit.disabled=true;
+      checkout.submittingPayment=true;
+      if(submit){submit.disabled=true;submit.textContent='Submitting order…'}
       try{
         const {data,error}=await state.client.rpc('create_upi_product_order',{
           p_product_id:checkout.product.id,
@@ -2696,6 +2702,7 @@
         });
         if(error)throw error;
         if(!data?.ok){
+          checkout.submittingPayment=false;
           if(data?.reason==='price_changed'){await refreshStore();checkout.paymentError='The product price changed. Please review the updated price.'}
           else checkout.paymentError=data?.message||'Could not submit this payment.';
           renderCheckout();return;
@@ -2706,7 +2713,7 @@
         $('modal-title').textContent='Payment submitted';
         $('modal-body').innerHTML=`<div class="wallet-balance"><strong style="font-size:18px">Payment submitted. Waiting for admin verification.</strong><small style="margin-top:9px">${escapeHtml(data.product_name)} · ₹${money(data.price)}</small><small>Order #${escapeHtml(data.order_id)} · UTR ${escapeHtml(utr)}</small>${data.coupon_code?`<small>Coupon ${escapeHtml(data.coupon_code)} · ${escapeHtml(data.discount_percent)}% off · Original ₹${money(data.original_price)} · Paid ₹${money(data.price)}</small>`:''}</div><button class="modal-primary" id="upi-order-view" type="button">View My Orders</button><button class="back" id="upi-order-done" type="button" style="margin-left:7px">Done</button>`;
         $('upi-order-view').addEventListener('click',()=>openWallet('orders'));$('upi-order-done').addEventListener('click',closeModal);
-      }catch(error){checkout.paymentError=error.message||'Could not submit this payment.';renderCheckout()}
+      }catch(error){checkout.submittingPayment=false;checkout.paymentError=error.message||'Could not submit this payment.';renderCheckout()}
     }
 
     async function refreshStore(){
