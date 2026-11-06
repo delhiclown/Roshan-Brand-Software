@@ -390,10 +390,10 @@
     .checkout-utr-label{display:block;margin:12px 0 5px;color:var(--muted);font-size:11px}
     .checkout-upi-id{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#080f20;overflow-wrap:anywhere}
     .checkout-upi-id strong{min-width:0;overflow-wrap:anywhere}
-    .checkout-app-links{display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+    .checkout-app-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
     .checkout-app-links a{min-height:44px;display:grid;place-items:center;border:1px solid var(--line);border-radius:10px;background:#101a31;color:var(--text);font-size:11px;font-weight:700}
     .checkout-app-links a:hover{border-color:var(--gold);color:var(--gold)}
-    @media(max-width:639.98px){.modal{padding:8px;align-items:center}.checkout-dialog{width:100%;max-height:calc(100dvh - 16px);padding:16px}.checkout-panel{padding:11px}.checkout-panel .qr-box{width:min(250px,100%);min-height:250px}.checkout-panel .qr-box img,.checkout-panel .qr-box canvas{width:min(220px,100%)}.checkout-app-links{display:grid}.checkout-tabs{gap:5px}.checkout-tab{font-size:10px;padding:8px 4px}}
+    @media(max-width:639.98px){.modal{padding:8px;align-items:center}.checkout-dialog{width:100%;max-height:calc(100dvh - 16px);padding:16px}.checkout-panel{padding:11px}.checkout-panel .qr-box{width:min(250px,100%);min-height:250px}.checkout-panel .qr-box img,.checkout-panel .qr-box canvas{width:min(220px,100%)}.checkout-tabs{gap:5px}.checkout-tab{font-size:10px;padding:8px 4px}}
     .upi-app-options{display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
     .upi-app-link,.upi-qr-toggle{min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center;border:1px solid var(--line);border-radius:11px;background:#101a31;color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
     .upi-app-link:hover,.upi-qr-toggle:hover{border-color:var(--gold);color:var(--gold)}
@@ -2545,7 +2545,7 @@
           ['PhonePe','phonepe://pay'],
           ['Paytm','paytmmp://pay'],
           ['Other UPI app','upi://pay']
-        ].map(([label,scheme])=>`<a href="${scheme}?${qrParams.toString()}">${label}</a>`).join('');
+        ].map(([label,scheme])=>`<a href="${scheme}?${qrParams.toString()}" target="_blank" rel="noopener">${label}</a>`).join('');
         paymentPanel=`<section class="checkout-panel"><h3>Pay with UPI ID / UPI App</h3><div class="checkout-upi-id"><strong>${escapeHtml(upiId||'UPI ID not configured')}</strong><button class="btn ghost" id="copy-checkout-upi" type="button" ${upiId?'':'disabled'}>Copy UPI ID</button></div><div class="checkout-app-links">${deepLinks}</div><p class="checkout-note">Pay exactly ₹${money(pricing.finalPrice)} using your UPI app.</p><label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID (12 digits)</label><input class="checkout-utr" id="checkout-utr" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error">${escapeHtml(checkout.paymentError||'')}</div><button class="modal-primary checkout-submit" id="checkout-submit-payment" type="button">I have paid</button></section>`;
       }else{
         paymentPanel='<section class="checkout-panel"><p class="modal-error">No payment methods are currently available. Please contact the store.</p></section>';

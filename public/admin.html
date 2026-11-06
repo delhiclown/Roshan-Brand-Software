@@ -335,7 +335,7 @@
           <div class="field"><label for="site-title">Site title</label><input id="site-title" maxlength="80" required></div>
           <section style="border:1px solid var(--line);border-radius:14px;padding:16px;margin:17px 0">
             <h3 style="margin-bottom:5px">Payment settings</h3>
-            <p class="sub">Configure the customer payment methods. UPI details are used only when saved here.</p>
+            <p class="sub">Enable Wallet, QR, and UPI app checkout options. QR and Google Pay, PhonePe, and Paytm links appear after you enter a UPI ID and payee name and save these settings.</p>
             <div class="field"><label for="upi-id">UPI ID</label><input id="upi-id" inputmode="email" autocapitalize="none" spellcheck="false" maxlength="129" placeholder="yourname@bank" pattern="[A-Za-z0-9][A-Za-z0-9._-]{0,63}@[A-Za-z0-9][A-Za-z0-9.-]{0,63}" title="Enter a valid UPI ID such as name@bank"></div>
             <div class="field"><label for="upi-payee-name">UPI payee name</label><input id="upi-payee-name" maxlength="80" placeholder="Your payee name"></div>
             <div class="field"><label for="upi-qr-image">QR image (optional)</label><input id="upi-qr-image" type="file" accept="image/png,image/jpeg,image/webp"><div id="upi-qr-preview" style="display:grid;place-items:center;width:190px;min-height:190px;margin-top:9px;padding:12px;border-radius:12px;background:#fff;color:#161616"></div><label class="check" for="remove-upi-qr"><input id="remove-upi-qr" type="checkbox">Remove saved QR image</label><small class="sub" style="display:block;margin-top:7px">PNG, JPG, or WebP up to 5 MB. Checkout creates an exact-amount QR from your saved UPI settings.</small></div>
