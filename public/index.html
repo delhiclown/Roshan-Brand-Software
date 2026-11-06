@@ -2594,7 +2594,12 @@
           if(!coupon||coupon.type==='tryAgain'){
             checkout.couponMessage='Invalid coupon';checkout.couponMessageType='error';
           }else{
-            checkout.coupon=coupon;checkout.couponMessage=method==='wallet'
+            checkout.coupon=coupon;
+            const methods=availableCheckoutMethods();
+            if(checkout.method==='wallet'){
+              checkout.method=methods.includes('upi_qr')?'upi_qr':methods.includes('upi_app')?'upi_app':checkout.method;
+            }
+            checkout.couponMessage=checkout.method==='wallet'
               ?`Coupon saved: ${Number(coupon.value)||0}% off for QR / UPI payments.`
               :`Coupon applied: ${Number(coupon.value)||0}% off`;
             checkout.couponMessageType='success';
@@ -2647,8 +2652,21 @@
         return;
       }
       try{await refreshWalletBalance()}catch(error){showNotice(`Could not load wallet balance: ${error.message}`);return}
+      const methods=availableCheckoutMethods();
       const suggestedCoupon=getSuggestedCheckoutCoupon();
-      state.checkout={product,method:availableCheckoutMethods()[0]||'',coupon:null,couponInput:suggestedCoupon,couponMessage:'',couponMessageType:'',utr:'',paymentError:''};
+      const coupon=suggestedCoupon?resolveCoupon(suggestedCoupon):null;
+      const upiMethod=methods.includes('upi_qr')?'upi_qr':methods.includes('upi_app')?'upi_app':'';
+      const applyCoupon=Boolean(coupon&&upiMethod);
+      state.checkout={
+        product,
+        method:applyCoupon?upiMethod:methods[0]||'',
+        coupon:applyCoupon?coupon:null,
+        couponInput:suggestedCoupon,
+        couponMessage:applyCoupon?`Coupon applied: ${Number(coupon.value)||0}% off`:coupon?'Coupon applies to QR / UPI payments.':'',
+        couponMessageType:applyCoupon?'success':'',
+        utr:'',
+        paymentError:''
+      };
       openModal();renderCheckout();
     }
 
