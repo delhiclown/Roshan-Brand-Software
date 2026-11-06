@@ -250,9 +250,9 @@
             <h2 class="title-premium" id="form-title">Add product</h2><p class="sub desc-premium">Manage product details and availability.</p>
             <form id="product-form">
               <div class="field"><label for="product-name">Name</label><input id="product-name" maxlength="120" required></div>
-              <div class="field"><label for="description">Description</label><textarea id="description" maxlength="500"></textarea></div>
-              <div class="field"><label for="product-image">Product photo</label><input id="product-image" type="file" accept="image/jpeg,image/png,image/webp,image/gif"><label class="check"><input id="remove-image" type="checkbox"> Remove current photo</label><img id="image-preview" class="hidden" alt="Product photo preview" style="width:100%;max-height:180px;object-fit:contain;border:1px solid var(--line);border-radius:10px;background:#080f20"><input id="image-url" type="hidden"></div>
-              <div class="field"><label for="download-url">Software download link</label><input id="download-url" type="url" maxlength="2048" placeholder="https://..."><small class="sub" style="display:block;margin:5px 0 0">Shown to a customer only after their purchase is complete.</small></div>
+              <div class="field" id="description-field"><label for="description">Description</label><textarea id="description" maxlength="500"></textarea></div>
+              <div class="field" id="product-image-field"><label for="product-image">Product photo</label><input id="product-image" type="file" accept="image/jpeg,image/png,image/webp,image/gif"><label class="check"><input id="remove-image" type="checkbox"> Remove current photo</label><img id="image-preview" class="hidden" alt="Product photo preview" style="width:100%;max-height:180px;object-fit:contain;border:1px solid var(--line);border-radius:10px;background:#080f20"><input id="image-url" type="hidden"></div>
+              <div class="field" id="download-link-field"><label for="download-url">Software download link</label><input id="download-url" type="url" maxlength="2048" placeholder="https://..."><small class="sub" style="display:block;margin:5px 0 0">Shown to a customer only after their purchase is complete.</small></div>
               <div class="row"><div class="field"><label for="price">Price (₹)</label><input id="price" type="number" min="0" step="0.01" required></div><div class="field"><label for="unit">Optional unit</label><input id="unit" placeholder="month, IP, GB" maxlength="30"></div></div>
               <div id="plan-fields" class="hidden">
                 <div class="row">
@@ -442,6 +442,9 @@
     function syncPlanFields(){
       const isVps=isVpsCategory(state.category);
       const isProxy=isProxyCategory(state.category);
+      $('description-field').classList.toggle('hidden',isPlanCategory(state.category));
+      $('product-image-field').classList.toggle('hidden',isPlanCategory(state.category));
+      $('download-link-field').classList.toggle('hidden',isPlanCategory(state.category));
       $('plan-fields').classList.toggle('hidden',!isPlanCategory(state.category));
       $('os-type-field').classList.toggle('hidden',!isVps);
       $('data-size-field').classList.toggle('hidden',!isProxy);
@@ -849,7 +852,7 @@
     }
     async function editProduct(id){
       const product=state.products.find(item=>String(item.id)===String(id));if(!product){setError('product-error','Could not find this product. Refresh the list and try again.');return}
-      state.editing=product.id;state.editingDownloadUrl=null;state.downloadLinkLoaded=false;
+      state.editing=product.id;state.editingDownloadUrl=null;state.downloadLinkLoaded=isPlanCategory(state.category);
       if(productPreviewUrl){URL.revokeObjectURL(productPreviewUrl);productPreviewUrl=null}
       $('product-name').value=product.name;$('description').value=product.description||'';$('price').value=product.price;$('unit').value=product.unit||'';$('in-stock').checked=productIsAvailable(product);$('image-url').value=product.image_url||'';$('remove-image').checked=false;
       const savedSection=product.plan_section||'Advance';
@@ -859,11 +862,13 @@
       $('os-type').value=product.os_type==='Windows'?'Windows':'Linux';$('ip-series').value=product.ip_series||'';$('data-size').value=product.data_size||'';$('specs').value=product.specs||'';$('ip-count').value=product.ip_count||'';$('validity').value=product.validity||'';$('product-badge').value=product.badge||'';$('stock-status').value=product.stock_status||(product.in_stock===false?'out_of_stock':'available');$('price-prefix').value=product.price_prefix||'From';$('product-details').value=product.details||'';syncPlanFields();
       if(product.image_url){$('image-preview').src=product.image_url;$('image-preview').classList.remove('hidden')}else{$('image-preview').removeAttribute('src');$('image-preview').classList.add('hidden')}
       $('product-image').value='';$('download-url').value='';$('form-title').textContent=`Edit product: ${product.name}`;$('save-product').textContent='Save changes';$('cancel-edit').classList.remove('hidden');$('product-form-panel').classList.add('editing-product');$('product-form-panel').scrollIntoView({behavior:'smooth',block:'center'});setError('product-error');
-      try{
-        const {data:download,error}=await state.client.from('product_download_links').select('download_url').eq('product_id',product.id).maybeSingle();
-        if(error)throw error;
-        state.editingDownloadUrl=download?.download_url||'';state.downloadLinkLoaded=true;$('download-url').value=state.editingDownloadUrl;
-      }catch(error){setError('product-error',`Could not load this product's download link: ${error.message}`)}
+      if(!isPlanCategory(state.category)){
+        try{
+          const {data:download,error}=await state.client.from('product_download_links').select('download_url').eq('product_id',product.id).maybeSingle();
+          if(error)throw error;
+          state.editingDownloadUrl=download?.download_url||'';state.downloadLinkLoaded=true;$('download-url').value=state.editingDownloadUrl;
+        }catch(error){setError('product-error',`Could not load this product's download link: ${error.message}`)}
+      }
     }
     async function uploadProductImage(file){
       const extensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
@@ -881,9 +886,9 @@
       const existing=isEditing?state.products.find(item=>String(item.id)===String(state.editing)):null;
       if(isEditing&&!existing){setError('product-error','Could not find this product. Refresh the list and try again.');return}
       if(isEditing&&!state.downloadLinkLoaded){setError('product-error',"Could not load this product's download link. Try again before saving.");return}
-      const downloadUrl=$('download-url').value.trim();
+      const downloadUrl=isPlanCategory(state.category)?'':$('download-url').value.trim();
       if(downloadUrl){try{const url=new URL(downloadUrl);if(!['http:','https:'].includes(url.protocol))throw new Error();}catch{setError('product-error','Enter a valid HTTP or HTTPS download link.');return}}
-      const product={name:$('product-name').value.trim(),description:$('description').value.trim(),price:Number($('price').value),unit:$('unit').value.trim()||null,in_stock:isPlanCategory(state.category)?$('stock-status').value==='available':$('in-stock').checked,image_url:$('image-url').value||null};
+      const product={name:$('product-name').value.trim(),description:isPlanCategory(state.category)?(existing?.description||''):$('description').value.trim(),price:Number($('price').value),unit:$('unit').value.trim()||null,in_stock:isPlanCategory(state.category)?$('stock-status').value==='available':$('in-stock').checked,image_url:isPlanCategory(state.category)?(existing?.image_url||null):$('image-url').value||null};
       if(isPlanCategory(state.category)){
         const selectedSection=$('plan-section').value;
         const planSection=selectedSection==='__custom__'||selectedSection==='Custom'
@@ -903,7 +908,7 @@
         product.details=$('product-details').value.trim()||null;
       }
       if(!product.name||!Number.isFinite(product.price)||product.price<0){setError('product-error','Enter a product name and a valid non-negative price.');return}
-      const file=$('product-image').files[0];
+      const file=isPlanCategory(state.category)?null:$('product-image').files[0];
       $('save-product').disabled=true;
       try{
         if(file)product.image_url=await uploadProductImage(file);
@@ -921,7 +926,7 @@
           if(result.error)throw result.error;
           productId=result.data.id;
         }
-        const downloadChanged=!isEditing||downloadUrl!==state.editingDownloadUrl;
+        const downloadChanged=!isPlanCategory(state.category)&&(!isEditing||downloadUrl!==state.editingDownloadUrl);
         if(downloadChanged){
           const linkResult=downloadUrl
             ? await state.client.from('product_download_links').upsert({product_id:productId,download_url:downloadUrl})
