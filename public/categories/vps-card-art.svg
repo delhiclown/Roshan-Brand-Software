@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" fill="none">
+  <defs>
+    <linearGradient id="case" x1="270" y1="30" x2="620" y2="205" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#324b61"/>
+      <stop offset=".48" stop-color="#16283a"/>
+      <stop offset="1" stop-color="#0a1724"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="375" y1="70" x2="650" y2="184" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#294158"/>
+      <stop offset="1" stop-color="#101e2d"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="310" y1="30" x2="690" y2="220" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2589d7" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#06b6d4" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="505" cy="205" rx="206" ry="17" fill="#030b14" fill-opacity=".52"/>
+  <path d="m215 63 329-43 137 37-329 54-137-48Z" fill="#344c60"/>
+  <path d="m215 63 137 48v111l-137-40V63Z" fill="#101d2a"/>
+  <path d="m352 111 329-54v111l-329 54V111Z" fill="url(#case)"/>
+  <path d="m240 80 91 31v21l-91-28V80Zm0 40 91 29v21l-91-27v-23Zm0 40 91 28v21l-91-26v-23Z" fill="#26394a" stroke="#71899b" stroke-opacity=".4"/>
+  <path d="m260 90 2 1m20 6 2 1m20 6 2 1m-46 27 2 1m20 6 2 1m20 6 2 1m-46 27 2 1m20 6 2 1m20 6 2 1" stroke="#4ccafa" stroke-width="4" stroke-linecap="round"/>
+  <path d="m352 111 329-54v32l-329 58v-36Z" fill="#40596c"/>
+  <path d="m352 166 329-56v32l-329 57v-33Z" fill="url(#glass)"/>
+  <path d="m390 130 245-42m-245 58 245-42m-245 58 245-42" stroke="#9bb2c4" stroke-opacity=".19" stroke-width="2"/>
+  <path d="M470 84c0-15 12-27 27-27 13 0 24 9 26 21 3-1 6-2 9-2 13 0 23 10 23 23s-10 23-23 23h-57c-12 0-21-9-21-20 0-8 7-16 16-18Z" fill="#12293b" stroke="#c7e9f8" stroke-width="4" stroke-linejoin="round"/>
+  <path d="m495 104 15-15 15 15m-15-14v27" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="602" cy="44" r="4" fill="#f7ad4c"/>
+  <circle cx="624" cy="41" r="3" fill="#48cafa"/>
+  <circle cx="644" cy="38" r="4" fill="#f7ad4c"/>
+  <path d="M233 220h416" stroke="#56bff1" stroke-opacity=".24" stroke-width="2"/>
+  <path fill="url(#glow)" d="M200 20h520v205H200z"/>
+</svg>

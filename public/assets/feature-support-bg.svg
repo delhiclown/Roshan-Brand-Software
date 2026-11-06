@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="390" viewBox="0 0 1020 390" fill="none">
+  <defs>
+    <radialGradient id="tealGlow" cx="0" cy="0" r="1" gradientTransform="matrix(0 235 -320 0 806 195)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#18C9C0" stop-opacity=".32"/>
+      <stop offset="1" stop-color="#18C9C0" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+  </defs>
+  <ellipse cx="806" cy="195" rx="320" ry="235" fill="url(#tealGlow)"/>
+  <g stroke="#28CFC2" stroke-opacity=".45" stroke-width="2">
+    <path d="m599 89 92 42 48-55 111 47 88-56 43 90-103 91-91-24-89 79-92-64"/>
+    <path d="m691 131 46 106m48-114-23 114m111-67-18 91m106-181-34 124m77-34-77 34"/>
+  </g>
+  <g fill="#39D8CB" fill-opacity=".7">
+    <circle cx="599" cy="89" r="6"/><circle cx="691" cy="131" r="5"/><circle cx="739" cy="76" r="6"/>
+    <circle cx="850" cy="123" r="6"/><circle cx="938" cy="67" r="5"/><circle cx="981" cy="157" r="6"/>
+    <circle cx="878" cy="248" r="5"/><circle cx="787" cy="224" r="6"/><circle cx="698" cy="303" r="5"/>
+  </g>
+  <g stroke="#9CF4E9" stroke-opacity=".78" stroke-width="3" stroke-linejoin="round">
+    <path d="M754 144h81a19 19 0 0 1 19 19v37a19 19 0 0 1-19 19h-41l-26 22v-22h-14a19 19 0 0 1-19-19v-37a19 19 0 0 1 19-19Z"/>
+    <path d="M836 75h91a18 18 0 0 1 18 18v22a18 18 0 0 1-18 18h-14l-21 17v-17h-56a18 18 0 0 1-18-18V93a18 18 0 0 1 18-18Z"/>
+    <path d="M776 173h40m-40 15h25m-25 15h34M852 97h54m-54 15h37"/>
+  </g>
+  <g stroke="#20B7B0" stroke-width="7" stroke-linecap="round">
+    <path d="M685 190v28a34 34 0 0 0 34 34h17"/>
+    <path d="M918 190v28a34 34 0 0 1-34 34h-16"/>
+  </g>
+  <path d="M685 186a29 29 0 0 1 58 0v28h-20v-28a9 9 0 0 0-18 0v28h-20v-28Zm204 0a29 29 0 0 0-58 0v28h20v-28a9 9 0 0 1 18 0v28h20v-28Z" fill="#087F83" stroke="#52E2D6" stroke-width="3"/>
+  <g stroke="#7BF0E3" stroke-width="3" stroke-linecap="round">
+    <path d="M757 285h77a17 17 0 0 1 17 17v16a17 17 0 0 1-17 17h-35l-23 17v-17h-19a17 17 0 0 1-17-17v-16a17 17 0 0 1 17-17Z"/>
+    <path d="M783 302h44m-44 13h31"/>
+  </g>
+</svg>

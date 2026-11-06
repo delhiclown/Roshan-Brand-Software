@@ -11,6 +11,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <link rel="stylesheet" href="/brand-logo.css">
+  <script src="/brand-logo.js"></script>
   <script>
     try {
       document.documentElement.dataset.theme = localStorage.getItem('roshan-theme') === 'light' ? 'light' : 'dark';
@@ -31,8 +33,7 @@
     .wrap{width:min(1280px,calc(100% - 48px));margin:auto}
     header{height:calc(72px + env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px);border-bottom:1px solid rgba(26,35,64,.8);display:flex;align-items:center;position:sticky;top:0;z-index:50;background:rgba(6,11,23,.9);backdrop-filter:blur(14px)}
     .nav{display:flex;justify-content:space-between;align-items:center;gap:16px;position:relative;min-width:0}
-    .brand{flex:none;white-space:nowrap;font-family:Orbitron,sans-serif;font-size:clamp(18px,4.5vw,26px);font-weight:800;letter-spacing:.25px;color:var(--gold)}
-    .brand span{color:#2ea8ff}
+    .brand{display:inline-flex;align-items:center;gap:9px;flex:none;white-space:nowrap;font-family:Orbitron,sans-serif;font-size:clamp(18px,4.5vw,26px);font-weight:800;letter-spacing:.25px;color:var(--gold)}
     .main-nav{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:clamp(12px,2vw,25px);white-space:nowrap}
     .main-nav a,.mobile-drawer a{font-size:13px;font-weight:500;color:#e8ecf7;white-space:nowrap;transition:color .2s}
     .main-nav a:hover,.mobile-drawer a:hover{color:var(--gold)}
@@ -109,6 +110,103 @@
     .orders-item-detail .orders-copy{min-height:40px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:#111b32;color:var(--text);cursor:pointer}
     .orders-skeleton{height:64px;margin:0 0 8px;border:1px solid var(--line);border-radius:11px;background:linear-gradient(100deg,#0b1429 30%,#15213a 48%,#0b1429 66%);background-size:200% 100%;animation:orders-shimmer 1.25s linear infinite}
     @keyframes orders-shimmer{to{background-position-x:-200%}}
+    .auth-page{position:fixed;inset:0;z-index:300;display:grid;place-items:center;overflow:auto;padding:28px 18px;background:radial-gradient(ellipse at 50% 12%,rgba(41,152,255,.16),transparent 42%),#040812;backdrop-filter:blur(18px)}
+    .auth-card{width:min(100%,460px);padding:clamp(25px,6vw,42px);border:1px solid rgba(112,139,190,.28);border-radius:24px;background:linear-gradient(145deg,rgba(18,30,53,.98),rgba(8,14,29,.99));box-shadow:0 28px 90px rgba(0,0,0,.55),0 0 42px rgba(41,152,255,.08),inset 0 1px rgba(255,255,255,.08)}
+    .auth-back{display:inline-flex;align-items:center;gap:7px;margin:0 0 23px;padding:0;border:0;background:transparent;color:var(--muted);font-size:12px;cursor:pointer}
+    .auth-back:hover{color:var(--gold)}
+    .auth-brand{display:flex;align-items:center;justify-content:center;gap:11px;margin:0 0 23px;color:var(--gold);font-family:Orbitron,sans-serif;font-size:19px;font-weight:800;letter-spacing:.04em}
+    .auth-card h1{margin:0;text-align:center;color:#f4f6fc;font:800 clamp(24px,5vw,30px) var(--font-heading);letter-spacing:-.04em}
+    .auth-subtitle{margin:9px 0 24px;text-align:center;color:var(--muted);font-size:13px;line-height:1.6}
+    .auth-google{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;gap:11px;border:1px solid rgba(140,160,197,.32);border-radius:11px;background:linear-gradient(145deg,#17223a,#101a2d);color:var(--text);font-weight:700;font-size:13px;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s}
+    .auth-google:hover{transform:translateY(-1px);border-color:rgba(245,192,74,.6);box-shadow:0 8px 20px rgba(0,0,0,.22)}
+    .auth-google svg{width:19px;height:19px}
+    .auth-divider{display:flex;align-items:center;gap:12px;margin:21px 0;color:#7f8ba5;font-size:11px;font-weight:700;letter-spacing:.13em}
+    .auth-divider:before,.auth-divider:after{content:"";height:1px;flex:1;background:linear-gradient(90deg,transparent,rgba(124,146,185,.3),transparent)}
+    .auth-field{margin:0 0 15px}
+    .auth-field label{display:block;margin-bottom:7px;color:#c2cadd;font-size:12px;font-weight:650}
+    .auth-field input{width:100%;min-height:48px;padding:0 14px;border:1px solid rgba(117,139,180,.28);border-radius:11px;background:rgba(7,14,28,.8);color:var(--text);font-size:13px}
+    .auth-field input:focus{border-color:rgba(245,192,74,.68);box-shadow:0 0 0 3px rgba(245,192,74,.1);outline:none}
+    .auth-password-wrap{position:relative}
+    .auth-password-wrap input{padding-right:50px}
+    .auth-password-toggle{position:absolute;top:50%;right:7px;transform:translateY(-50%);width:38px;height:38px;display:grid;place-items:center;border:0;border-radius:9px;background:transparent;color:#9daac1;cursor:pointer}
+    .auth-password-toggle:hover{color:var(--gold)}
+    .auth-password-toggle svg{width:19px;height:19px}
+    .auth-forgot-row{display:flex;justify-content:flex-end;margin:-5px 0 16px}
+    .auth-link{border:0;background:transparent;color:#86bfff;font-size:12px;font-weight:650;text-decoration:none;cursor:pointer}
+    .auth-link:hover{color:#c3e1ff;text-decoration:underline;text-underline-offset:3px}
+    .auth-submit{width:100%;min-height:49px;border:1px solid rgba(255,221,142,.3);border-radius:11px;background:linear-gradient(135deg,#f5c451,#dfa52c);color:#171101;font-weight:800;font-size:13px;cursor:pointer;box-shadow:inset 0 1px rgba(255,255,255,.38),0 8px 22px rgba(245,192,74,.13);transition:transform .18s,filter .18s}
+    .auth-submit:hover{transform:translateY(-1px);filter:brightness(1.05)}
+    .auth-submit:disabled,.auth-google:disabled{opacity:.65;cursor:wait;transform:none}
+    .auth-message{min-height:18px;margin:11px 0 0;color:#ff8c99;text-align:center;font-size:12px;line-height:1.5}
+    .auth-message.success{color:#a7c7f5}
+    .auth-switch{margin:19px 0 0;text-align:center;color:var(--muted);font-size:12px}
+    .auth-switch .auth-link{margin-left:3px}
+    .offers-trigger{position:relative;min-height:40px;padding:0 12px;border:1px solid rgba(245,192,74,.48);border-radius:999px;background:linear-gradient(135deg,rgba(245,192,74,.16),rgba(41,152,255,.12));color:#ffe49a;font-size:11px;font-weight:800;white-space:nowrap;cursor:pointer;box-shadow:0 0 16px rgba(245,192,74,.12);animation:offer-badge-glow 2.2s ease-in-out infinite}
+    .offers-trigger:hover{border-color:var(--gold);filter:brightness(1.12)}
+    @keyframes offer-badge-glow{0%,100%{box-shadow:0 0 8px rgba(245,192,74,.1)}50%{box-shadow:0 0 18px rgba(41,152,255,.27),0 0 20px rgba(245,192,74,.2)}}
+    .offers-modal{position:fixed;inset:0;z-index:320;display:grid;place-items:center;padding:20px;overflow:auto;background:rgba(3,7,17,.75);backdrop-filter:blur(14px)}
+    .offers-dialog{position:relative;width:min(760px,100%);max-height:min(86dvh,820px);overflow:auto;border:1px solid rgba(245,192,74,.4);border-radius:24px;background:linear-gradient(145deg,#111d34,#080f20);box-shadow:0 28px 90px rgba(0,0,0,.62),0 0 45px rgba(41,152,255,.12);animation:offer-card-in .7s cubic-bezier(.16,1,.3,1) both}
+    .offers-dialog:before{content:"";position:absolute;inset:0 0 auto;height:150px;pointer-events:none;background:radial-gradient(circle at 8% 28%,#fff5b8 0 2px,transparent 3px),radial-gradient(circle at 18% 55%,#5db7ff 0 2px,transparent 3px),radial-gradient(circle at 32% 20%,#f5c04a 0 2px,transparent 3px),radial-gradient(circle at 68% 32%,#fff5b8 0 2px,transparent 3px),radial-gradient(circle at 84% 18%,#71c6ff 0 2px,transparent 3px),radial-gradient(circle at 92% 52%,#f5c04a 0 2px,transparent 3px);opacity:.7;animation:offer-sparkle-drift 4s ease-in-out infinite}
+    @keyframes offer-card-in{0%{opacity:0;transform:translateY(25px) scale(.72)}68%{opacity:1;transform:translateY(-5px) scale(1.025)}100%{opacity:1;transform:translateY(0) scale(1)}}
+    @keyframes offer-sparkle-drift{0%,100%{opacity:.35;transform:translateY(-5px)}50%{opacity:.85;transform:translateY(8px)}}
+    .offers-head{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:24px 25px 15px}
+    .offers-eyebrow{display:block;color:#78bbff;font-size:10px;font-weight:800;letter-spacing:.17em;text-transform:uppercase}
+    .offers-head h2{margin:7px 0 0;color:#fff4d2;font:800 clamp(21px,4vw,28px) var(--font-heading)}
+    .offers-close{flex:none;width:38px;height:38px;border:1px solid rgba(146,169,207,.32);border-radius:50%;background:#101a30;color:var(--text);font-size:22px;cursor:pointer}
+    .offers-close:hover{border-color:var(--gold);color:var(--gold)}
+    .offers-content{position:relative;display:grid;gap:12px;padding:8px 25px 25px}
+    .offer-card{position:relative;overflow:hidden;padding:18px;border:1px solid rgba(120,158,208,.26);border-radius:17px;background:linear-gradient(125deg,rgba(41,152,255,.09),rgba(245,192,74,.075) 58%,rgba(12,21,39,.7))}
+    .offer-card:after{content:"";position:absolute;top:-40%;left:-60%;width:32%;height:180%;transform:rotate(25deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.13),transparent);animation:offer-shine 5s ease-in-out infinite;pointer-events:none}
+    @keyframes offer-shine{0%,22%{left:-60%;opacity:0}34%{opacity:1}55%,100%{left:135%;opacity:0}}
+    .offer-target{display:inline-flex;margin-bottom:8px;padding:5px 9px;border:1px solid rgba(120,180,255,.3);border-radius:999px;background:rgba(41,152,255,.1);color:#9bcfff;font-size:10px;font-weight:750}
+    .offer-card h3{margin:0 0 7px;color:#ffe7a2;font-size:18px}
+    .offer-card p{margin:0;color:#c0cbe0;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+    .offer-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:15px}
+    .offer-countdown{color:#93caff;font-size:11px;font-weight:750;font-variant-numeric:tabular-nums}
+    .offer-claim{min-height:40px;padding:0 17px;border:1px solid rgba(255,232,164,.48);border-radius:10px;background:linear-gradient(135deg,#ffe28c,#e7ad36);color:#211805;font-size:11px;font-weight:850;cursor:pointer;box-shadow:0 5px 18px rgba(245,192,74,.18)}
+    .offer-claim:hover{filter:brightness(1.08);transform:translateY(-1px)}
+    .offer-claim:active{transform:translateY(2px);box-shadow:0 1px 5px rgba(245,192,74,.18)}
+    .offer-claim.claim-available{animation:offer-claim-pulse 2.8s ease-in-out infinite}
+    .offer-claim:disabled{animation:none;filter:grayscale(1);opacity:.55;cursor:not-allowed;box-shadow:none}
+    @keyframes offer-claim-pulse{0%,100%{box-shadow:0 5px 14px rgba(245,192,74,.14)}50%{box-shadow:0 7px 22px rgba(245,192,74,.3),0 0 15px rgba(41,152,255,.13)}}
+    .offer-benefit-count{margin:8px 0 0;color:#e4c974;font-size:11px;font-weight:650}
+    .offer-claim-modal{position:fixed;inset:0;z-index:330;display:grid;place-items:center;padding:18px;background:rgba(3,7,17,.78);backdrop-filter:blur(12px)}
+    .offer-claim-dialog{width:min(490px,100%);max-height:min(90dvh,740px);overflow:auto;padding:21px;border:1px solid rgba(245,192,74,.45);border-radius:21px;background:linear-gradient(150deg,#14213b,#081020);box-shadow:0 25px 80px #000b,0 0 34px rgba(41,152,255,.12);animation:offer-card-in .55s cubic-bezier(.16,1,.3,1) both}
+    .offer-claim-dialog h2{margin:0 0 8px;color:#ffe7a2;font-size:19px}
+    .offer-claim-dialog p{color:#c0cbe0;font-size:12px;line-height:1.55}
+    .offer-claim-dialog label{display:block;margin:13px 0 6px;font-size:11px;font-weight:700;color:#dce5f6}
+    .offer-claim-dialog input[type="file"],.offer-claim-dialog select{width:100%;min-height:44px;padding:9px;border:1px solid rgba(146,169,207,.32);border-radius:10px;background:#0b1429;color:var(--text)}
+    .offer-share-consent{display:flex!important;align-items:flex-start;gap:8px;line-height:1.45}
+    .offer-share-consent input{margin-top:2px;accent-color:#f5c04a}
+    .offer-claim-error{min-height:18px;color:#ff9da5;font-size:12px}
+    .offer-claim-submit{width:100%;margin-top:9px}
+    .offer-claim-close{float:right;width:36px;height:36px;border:1px solid var(--line);border-radius:50%;background:#101a30;color:var(--text);font-size:21px;cursor:pointer}
+    .offer-notification{position:fixed;left:18px;bottom:18px;z-index:310;width:min(330px,calc(100vw - 36px));padding:13px 15px;border:1px solid rgba(245,192,74,.42);border-radius:14px;background:linear-gradient(145deg,#172541,#0c1528);color:#f4f6fc;box-shadow:0 14px 40px #0009,0 0 18px rgba(41,152,255,.13);font-size:12px;transform:translateX(calc(-100% - 25px));opacity:0;transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .3s}
+    .offer-notification.visible{transform:translateX(0);opacity:1}
+    .offer-notification strong{color:#ffe49a}
+    :root[data-theme="light"] .offer-claim-dialog{background:linear-gradient(150deg,#fff,#edf3fc);box-shadow:0 25px 80px rgba(30,48,80,.3),0 0 34px rgba(41,152,255,.1)}
+    :root[data-theme="light"] .offer-claim-dialog h2{color:#57400b}
+    :root[data-theme="light"] .offer-claim-dialog p,:root[data-theme="light"] .offer-claim-dialog label{color:#34445f}
+    :root[data-theme="light"] .offer-notification{background:linear-gradient(145deg,#fff,#edf3fc);color:#17233a}
+    .orders-status.payment-due{color:#ffe49a;border-color:#856822}
+    .orders-pay-button,.orders-delete-button{min-height:38px;margin:6px 6px 0 0;padding:0 13px;border:1px solid var(--gold);border-radius:9px;background:linear-gradient(135deg,#ffe28c,#e7ad36);color:#211805;font-size:11px;font-weight:800;cursor:pointer}
+    .orders-delete-button{border-color:#71303b;background:transparent;color:#ffb5bb}
+    .offers-empty{padding:30px;text-align:center;color:var(--muted)}
+    :root[data-theme="light"] .offers-modal{background:rgba(225,232,244,.76)}
+    :root[data-theme="light"] .offers-dialog{background:linear-gradient(145deg,#fff,#edf3fc);box-shadow:0 28px 90px rgba(30,48,80,.3),0 0 45px rgba(41,152,255,.1)}
+    :root[data-theme="light"] .offers-head h2,:root[data-theme="light"] .offer-card h3{color:#57400b}
+    :root[data-theme="light"] .offer-card p{color:#34445f}
+    :root[data-theme="light"] .offer-card{background:linear-gradient(125deg,rgba(41,152,255,.06),rgba(245,192,74,.09),rgba(255,255,255,.8))}
+    @media(prefers-reduced-motion:reduce){.offers-trigger,.offers-dialog,.offers-dialog:before,.offer-card:after,.offer-claim.claim-available{animation:none;transition:none}.offer-claim-modal,.offer-notification{transition:none}}
+    :root[data-theme="light"] .auth-page{background:radial-gradient(ellipse at 50% 12%,rgba(41,152,255,.15),transparent 42%),#e8eef8}
+    :root[data-theme="light"] .auth-card{border-color:rgba(87,112,155,.25);background:linear-gradient(145deg,#fff,#edf3fc);box-shadow:0 28px 70px rgba(38,59,94,.2),0 0 35px rgba(41,152,255,.08),inset 0 1px #fff}
+    :root[data-theme="light"] .auth-card h1{color:#17233a}
+    :root[data-theme="light"] .auth-field label{color:#3b4b66}
+    :root[data-theme="light"] .auth-field input{border-color:#d4deed;background:#f7f9fd;color:#17233a}
+    :root[data-theme="light"] .auth-google{border-color:#d3ddeb;background:linear-gradient(145deg,#fff,#edf2f9);color:#273852}
+    :root[data-theme="light"] .auth-message.success{color:#405c83}
+    @media(max-width:639.98px){.auth-page{align-items:center;padding:18px 14px calc(18px + env(safe-area-inset-bottom,0px))}.auth-card{padding:27px 21px;border-radius:20px}.auth-brand{margin-bottom:19px}.auth-subtitle{margin-bottom:20px}}
+    @media(max-width:639.98px){.offers-modal{align-items:flex-end;padding:10px}.offers-dialog{max-height:min(91dvh,820px);border-radius:22px 22px 12px 12px}.offers-head{padding:20px 17px 13px}.offers-content{padding:7px 14px 18px}.offer-card-bottom{align-items:stretch;flex-direction:column}.offer-claim{width:100%;min-height:46px}.offers-trigger{min-height:36px;padding:0 9px;font-size:10px}.offer-claim-modal{align-items:flex-end;padding:8px}.offer-claim-dialog{max-height:92dvh;border-radius:20px 20px 12px 12px;padding:17px}.offer-notification{left:10px;bottom:10px;width:min(330px,calc(100vw - 20px))}}
     main{padding:0 0 90px}
     .hero{padding:74px 0 70px;text-align:center}
     .hero-pill{display:inline-flex;align-items:center;padding:7px 16px;border:1px solid #3a2c0a;border-radius:999px;color:#ffdf8a;font-size:11px;letter-spacing:2px;background:rgba(245,196,81,.07)}
@@ -119,6 +217,18 @@
     .hero-collections-heading{margin-bottom:13px;color:var(--muted);font-size:11px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase}
     .hero-category-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
     .hero-category{min-width:0;min-height:82px;display:flex;align-items:center;gap:12px;padding:14px;text-align:left;border:1px solid rgba(106,125,165,.22);border-radius:15px;background:linear-gradient(145deg,rgba(16,28,52,.96),rgba(8,15,32,.96));color:var(--text);cursor:pointer;box-shadow:inset 0 1px rgba(255,255,255,.035),0 10px 24px rgba(0,0,0,.14);transition:transform .2s,border-color .2s,box-shadow .2s}
+    .hero-category[data-hero-category="vps"]{border-color:rgba(59,130,246,.48)}
+    .hero-category .hero-category-art{position:absolute;inset:0 0 0 auto;width:61%;overflow:hidden;pointer-events:none;z-index:0;mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.26) 15%,#000 46%)}
+    .hero-category-art img{display:block;width:100%;height:100%;object-fit:contain;object-position:right center}
+    .hero-category[data-hero-category="vps"] .hero-category-art img,.hero-category[data-hero-category="residential"] .hero-category-art img{object-fit:cover;object-position:center}
+    .hero-category[data-hero-category="software"] .hero-category-art img{object-fit:cover;object-position:center}
+    .hero-category[data-hero-category="residential"] .hero-category-art{mask-image:none}
+    .hero-category[data-hero-category="residential"] .hero-category-art img{position:absolute;inset:6% 0 auto auto;width:88%;height:88%;object-fit:contain;object-position:right center}
+    .hero-category[data-hero-category="residential"] .hero-category-arrow{display:none}
+    .hero-category[data-hero-category="proxy"] .hero-category-art{background:#0a1226}
+    .hero-category[data-hero-category="proxy"] .hero-category-art img{object-fit:contain;object-position:right center}
+    .hero-category[data-hero-category="vps"] .hero-category-icon,.hero-category[data-hero-category="vps"] .hero-category-copy,.hero-category[data-hero-category="vps"] .hero-category-arrow,.hero-category[data-hero-category="proxy"] .hero-category-icon,.hero-category[data-hero-category="proxy"] .hero-category-copy,.hero-category[data-hero-category="proxy"] .hero-category-arrow,.hero-category[data-hero-category="software"] .hero-category-icon,.hero-category[data-hero-category="software"] .hero-category-copy,.hero-category[data-hero-category="software"] .hero-category-arrow,.hero-category[data-hero-category="residential"] .hero-category-icon,.hero-category[data-hero-category="residential"] .hero-category-copy,.hero-category[data-hero-category="residential"] .hero-category-arrow{position:relative;z-index:1}
+    .hero-category[data-hero-category="software"]{border-color:rgba(245,184,61,.48)}
     .hero-category:hover{transform:translateY(-3px);border-color:rgba(245,192,74,.72);box-shadow:inset 0 1px rgba(255,255,255,.06),0 14px 28px rgba(0,0,0,.24),0 0 22px rgba(245,192,74,.08)}
     .hero-category-icon{width:42px;height:42px;flex:none;display:grid;place-items:center;border:1px solid rgba(245,192,74,.2);border-radius:12px;background:linear-gradient(145deg,rgba(245,192,74,.15),rgba(245,192,74,.04));color:var(--gold);font-size:19px}
     .hero-category-copy{min-width:0;flex:1}
@@ -151,7 +261,13 @@
     @keyframes banner-shimmer{to{background-position-x:-220%}}
     .category-banner.loaded{animation:none;background:#0a1226}
     .category-banner-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1);transition:opacity .3s ease,transform .45s ease}
+    .category[data-card-tone="software"] .category-banner-image,.category[data-card-tone="vps"] .category-banner-image,.category[data-card-tone="residential"] .category-banner-image{object-fit:cover;object-position:center}
+    .category[data-card-tone="proxy"] .category-banner-image{object-fit:contain;background:#0a1226}
     .category-banner-image.loaded{opacity:1}
+    .category[data-card-tone="vps"] .category-banner.loaded{background:#101b28}
+    .category[data-card-tone="residential"] .category-banner.loaded{background:#101b28}
+    .category[data-card-tone="proxy"] .category-banner.loaded{background:#0a1226}
+    .category[data-card-tone="software"] .category-banner:after,.category[data-card-tone="proxy"] .category-banner:after{background:linear-gradient(180deg,transparent 58%,rgba(10,18,38,.22) 100%)}
     .category:hover .category-banner-image.loaded{transform:scale(1.05)}
     .category-banner:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(10,18,38,.52) 69%,#0a1226 100%);pointer-events:none}
     .category-banner-fallback{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(145deg,#101d36,#0a1226 76%);color:var(--gold)}
@@ -184,6 +300,45 @@
     .buy{border:0;border-radius:10px;padding:10px 14px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#171101;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;transition:filter .2s,transform .2s}
     .buy:hover{filter:brightness(1.08);transform:translateY(-1px)}
     .buy:disabled{background:#26314a;color:#828da5;cursor:not-allowed;transform:none}
+    .vps-browse{margin:0 0 24px;padding:18px;border:1px solid rgba(32,201,121,.2);border-radius:18px;background:linear-gradient(145deg,rgba(13,28,34,.94),rgba(8,16,30,.98));box-shadow:inset 0 1px rgba(255,255,255,.04),0 12px 30px rgba(0,0,0,.2)}
+    .vps-tools{display:grid;grid-template-columns:minmax(180px,1fr) auto;gap:12px;align-items:center}
+    .vps-search{border-color:rgba(32,201,121,.22);background:#09151b}
+    .vps-filters,.vps-jump-list{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .vps-filter,.vps-jump,.vps-top{border:1px solid rgba(32,201,121,.2);border-radius:999px;background:#0b181d;color:#aac0bb;padding:9px 13px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+    .vps-filter.active,.vps-jump.active{border-color:#20c979;background:rgba(32,201,121,.13);color:#72ecac;box-shadow:0 0 16px rgba(32,201,121,.1)}
+    .vps-jumpbar{position:sticky;top:calc(72px + env(safe-area-inset-top,0px));z-index:20;display:flex;justify-content:space-between;align-items:center;gap:12px;margin:14px 0 24px;padding:10px;border:1px solid rgba(32,201,121,.18);border-radius:15px;background:rgba(7,15,22,.94);backdrop-filter:blur(14px)}
+    .vps-jump-label{flex:none;color:#68d99d;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+    .vps-jump-list{min-width:0;overflow:auto;flex-wrap:nowrap;scrollbar-width:thin}
+    .vps-top{flex:none;color:#72ecac}
+    .vps-plan-section{scroll-margin-top:145px;margin:0 0 28px}
+    .vps-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:0 2px;color:var(--text);font:700 clamp(16px,2.4vw,20px) var(--font-heading)}
+    .vps-section-heading span{color:#77e9aa}
+    .vps-plan-list{display:grid;gap:9px}
+    .vps-plan{display:grid;grid-template-columns:34px 38px minmax(0,1fr) auto;gap:13px;align-items:center;padding:15px;border:1px solid rgba(106,144,135,.19);border-radius:15px;background:linear-gradient(120deg,rgba(17,32,39,.96),rgba(8,17,29,.97));box-shadow:inset 0 1px rgba(255,255,255,.035);transition:border-color .2s,transform .2s}
+    .vps-plan:hover{border-color:rgba(32,201,121,.44);transform:translateY(-1px)}
+    .vps-server-icon{width:28px;height:28px;color:#62d99b}
+    .vps-os-logo{width:34px;height:34px;display:grid;place-items:center;border:1px solid rgba(32,201,121,.15);border-radius:10px;background:rgba(32,201,121,.07);color:#71e6a8;font-size:22px}
+    .vps-os-logo svg{width:21px;height:21px;fill:currentColor}
+    .vps-plan-copy{min-width:0}
+    .vps-plan-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0;color:#f2f7f5;font-size:14px;font-weight:750;overflow-wrap:anywhere}
+    .vps-plan-title.sold-out{text-decoration:line-through;color:#899694}
+    .vps-plan-ip,.vps-plan-specs{color:#aabbb7;font-size:11px;line-height:1.55;overflow-wrap:anywhere}
+    .vps-plan-ip{margin-top:4px}
+    .vps-plan-badge{border:1px solid rgba(32,201,121,.24);border-radius:999px;padding:4px 8px;color:#79e6ad;background:rgba(32,201,121,.08);font-size:9px;font-weight:800;white-space:nowrap}
+    .vps-stock{display:inline-flex;margin-top:7px;border:1px solid rgba(32,201,121,.25);border-radius:999px;padding:4px 8px;color:#70e1a3;background:rgba(32,201,121,.08);font-size:9px;font-weight:800}
+    .vps-stock.out{border-color:rgba(255,89,105,.3);color:#ff8790;background:rgba(255,89,105,.08)}
+    .vps-plan-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+    .vps-price{color:#8af0b7;font-size:13px;font-weight:800;white-space:nowrap}
+    .vps-cart{width:38px;height:38px;display:grid;place-items:center;border:1px solid rgba(32,201,121,.27);border-radius:11px;background:rgba(32,201,121,.08);color:#7be6ac;cursor:pointer}
+    .vps-cart svg{width:18px;height:18px}
+    .vps-buy{min-width:102px;padding:10px 12px;border:0;border-radius:10px;background:linear-gradient(135deg,#36d987,#16ae67);color:#04160d;font-size:10px;font-weight:900;letter-spacing:.04em;cursor:pointer}
+    .vps-buy:disabled,.vps-cart:disabled{border-color:#303b3d;background:#202a2d;color:#788483;cursor:not-allowed;box-shadow:none}
+    .vps-details{grid-column:3/5;margin-top:-3px;border-top:1px solid rgba(106,144,135,.15);padding-top:10px;color:#aabbb7;font-size:11px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+    .vps-details summary{width:fit-content;color:#77e9aa;cursor:pointer;font-weight:700;list-style:none}
+    .vps-details summary::-webkit-details-marker{display:none}
+    .vps-details summary:after{content:"⌄";display:inline-block;margin-left:7px;transition:transform .2s}
+    .vps-details[open] summary:after{transform:rotate(180deg)}
+    .vps-empty{grid-column:1/-1}
     .product-download{display:flex;align-items:center;justify-content:center;min-height:42px;margin-top:12px;padding:9px 12px;border:1px solid #23563f;border-radius:10px;background:#0d211d;color:#84e4b6;font-size:12px;font-weight:700;text-align:center;overflow-wrap:anywhere}
     .product-download:hover{background:#123128}
     .empty,.notice{border:1px dashed var(--line);border-radius:16px;padding:24px;color:var(--muted);font-size:13px;text-align:center;grid-column:1/-1}
@@ -211,6 +366,34 @@
     .positive{color:#74dfaa}.negative{color:#ff929a}
     .qr-box{display:grid;place-items:center;min-height:180px;background:#fff;border-radius:12px;padding:12px;margin:12px auto;width:190px}
     .qr-box img{max-width:170px}
+    .checkout-dialog{width:min(600px,100%);max-height:92dvh;overflow-y:auto;overscroll-behavior:contain}
+    .checkout-product{margin:0 0 14px;padding:13px 15px;border:1px solid rgba(245,192,74,.24);border-radius:14px;background:linear-gradient(130deg,#171a24,#171407)}
+    .checkout-product strong{display:block;font-size:16px;overflow-wrap:anywhere}
+    .checkout-amounts{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px;font-size:12px;color:var(--muted)}
+    .checkout-amounts strong{color:var(--gold);font-size:20px;white-space:nowrap}
+    .checkout-coupon{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin:12px 0}
+    .checkout-coupon label{grid-column:1/-1;color:var(--muted);font-size:11px}
+    .checkout-coupon input,.checkout-utr{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:#080f20;color:var(--text);padding:11px;font:inherit}
+    .checkout-coupon .modal-primary{min-height:42px}
+    .checkout-coupon-message{grid-column:1/-1;min-height:16px;font-size:11px}
+    .checkout-coupon-message.success{color:#74dfaa}.checkout-coupon-message.error{color:#ff929a}
+    .checkout-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+    .checkout-tab{min-height:44px;padding:9px 7px;border:1px solid var(--line);border-radius:11px;background:#101a31;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer}
+    .checkout-tab.active{border-color:var(--gold);background:linear-gradient(145deg,#242039,#171a24);color:var(--gold);box-shadow:0 0 18px rgba(245,192,74,.12)}
+    .checkout-panel{padding:14px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,#101a30,#080f20)}
+    .checkout-panel h3{margin:0 0 8px;font-size:14px}
+    .checkout-panel .wallet-balance{margin:0 0 12px}
+    .checkout-note{margin:8px 0 0;color:var(--muted);font-size:11px;line-height:1.55}
+    .checkout-panel .qr-box{width:min(270px,100%);min-height:270px;padding:14px;margin:12px auto}
+    .checkout-panel .qr-box img,.checkout-panel .qr-box canvas{width:min(240px,100%);height:auto;max-width:100%}
+    .checkout-submit{width:100%;margin-top:10px}
+    .checkout-utr-label{display:block;margin:12px 0 5px;color:var(--muted);font-size:11px}
+    .checkout-upi-id{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#080f20;overflow-wrap:anywhere}
+    .checkout-upi-id strong{min-width:0;overflow-wrap:anywhere}
+    .checkout-app-links{display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+    .checkout-app-links a{min-height:44px;display:grid;place-items:center;border:1px solid var(--line);border-radius:10px;background:#101a31;color:var(--text);font-size:11px;font-weight:700}
+    .checkout-app-links a:hover{border-color:var(--gold);color:var(--gold)}
+    @media(max-width:639.98px){.modal{padding:8px;align-items:center}.checkout-dialog{width:100%;max-height:calc(100dvh - 16px);padding:16px}.checkout-panel{padding:11px}.checkout-panel .qr-box{width:min(250px,100%);min-height:250px}.checkout-panel .qr-box img,.checkout-panel .qr-box canvas{width:min(220px,100%)}.checkout-app-links{display:grid}.checkout-tabs{gap:5px}.checkout-tab{font-size:10px;padding:8px 4px}}
     .upi-app-options{display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
     .upi-app-link,.upi-qr-toggle{min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center;border:1px solid var(--line);border-radius:11px;background:#101a31;color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
     .upi-app-link:hover,.upi-qr-toggle:hover{border-color:var(--gold);color:var(--gold)}
@@ -230,6 +413,10 @@
     .delivery-link{display:inline-flex;margin:5px 0;color:var(--gold);overflow-wrap:anywhere}
     .customer-order-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-size:12px;text-align:center}
+    .footer-brand{display:inline-flex;align-items:center;justify-content:center;gap:9px}
+    .footer-brand-name{color:var(--gold);font-family:Orbitron,sans-serif;font-weight:700;letter-spacing:.03em}
+    #notice{display:flex;align-items:center;justify-content:center;gap:11px}
+    #notice .rb-logo{--logo-size:34px}
     .floating{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:11px;z-index:5}
     .float-link{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;color:white;font-size:22px;box-shadow:0 8px 26px #0008;transition:transform .2s}
     .float-link:hover{transform:translateY(-3px)}
@@ -256,13 +443,16 @@
     .spin-bulb:nth-child(3n + 1){animation-delay:.23s}
     @keyframes spin-bulb-blink{from{opacity:.48;scale:.78}to{opacity:1;scale:1}}
     .spin-wheel-wrap.spinning .spin-bulb{animation-duration:.18s}
-    .spin-wheel-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:16.5%;height:16.5%;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#a9741a,#7e500e);padding:5px;z-index:5;animation:spin-hub-float 3s ease-in-out infinite}
-    .spin-wheel-center::before{content:"";position:absolute;inset:4px;border-radius:50%;background:linear-gradient(145deg,#fbe08a 0%,#f5c04a 54%,#c98a1b 100%);box-shadow:inset 2px 2px 3px rgba(255,255,255,.55),inset -3px -4px 5px rgba(110,66,8,.35)}
-    .spin-wheel-center::after{content:"";position:absolute;inset:4px;border-radius:50%;background:radial-gradient(ellipse at 30% 20%,rgba(255,255,255,.42),transparent 46%);pointer-events:none}
-    .spin-wheel-logo{position:relative;z-index:1;font-family:Orbitron,Poppins,sans-serif;font-size:clamp(26px,8vw,38px);font-weight:900;line-height:1;color:#fbe08a;background:linear-gradient(155deg,#fff1ad 8%,#f5c04a 48%,#a9741a 92%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:2px 2px 0 #80500e,3px 3px 0 #694009,0 1px 5px rgba(255,255,255,.3)}
-    .spin-wheel-wrap.spinning .spin-wheel-center{animation:spin-hub-float .7s ease-in-out infinite,spin-hub-glow .7s ease-in-out infinite}
-    @keyframes spin-hub-float{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.06)}}
+    .spin-wheel-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:16.5%;height:16.5%;border:2px solid #80500e;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#fbe08a,#ad7415 74%);padding:3px;z-index:5;box-shadow:0 0 0 2px rgba(255,234,155,.78),0 4px 8px rgba(0,0,0,.62)}
+    .spin-wheel-center #wheel-brand-logo{display:block;width:100%;height:100%}
+    .spin-wheel-center .rb-logo{width:100%;height:100%}
+    .spin-wheel-center .rb-logo:before{inset:-48%;opacity:.1}
+    .spin-wheel-wrap.spinning .spin-wheel-center{animation:spin-hub-glow .7s ease-in-out infinite}
+    .spin-wheel-wrap.spinning .spin-wheel-center .rb-logo-face{filter:brightness(1.25) saturate(1.12)}
+    .spin-wheel-wrap.spinning .spin-wheel-center .rb-logo-face:after{animation-duration:.65s;opacity:1}
+    .spin-wheel-wrap.spin-finished .spin-wheel-center{animation:spin-hub-bounce .48s cubic-bezier(.2,.8,.25,1)}
     @keyframes spin-hub-glow{0%,100%{box-shadow:0 0 2px rgba(245,192,74,.2)}50%{box-shadow:0 0 15px rgba(245,192,74,.55)}}
+    @keyframes spin-hub-bounce{0%,100%{transform:translate(-50%,-50%) scale(1)}42%{transform:translate(-50%,-60%) scale(1.14)}70%{transform:translate(-50%,-47%) scale(.96)}}
     .spin-pointer{position:absolute;left:50%;top:-1px;transform:translateX(-50%);width:30px;height:26px;background:#f5c04a;clip-path:polygon(0 0,100% 0,50% 100%);z-index:6}
     .spin-pointer::before{content:"";position:absolute;inset:2px 2px 4px;background:#2a2f3a;clip-path:polygon(0 0,100% 0,50% 100%)}
     .spin-button{display:inline-flex;align-items:center;justify-content:center;min-width:130px;height:46px;padding:0 16px;border:0;border-radius:12px;background:linear-gradient(135deg,#fbe08a 0%,#f5c04a 52%,#d99d1f 100%);color:#171101;font-family:Poppins,sans-serif;font-weight:800;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;box-shadow:0 8px 26px rgba(245,192,74,.2);transition:transform .2s,filter .2s,opacity .2s}
@@ -271,9 +461,9 @@
     .coupon-banner{margin-top:18px;border:1px dashed rgba(94,145,255,.6);background:rgba(19,31,52,.7);border-radius:14px;padding:15px 18px;color:#e8f1ff;font-size:14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
     .coupon-banner strong{color:var(--gold)}
     .coupon-banner .reward-value{font-weight:700;color:#ffffff}
-    .coupon-banner .reward-code{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:8px;background:#0b1429;border:1px solid var(--line);color:var(--gold);font-weight:800;letter-spacing:.08em;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+    .coupon-code-group{display:inline-flex;align-items:center;gap:7px}.coupon-banner .reward-code{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:8px;background:#0b1429;border:1px solid var(--line);color:var(--gold);font-weight:800;letter-spacing:.08em;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.coupon-copy{padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#0b1429;color:var(--gold);font-size:11px;font-weight:700;cursor:pointer}.coupon-copy:hover{border-color:var(--gold)}
     @media(max-width:760px){.spin-panel{min-height:0;padding:24px 16px}.spin-controls{flex-direction:column;gap:14px}.spin-copy{max-width:480px;text-align:center}.spin-copy li{justify-content:center}.spin-button{width:min(280px,100%);min-width:0}.coupon-banner{flex-direction:column;align-items:flex-start}.}
-    @media(max-width:639.98px){.spin-wheel-wrap{--label-radius:-71px;width:220px;height:220px}.spin-wheel-label{font-size:11px!important}.spin-bulb{width:6px;height:6px;transform:rotate(var(--bulb-angle)) translateY(-102px)}.spin-wheel-center{width:16.5%;height:16.5%;padding:3px}.spin-wheel-center::before,.spin-wheel-center::after{inset:3px}.spin-pointer{width:28px;height:24px;top:-1px}}
+    @media(max-width:639.98px){.spin-wheel-wrap{--label-radius:-71px;width:220px;height:220px}.spin-wheel-label{font-size:11px!important}.spin-bulb{width:6px;height:6px;transform:rotate(var(--bulb-angle)) translateY(-102px)}.spin-wheel-center{width:16.5%;height:16.5%;padding:2px}.spin-pointer{width:28px;height:24px;top:-1px}}
     @media(min-width:640px){.mobile-drawer{display:none}}
     @media(min-width:640px) and (max-width:1023.98px){
       .wrap{width:calc(100% - 48px)}
@@ -353,6 +543,21 @@
       .float-link{width:47px;height:47px}
       .quick-row{gap:6px}
       .quick-amount{padding:10px 6px;font-size:12px}
+      .vps-browse{padding:13px}
+      .vps-tools{grid-template-columns:1fr}
+      .vps-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+      .vps-filter{padding:9px 5px;font-size:9px}
+      .vps-jumpbar{top:calc(60px + env(safe-area-inset-top,0px));gap:7px;padding:7px}
+      .vps-jump-label{display:none}
+      .vps-jump{padding:8px 10px;font-size:10px}
+      .vps-top{padding:8px 10px;font-size:10px}
+      .vps-plan{grid-template-columns:28px 32px minmax(0,1fr);gap:8px;padding:12px}
+      .vps-server-icon{width:24px;height:24px}
+      .vps-os-logo{width:30px;height:30px}
+      .vps-plan-title{font-size:12px}
+      .vps-plan-actions{grid-column:1/-1;justify-content:flex-end;border-top:1px solid rgba(106,144,135,.12);padding-top:10px}
+      .vps-price{margin-right:auto;font-size:12px}
+      .vps-details{grid-column:1/-1}
     }
     @media(max-width:360px){
       .brand{letter-spacing:-1.5px}
@@ -360,6 +565,7 @@
     @media(max-width:340px){
       .brand{display:inline-block;width:120px;min-width:0;flex:0 0 120px;font-size:16px;letter-spacing:-2.5px;transform:none}
     }
+    @media(prefers-reduced-motion:reduce){.vps-plan{transition:none}}
     body{background:radial-gradient(ellipse at 50% -18%,#1b2b4a 0,transparent 45%),linear-gradient(180deg,#080e1d 0%,#060b17 48%,#080d19 100%)}
     body:before{background:radial-gradient(ellipse at 10% 27%,rgba(41,152,255,.09),transparent 30%),radial-gradient(ellipse at 90% 56%,rgba(245,192,74,.075),transparent 28%),radial-gradient(ellipse at 50% 100%,rgba(41,80,150,.13),transparent 38%)}
     header{border-bottom-color:rgba(95,119,164,.2);background:rgba(7,12,25,.78);box-shadow:0 10px 35px rgba(0,0,0,.2)}
@@ -492,6 +698,24 @@
       background:linear-gradient(145deg,color-mix(in srgb,var(--card-accent) 15%,var(--card-surface)),color-mix(in srgb,var(--card-accent-2) 12%,var(--card-surface-2))) padding-box,linear-gradient(135deg,color-mix(in srgb,var(--card-accent) 78%,white),color-mix(in srgb,var(--card-accent-2) 82%,transparent)) border-box;
       box-shadow:0 20px 38px rgba(0,0,0,.24),0 0 26px color-mix(in srgb,var(--card-accent) 13%,transparent),inset 0 1px rgba(255,255,255,.16);
       transition:transform .28s cubic-bezier(.2,.8,.2,1),border-color .25s,box-shadow .25s,background .25s
+    }
+    .why-card[data-card-tone="software"]{
+      background-image:linear-gradient(90deg,rgba(18,15,12,.94) 0%,rgba(18,15,12,.82) 42%,rgba(18,15,12,.58) 100%),url("/assets/feature-premium-bg.svg?v=20261107"),linear-gradient(145deg,color-mix(in srgb,var(--card-accent) 15%,var(--card-surface)),color-mix(in srgb,var(--card-accent-2) 12%,var(--card-surface-2))),linear-gradient(135deg,color-mix(in srgb,var(--card-accent) 78%,white),color-mix(in srgb,var(--card-accent-2) 82%,transparent));
+      background-size:cover,cover,auto,auto;background-position:center,right center,center,center;background-repeat:no-repeat;background-origin:padding-box,padding-box,padding-box,border-box;background-clip:padding-box,padding-box,padding-box,border-box
+    }
+    .why-card[data-card-tone="fast"]{
+      background-image:linear-gradient(90deg,rgba(24,12,15,.94) 0%,rgba(24,12,15,.82) 42%,rgba(24,12,15,.58) 100%),url("/assets/feature-checkout-bg.svg?v=20261107"),linear-gradient(145deg,color-mix(in srgb,var(--card-accent) 15%,var(--card-surface)),color-mix(in srgb,var(--card-accent-2) 12%,var(--card-surface-2))),linear-gradient(135deg,color-mix(in srgb,var(--card-accent) 78%,white),color-mix(in srgb,var(--card-accent-2) 82%,transparent));
+      background-size:cover,cover,auto,auto;background-position:center,right center,center,center;background-repeat:no-repeat;background-origin:padding-box,padding-box,padding-box,border-box;background-clip:padding-box,padding-box,padding-box,border-box
+    }
+    .why-card[data-card-tone="support"]{
+      background-image:linear-gradient(90deg,rgba(8,21,26,.94) 0%,rgba(8,21,26,.82) 42%,rgba(8,21,26,.58) 100%),url("/assets/feature-support-bg.svg?v=20261107"),linear-gradient(145deg,color-mix(in srgb,var(--card-accent) 15%,var(--card-surface)),color-mix(in srgb,var(--card-accent-2) 12%,var(--card-surface-2))),linear-gradient(135deg,color-mix(in srgb,var(--card-accent) 78%,white),color-mix(in srgb,var(--card-accent-2) 82%,transparent));
+      background-size:cover,cover,auto,auto;background-position:center,right center,center,center;background-repeat:no-repeat;background-origin:padding-box,padding-box,padding-box,border-box;background-clip:padding-box,padding-box,padding-box,border-box
+    }
+    @media(max-width:639.98px){
+      .why-card[data-card-tone="software"],.why-card[data-card-tone="fast"],.why-card[data-card-tone="support"]{background-image:linear-gradient(90deg,rgba(9,14,24,.96) 0%,rgba(9,14,24,.88) 48%,rgba(9,14,24,.72) 100%),var(--why-card-art),linear-gradient(145deg,color-mix(in srgb,var(--card-accent) 15%,var(--card-surface)),color-mix(in srgb,var(--card-accent-2) 12%,var(--card-surface-2))),linear-gradient(135deg,color-mix(in srgb,var(--card-accent) 78%,white),color-mix(in srgb,var(--card-accent-2) 82%,transparent))}
+      .why-card[data-card-tone="software"]{--why-card-art:url("/assets/feature-premium-bg.svg?v=20261107")}
+      .why-card[data-card-tone="fast"]{--why-card-art:url("/assets/feature-checkout-bg.svg?v=20261107")}
+      .why-card[data-card-tone="support"]{--why-card-art:url("/assets/feature-support-bg.svg?v=20261107")}
     }
     .hero-category:before,.category:before,.product:before,.why-card:before,.spin-panel:before,.orders-card:before,.dialog:before{
       content:"";position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;
@@ -654,6 +878,14 @@
       .hero-category{position:relative;align-content:flex-start;flex-wrap:wrap;gap:7px;min-height:112px;padding:12px}
       .hero-category-icon{width:36px;height:36px}
       .hero-category-copy{width:100%;min-width:0;flex:1 0 100%}
+      .hero-category[data-hero-category="software"]{align-content:center;flex-wrap:nowrap;gap:8px;min-height:82px;padding:10px}
+      .hero-category[data-hero-category="software"] .hero-category-art{width:55%;opacity:.72}
+      .hero-category[data-hero-category="software"] .hero-category-art img{object-fit:cover;object-position:right center}
+      .hero-category[data-hero-category="software"] .hero-category-icon{width:34px;height:34px}
+      .hero-category[data-hero-category="software"] .hero-category-copy{width:auto;min-width:0;flex:1 1 0}
+      .hero-category[data-hero-category="software"] .hero-category-copy strong.title-premium{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(14px,4vw,17px)}
+      .hero-category[data-hero-category="software"] .hero-category-copy small{font-size:9px}
+      .hero-category[data-hero-category="software"] .hero-category-arrow{position:absolute;top:50%;right:9px;z-index:2;transform:translateY(-50%)}
       .hero-category-copy strong,.hero-category-copy strong.title-premium{overflow:visible;text-overflow:clip;white-space:normal;font-size:clamp(18px,4.7vw,20px)}
       .hero-category-arrow{position:absolute;top:20px;right:12px}
       .section-head h2{font-size:clamp(23px,7vw,29px)}
@@ -672,13 +904,25 @@
       .hero-category:before,.category:before,.product:before,.why-card:before,.spin-panel:before,.orders-card:before,.dialog:before{transform:none!important}
       .hero-category:after,.category:after,.product:after,.why-card:after,.spin-panel:after,.orders-card:after,.dialog:after{display:none}
     }
-    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.page-enter{animation:none}.reveal{opacity:1;transform:none;transition:none}.hero-scene-orb{animation:none}.cursor-glow{display:none}*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.page-enter{animation:none}.reveal{opacity:1;transform:none;transition:none}.hero-scene-orb{animation:none}.cursor-glow{display:none}.spin-wheel-center{animation:none!important}*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+    @media(max-width:768px){
+      #spin-win .spin-panel{box-sizing:border-box;flex-direction:column;align-items:center;gap:16px;padding:20px;text-align:center;overflow:visible}
+      #spin-win .spin-controls{width:100%;flex-direction:column;align-items:center;gap:0}
+      #spin-win .spin-wheel-wrap{container-type:inline-size;width:min(100%,300px);height:auto;aspect-ratio:1/1;margin:0 auto;overflow:visible}
+      #spin-win .spin-wheel{overflow:visible}
+      #spin-win .spin-wheel-label{--label-radius:clamp(-88px,-30cqw,-62px);font-size:clamp(9px,2.8vw,11px)!important}
+      #spin-win .spin-bulb{transform:rotate(var(--bulb-angle)) translateY(-46cqw)}
+      #spin-win .spin-button{display:block;width:70%;max-width:240px;min-width:0;margin:16px auto 0}
+      #spin-win .spin-copy{width:100%;max-width:400px;text-align:center}
+      #spin-win .spin-copy ul{max-width:280px;margin:16px auto 0;text-align:left}
+      #spin-win .spin-copy li{justify-content:flex-start;text-align:left}
+    }
   </style>
 </head>
 <body>
   <header>
     <div class="wrap nav">
-      <a class="brand" id="site-title" href="/" aria-label="Roshan Brand home">ROSHAN<span>BRAND</span></a>
+      <a class="brand" id="site-title" href="/" aria-label="Roshan Brand home"><span id="nav-brand-logo" class="rb-logo-slot" data-logo-size="rb-logo-nav" aria-hidden="true"></span><span class="brand-wordmark">ROSHAN<span>BRAND</span></span></a>
       <nav class="main-nav" aria-label="Main navigation">
         <a href="#categories-view" data-section-nav="categories-view">Software</a>
         <a href="#why-us" data-section-nav="why-us">Why Us</a>
@@ -709,6 +953,52 @@
       <div class="orders-panel-footer"><button id="orders-view-all" type="button">View all orders</button></div>
     </section>
   </div>
+  <section class="auth-page hidden" id="auth-page" aria-hidden="true" aria-labelledby="auth-title">
+    <div class="auth-card" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+      <button class="auth-back" id="auth-back" type="button">← Back to store</button>
+      <div class="auth-brand"><span id="auth-brand-logo" class="rb-logo-slot" data-logo-size="rb-logo-auth" aria-hidden="true"></span><span class="brand-wordmark">ROSHAN<span>BRAND</span></span></div>
+      <h1 id="auth-title">Welcome back</h1>
+      <p class="auth-subtitle" id="auth-subtitle">Sign in to your dashboard</p>
+      <button class="auth-google" id="auth-google" type="button">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.73 7.18l7.27 5.64c4.25-3.92 7.5-9.72 7.5-17.29z"/><path fill="#FBBC05" d="M10.53 28.59a14.4 14.4 0 0 1 0-9.18l-7.98-6.19a23.95 23.95 0 0 0 0 21.56l7.98-6.19z"/><path fill="#4285F4" d="M24 48c6.48 0 11.93-2.13 15.9-5.8l-7.27-5.64c-2.02 1.35-4.6 2.15-8.63 2.15-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        <span>Continue with Google</span>
+      </button>
+      <div class="auth-divider" id="auth-divider"><span>OR</span></div>
+      <form id="auth-form" novalidate>
+        <div class="auth-field"><label for="auth-email">Email address</label><input id="auth-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required></div>
+        <div class="auth-field" id="auth-password-field"><label for="auth-password">Password</label><div class="auth-password-wrap"><input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required><button class="auth-password-toggle" id="auth-password-toggle" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+        <div class="auth-forgot-row" id="auth-forgot-row"><button class="auth-link" id="auth-forgot" type="button">Forgot password?</button></div>
+        <button class="auth-submit" id="auth-submit" type="submit">Sign in</button>
+        <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
+      </form>
+      <p class="auth-switch" id="auth-switch">Don't have an account? <button class="auth-link" id="auth-switch-link" type="button">Create one free</button></p>
+    </div>
+  </section>
+  <section class="offers-modal hidden" id="offers-modal" aria-hidden="true">
+    <button class="orders-backdrop" id="offers-backdrop" type="button" aria-label="Close offers"></button>
+    <section class="offers-dialog" role="dialog" aria-modal="true" aria-labelledby="offers-title">
+      <div class="offers-head"><div><span class="offers-eyebrow">Roshan Brand offers</span><h2 id="offers-title">Special offers for you</h2></div><button class="offers-close" id="offers-close" type="button" aria-label="Close offers">×</button></div>
+      <div class="offers-content" id="offers-content"></div>
+    </section>
+  </section>
+  <section class="offer-claim-modal hidden" id="offer-claim-modal" aria-hidden="true">
+    <button class="orders-backdrop" id="offer-claim-backdrop" type="button" aria-label="Close offer claim"></button>
+    <section class="offer-claim-dialog" role="dialog" aria-modal="true" aria-labelledby="offer-claim-title">
+      <button class="offer-claim-close" id="offer-claim-close" type="button" aria-label="Close">×</button>
+      <h2 id="offer-claim-title">Claim this offer</h2>
+      <p id="offer-claim-description"></p>
+      <form id="offer-claim-form">
+        <label for="offer-claim-product">Choose one software product</label>
+        <select id="offer-claim-product" required></select>
+        <label for="offer-claim-screenshot">Upload WhatsApp share screenshot (PNG/JPG/WebP, up to 2 MB)</label>
+        <input id="offer-claim-screenshot" type="file" accept="image/png,image/jpeg,image/webp" required>
+        <label class="offer-share-consent" for="offer-claim-share-name"><input id="offer-claim-share-name" type="checkbox"> I agree that my name may appear in offer claim notifications.</label>
+        <div class="offer-claim-error" id="offer-claim-error" role="status" aria-live="polite"></div>
+        <button class="offer-claim offer-claim-submit claim-available" id="offer-claim-submit" type="submit">Send for review</button>
+      </form>
+    </section>
+  </section>
+  <div class="offer-notification" id="offer-name-notification" role="status" aria-live="polite"></div>
   <main class="wrap page-enter">
     <section class="hero" id="home">
       <div class="hero-scene" aria-hidden="true"><div class="hero-scene-orb"></div></div>
@@ -725,6 +1015,16 @@
     </section>
     <section id="products-view" class="view hidden">
       <div class="section-head"><div><button class="back" id="back-button">← &nbsp; Back to categories</button><h2 class="title-premium" id="category-heading" style="margin-top:18px"></h2><p class="desc-premium" id="category-description"></p></div></div>
+      <section id="vps-browse" class="vps-browse hidden" aria-label="Plan search and filters">
+        <div class="vps-tools">
+          <input id="vps-search" class="vps-search" type="search" placeholder="Search plans, IP series, specs…" aria-label="Search plans">
+          <div class="vps-filters" id="vps-filters" role="group" aria-label="Filter plans"></div>
+        </div>
+      </section>
+      <nav id="vps-jumpbar" class="vps-jumpbar hidden" aria-label="Jump to plan section">
+        <span class="vps-jump-label">Jump to</span><div class="vps-jump-list" id="vps-jump-list"></div><button class="vps-top" id="vps-top" type="button">Top ↑</button>
+      </nav>
+      <div id="vps-products" class="hidden"></div>
       <div class="product-grid" id="product-grid"></div>
     </section>
     <section class="legacy-section" id="why-us">
@@ -765,7 +1065,7 @@
             <span class="spin-bulb" style="--bulb-angle:315deg" aria-hidden="true"></span>
             <span class="spin-bulb" style="--bulb-angle:330deg" aria-hidden="true"></span>
             <span class="spin-bulb" style="--bulb-angle:345deg" aria-hidden="true"></span>
-            <div class="spin-wheel-center" aria-hidden="true"><span class="spin-wheel-logo">R</span></div>
+            <div class="spin-wheel-center" aria-hidden="true"><span id="wheel-brand-logo" class="rb-logo-slot" data-logo-size="rb-logo-wheel"></span></div>
           </div>
           <button class="spin-button" id="spin-button" type="button">Spin Now</button>
         </div>
@@ -780,13 +1080,13 @@
       </div>
       <div class="coupon-banner hidden" id="coupon-banner" aria-live="polite"></div>
     </section>
-    <div class="notice hidden" id="notice" role="status" aria-live="polite"><span id="notice-message"></span><button class="back hidden" id="retry-products" type="button" style="margin:10px auto 0">Retry</button></div>
+    <div class="notice hidden" id="notice" role="status" aria-live="polite"><span id="notice-logo" class="rb-logo-slot hidden" data-logo-size="rb-logo-loader" aria-hidden="true"></span><span id="notice-message"></span><button class="back hidden" id="retry-products" type="button" style="margin:10px auto 0">Retry</button></div>
   </main>
-  <footer><div class="wrap">© <span id="year"></span> <span id="footer-title">Roshan Brand</span>. All rights reserved.</div></footer>
+  <footer><div class="wrap"><span class="footer-brand"><span id="footer-brand-logo" class="rb-logo-slot" data-logo-size="rb-logo-footer" aria-hidden="true"></span><span>© <span id="year"></span> <span id="footer-title" class="footer-brand-name">Roshan Brand</span>. All rights reserved.</span></span></div></footer>
   <div class="floating" id="floating-links"></div>
   <div class="cursor-glow" id="cursor-glow" aria-hidden="true"></div>
   <div class="modal" id="wallet-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="dialog" data-card-tone="cyan"><div class="dialog-head"><h2 id="modal-title">Wallet</h2><button class="modal-close" id="modal-close" aria-label="Close">×</button></div><div id="modal-body"></div></div>
+    <div class="dialog" id="wallet-dialog" data-card-tone="cyan"><div class="dialog-head"><h2 id="modal-title">Wallet</h2><button class="modal-close" id="modal-close" aria-label="Close">×</button></div><div id="modal-body"></div></div>
   </div>
   <script>
     const categories = [
@@ -795,15 +1095,17 @@
       {id:'proxy', title:'Linux Proxy', icon:'⌘', description:'Linux proxy solutions for flexible, dependable access.'},
       {id:'residential', title:'Residential Proxies', icon:'◎', description:'Residential IP options for your data and browsing needs.'}
     ];
-    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, myCoupons:[], isSpinning:false};
+    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, myCoupons:[], isSpinning:false, checkout:null, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, authMode:'signin', offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
     const $ = id => document.getElementById(id);
     const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     const money = value => new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(Number(value)||0);
     const digits = value => String(value||'').replace(/\D/g,'');
     const normalizeCategory = value => String(value ?? '').trim().toLowerCase();
+    const isPlanCategory = category => ['vps','windows-vps','proxy','residential'].includes(normalizeCategory(category));
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     let revealObserver = null;
+    let vpsSectionObserver = null;
     if('IntersectionObserver' in window && !reducedMotion){
       revealObserver = new IntersectionObserver(entries=>{
         entries.forEach(entry=>{
@@ -910,7 +1212,8 @@
       $('hero-category-grid').innerHTML = categories.map(category => {
         const productCount = state.products.filter(product => normalizeCategory(product.category) === normalizeCategory(category.id) && product.in_stock !== false).length;
         const countLabel = state.productsLoading && !state.products.length ? 'Explore collection' : `${productCount} ${productCount === 1 ? 'product' : 'products'}`;
-        return `<button class="hero-category" data-card-tone="${category.id}" type="button" data-hero-category="${category.id}"><span class="hero-category-icon">${category.icon}</span><span class="hero-category-copy"><strong class="title-premium">${category.title}</strong><small class="badge-premium">${countLabel}</small></span><span class="hero-category-arrow" aria-hidden="true">↗</span></button>`;
+        const categoryArt=category.id==='software'?'<span class="hero-category-art" aria-hidden="true"><img src="/categories/software-laptop-8k.webp" alt="" decoding="async"></span>':category.id==='vps'||category.id==='proxy'||category.id==='residential'?`<span class="hero-category-art" aria-hidden="true"><img src="${category.id==='vps'?'/categories/vps-datacenter.png':category.id==='proxy'?'/categories/proxy-logo-navy.png':'/assets/residential-proxies-banner-v3.svg?v=20261107'}" alt="" decoding="async"></span>`:'';
+        return `<button class="hero-category" data-card-tone="${category.id}" type="button" data-hero-category="${category.id}">${categoryArt}<span class="hero-category-icon">${category.icon}</span><span class="hero-category-copy"><strong class="title-premium">${category.title}</strong><small class="badge-premium">${countLabel}</small></span><span class="hero-category-arrow" aria-hidden="true">↗</span></button>`;
       }).join('');
       $('hero-category-grid').querySelectorAll('[data-hero-category]').forEach(button => button.addEventListener('click',() => showCategory(button.dataset.heroCategory)));
       revealPage($('hero-category-grid'));
@@ -918,13 +1221,26 @@
         const productCount = state.products.filter(product => normalizeCategory(product.category) === normalizeCategory(category.id) && product.in_stock !== false).length;
         const countLabel = state.productsLoading && !state.products.length ? 'Loading…' : `${productCount} ${productCount === 1 ? 'item' : 'items'}`;
         const countBadge = state.productsError ? '' : `<span class="count badge-premium">${countLabel}</span>`;
-        return `<button class="category" data-card-tone="${category.id}" data-category="${category.id}"><span class="category-banner"><img class="category-banner-image" src="/categories/${category.id}.jpg" alt="" loading="lazy" decoding="async" onload="this.classList.add('loaded');this.parentElement.classList.add('loaded')" onerror="this.hidden=true;this.classList.remove('loaded');this.parentElement.classList.remove('loaded');this.parentElement.classList.add('failed')"><span class="category-banner-fallback" aria-hidden="true">${categoryBannerIcons[category.id]}</span></span><span class="category-content"><span class="category-top"><span class="category-icon">${category.icon}</span>${countBadge}</span><h3 class="title-premium">${category.title}<span class="category-arrow">↗</span></h3><p class="desc-premium">${category.description}</p></span></button>`;
+        const bannerImage = category.id === 'vps' ? '/categories/vps-datacenter.png' : category.id === 'residential' ? '/assets/residential-proxies-banner-v3.svg?v=20261107' : category.id === 'proxy' ? '/categories/proxy-logo-navy.png' : category.id === 'software' ? '/categories/software-laptop-8k.webp' : `/categories/${category.id}.jpg`;
+        return `<button class="category" data-card-tone="${category.id}" data-category="${category.id}"><span class="category-banner"><img class="category-banner-image" src="${bannerImage}" alt="" loading="lazy" decoding="async" onload="this.classList.add('loaded');this.parentElement.classList.add('loaded')" onerror="this.hidden=true;this.classList.remove('loaded');this.parentElement.classList.remove('loaded');this.parentElement.classList.add('failed')"><span class="category-banner-fallback" aria-hidden="true">${categoryBannerIcons[category.id]}</span></span><span class="category-content"><span class="category-top"><span class="category-icon">${category.icon}</span>${countBadge}</span><h3 class="title-premium">${category.title}<span class="category-arrow">↗</span></h3><p class="desc-premium">${category.description}</p></span></button>`;
       }).join('');
       $('category-grid').querySelectorAll('[data-category]').forEach(button => button.addEventListener('click',() => showCategory(button.dataset.category)));
       revealPage($('category-grid'));
     }
 
     function renderProducts(){
+      if(isPlanCategory(state.selected)){
+        $('product-grid').classList.add('hidden');
+        $('vps-products').classList.remove('hidden');
+        $('vps-browse').classList.remove('hidden');
+        $('vps-jumpbar').classList.remove('hidden');
+        renderVpsProducts();
+        return;
+      }
+      $('product-grid').classList.remove('hidden');
+      $('vps-products').classList.add('hidden');
+      $('vps-browse').classList.add('hidden');
+      $('vps-jumpbar').classList.add('hidden');
       const products = state.products.filter(product => normalizeCategory(product.category) === normalizeCategory(state.selected));
       $('product-grid').innerHTML = state.productsLoading && !state.products.length
         ? '<div class="empty" role="status">Loading products…</div>'
@@ -934,10 +1250,74 @@
         const imageUrl=safeHttpUrl(product.image_url);
         const purchasedOrder=state.myOrders?.find(order=>String(order.product_id)===String(product.id)&&order.status==='delivered'&&safeHttpUrl(order.delivery_link));
         const downloadUrl=purchasedOrder?safeHttpUrl(purchasedOrder.delivery_link):'';
-        return `<article class="product" data-card-tone="${productCardTones[index%productCardTones.length]}">${imageUrl?`<div class="product-image-wrap"><img class="product-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.hidden=true"></div>`:'<div class="product-image-wrap">Product photo</div>'}<span class="premium badge-premium">PREMIUM</span><h3 class="title-premium">${escapeHtml(product.name)}</h3><p class="desc-premium">${escapeHtml(product.description)}</p><div class="product-foot"><div class="price">₹${money(product.price)}<small>${unit}</small></div><button class="buy" data-buy="${escapeHtml(product.id)}" ${inStock?'':'disabled'}>${inStock?'Buy Now':'Out of stock'}</button></div>${downloadUrl?`<a class="product-download" href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(product.name)}</a>`:''}</article>`;
+        return `<article class="product" data-product-id="${escapeHtml(product.id)}" data-card-tone="${productCardTones[index%productCardTones.length]}">${imageUrl?`<div class="product-image-wrap"><img class="product-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.hidden=true"></div>`:'<div class="product-image-wrap">Product photo</div>'}<span class="premium badge-premium">PREMIUM</span><h3 class="title-premium">${escapeHtml(product.name)}</h3><p class="desc-premium">${escapeHtml(product.description)}</p><div class="product-foot"><div class="price">₹${money(product.price)}<small>${unit}</small></div><button class="buy" type="button" data-buy="${escapeHtml(product.id)}" ${inStock?'':'disabled'}>${inStock?'Buy Now':'Out of stock'}</button></div>${downloadUrl?`<a class="product-download" href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(product.name)}</a>`:''}</article>`;
       }).join('') : '<div class="empty">No products in this category yet. Please check back soon.</div>';
-      $('product-grid').querySelectorAll('[data-buy]').forEach(button => button.addEventListener('click',()=>buyProduct(button.dataset.buy)));
       revealPage($('product-grid'));
+    }
+
+    function renderVpsProducts(){
+      if(vpsSectionObserver){vpsSectionObserver.disconnect();vpsSectionObserver=null}
+      const selectedCategory=normalizeCategory(state.selected);
+      const isVps=selectedCategory==='vps'||selectedCategory==='windows-vps';
+      const allProducts=state.products.filter(product=>normalizeCategory(product.category)===selectedCategory);
+      const normalizedOs=product=>String(product.os_type||'Linux').toLowerCase()==='windows'?'Windows':'Linux';
+      const query=state.vpsSearch.trim().toLowerCase();
+      const matchesSearch=product=>!query||[product.name,product.ip_series,product.data_size,product.specs,product.ip_count,product.validity,product.plan_section,product.badge,product.details,product.description].some(value=>String(value||'').toLowerCase().includes(query));
+      const searched=allProducts.filter(matchesSearch);
+      const available=product=>product.stock_status?product.stock_status==='available':product.in_stock!==false;
+      const filters=isVps
+        ?[['all','All',searched.length],['Linux','Linux VPS',searched.filter(product=>normalizedOs(product)==='Linux').length],['Windows','Windows VPS',searched.filter(product=>normalizedOs(product)==='Windows').length]]
+        :[['all','All',searched.length],['available','Available',searched.filter(available).length],['out_of_stock','Out of stock',searched.filter(product=>!available(product)).length]];
+      $('vps-filters').innerHTML=filters.map(([value,label,count])=>`<button class="vps-filter ${state.vpsOsFilter===value?'active':''}" type="button" data-vps-filter="${value}" aria-pressed="${state.vpsOsFilter===value}">${label} ${count}</button>`).join('');
+      $('vps-filters').querySelectorAll('[data-vps-filter]').forEach(button=>button.addEventListener('click',()=>{
+        state.vpsOsFilter=button.dataset.vpsFilter;
+        renderVpsProducts();
+      }));
+      $('vps-search').value=state.vpsSearch;
+      const products=searched.filter(product=>state.vpsOsFilter==='all'||(isVps?normalizedOs(product)===state.vpsOsFilter:state.vpsOsFilter==='available'?available(product):!available(product)));
+      const groups=[];
+      products.forEach(product=>{
+        const section=String(product.plan_section||'Plans').trim()||'Plans';
+        const os=isVps?normalizedOs(product):'';
+        const key=`${section}\u0000${os}`;
+        let group=groups.find(item=>item.key===key);
+        if(!group){group={key,section,os,products:[]};groups.push(group)}
+        group.products.push(product);
+      });
+      const slug=value=>String(value).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'plans';
+      const serverIcon='<svg class="vps-server-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="8" rx="2"/><rect x="4" y="13" width="16" height="8" rx="2"/><path d="M8 7h.01M11 7h5M8 17h.01M11 17h5"/></svg>';
+      const proxyIcon='<svg class="vps-server-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="5" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="m7 6.5 3 4M17 6.5l-3 4M7 17.5l3-4M17 17.5l-3-4"/></svg>';
+      const residentialIcon='<svg class="vps-server-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>';
+      const windowsIcon='<svg viewBox="0 0 24 24" aria-label="Windows"><path d="M2 4.5 10.5 3v8H2V4.5Zm10 8.5H22v8.5L12 20V13Zm-10 0h8.5v8L2 19.5V13Zm10-2V2l10-1v10h-10Z"/></svg>';
+      $('vps-jump-list').innerHTML=groups.map((group,index)=>`<button type="button" class="vps-jump ${index===0?'active':''}" data-vps-jump="vps-group-${index}-${slug(group.section)}-${slug(group.os||selectedCategory)}">${escapeHtml(group.section)}${group.os?` · ${escapeHtml(group.os)}`:''}</button>`).join('');
+      $('vps-products').innerHTML=groups.length?groups.map((group,index)=>{
+        const sectionId=`vps-group-${index}-${slug(group.section)}-${slug(group.os||selectedCategory)}`;
+        const rows=group.products.map(product=>{
+          const inStock=available(product);
+          const rowIcon=isVps?serverIcon:selectedCategory==='proxy'?proxyIcon:residentialIcon;
+          const osLogo=isVps?(group.os==='Windows'?windowsIcon:'<span aria-label="Linux">🐧</span>'):selectedCategory==='proxy'?'<span aria-label="Proxy">IP</span>':'<span aria-label="Residential proxy">R</span>';
+          const info=[product.ip_series?`IP ${escapeHtml(product.ip_series)}`:'',product.data_size?escapeHtml(product.data_size):'',product.specs?escapeHtml(product.specs):'',product.ip_count?escapeHtml(product.ip_count):'',product.validity?escapeHtml(product.validity):''].filter(Boolean).join(' · ');
+          const details=String(product.details||product.description||'').trim();
+          const prefix=String(product.price_prefix||'From').trim();
+          const purchasedOrder=state.myOrders?.find(order=>String(order.product_id)===String(product.id)&&order.status==='delivered'&&safeHttpUrl(order.delivery_link));
+          const downloadUrl=purchasedOrder?safeHttpUrl(purchasedOrder.delivery_link):'';
+          return `<article class="vps-plan" data-product-id="${escapeHtml(product.id)}"><span>${rowIcon}</span><span class="vps-os-logo">${osLogo}</span><div class="vps-plan-copy"><h3 class="vps-plan-title ${inStock?'':'sold-out'}">${escapeHtml(product.name)}${product.badge?`<span class="vps-plan-badge">${escapeHtml(product.badge)}</span>`:''}</h3>${info?`<div class="vps-plan-ip">${info}</div>`:''}<span class="vps-stock ${inStock?'':'out'}">${inStock?'Available':'Out of stock'}</span></div><div class="vps-plan-actions"><span class="vps-price">${escapeHtml(prefix)} ₹${money(product.price)}</span><button class="vps-cart" type="button" data-buy="${escapeHtml(product.id)}" ${inStock?'':'disabled'} aria-label="Add ${escapeHtml(product.name)} to cart" title="Add to cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.4L22 8H6"/><circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/></svg></button><button class="vps-buy" type="button" data-buy="${escapeHtml(product.id)}" ${inStock?'':'disabled'}>${inStock?'Buy Now':'Sold out'}</button></div><details class="vps-details"><summary>Plan details</summary>${details?`<div>${escapeHtml(details)}</div>`:'<div>Contact us for more plan details.</div>'}${downloadUrl?`<a class="product-download" href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(product.name)}</a>`:''}</details></article>`;
+        }).join('');
+        return `<section class="vps-plan-section" id="${sectionId}" data-vps-section><h3 class="vps-section-heading">${escapeHtml(group.section)} Plans${group.os?` - ${escapeHtml(group.os)}`:''} <span>(${group.products.length})</span></h3><div class="vps-plan-list">${rows}</div></section>`;
+      }).join(''):`<div class="empty vps-empty">No ${escapeHtml(categories.find(item=>item.id===selectedCategory)?.title||'')} plans match these filters. Please check back soon.</div>`;
+      $('vps-jump-list').querySelectorAll('[data-vps-jump]').forEach(button=>button.addEventListener('click',()=>{
+        document.getElementById(button.dataset.vpsJump)?.scrollIntoView({behavior:'smooth',block:'start'});
+      }));
+      $('vps-top').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+      if('IntersectionObserver' in window){
+        vpsSectionObserver=new IntersectionObserver(entries=>{
+          const visible=entries.filter(entry=>entry.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0];
+          if(!visible)return;
+          $('vps-jump-list').querySelectorAll('[data-vps-jump]').forEach(button=>button.classList.toggle('active',button.dataset.vpsJump===visible.target.id));
+        },{rootMargin:'-18% 0px -70% 0px',threshold:0});
+        $('vps-products').querySelectorAll('[data-vps-section]').forEach(section=>vpsSectionObserver.observe(section));
+      }
+      revealPage($('vps-products'));
     }
 
     function showCategory(categoryId){
@@ -946,6 +1326,18 @@
       state.selected = categoryId;
       $('category-heading').textContent = category.title;
       $('category-description').textContent = category.description;
+      const isPlan=categoryId==='vps'||categoryId==='windows-vps'||categoryId==='proxy'||categoryId==='residential';
+      state.vpsSearch='';
+      state.vpsOsFilter='all';
+      $('vps-search').value='';
+      $('vps-search').placeholder=`Search ${category.title} plans, IP series, specs…`;
+      $('vps-search').setAttribute('aria-label',`Search ${category.title} plans`);
+      $('vps-filters').setAttribute('aria-label',`Filter ${category.title} plans`);
+      $('vps-jumpbar').setAttribute('aria-label',`Jump to ${category.title} plan section`);
+      $('vps-browse').classList.toggle('hidden',!isPlan);
+      $('vps-jumpbar').classList.toggle('hidden',!isPlan);
+      $('vps-products').classList.toggle('hidden',!isPlan);
+      $('product-grid').classList.toggle('hidden',isPlan);
       $('categories-view').classList.add('hidden');
       $('products-view').classList.remove('hidden');
       $('why-us').classList.add('hidden');
@@ -960,6 +1352,7 @@
 
     function showCategories(scrollToTop=true){
       state.selected = null;
+      $('vps-browse').classList.add('hidden');$('vps-jumpbar').classList.add('hidden');$('vps-products').classList.add('hidden');$('product-grid').classList.remove('hidden');state.vpsSearch='';state.vpsOsFilter='all';
       $('products-view').classList.add('hidden');
       $('categories-view').classList.remove('hidden');
       $('why-us').classList.remove('hidden');
@@ -982,7 +1375,7 @@
       {code:'SAVE20', label:'20%', type:'percent', value:20, color:'#e11d48', maxDiscountAmount:500, weight:15},
       {code:'SAVE50', label:'50%', type:'percent', value:50, color:'#2f3fb8', maxDiscountAmount:500, weight:10},
       {code:'SAVE100', label:'100%', type:'percent', value:100, color:'#f5c04a', maxDiscountAmount:500, weight:4},
-      {code:'SAVE200', label:'200%', type:'percent', value:200, color:'#e11d48', maxDiscountAmount:500, weight:1},
+      {code:'BONUS100', label:'100%', type:'percent', value:100, color:'#e11d48', maxDiscountAmount:500, weight:1},
       {code:'TRY_AGAIN', label:'TRY AGAIN', type:'tryAgain', value:0, color:'#2a2f3a', maxDiscountAmount:0, weight:45},
       {code:'SAVE10', label:'10%', type:'percent', value:10, color:'#2f3fb8', maxDiscountAmount:500, weight:25}
     ];
@@ -991,15 +1384,19 @@
       try {
         const saved = JSON.parse(localStorage.getItem('roshan-spin-prizes-admin') || 'null');
         if(Array.isArray(saved) && saved.length){
-          return saved.map(item => ({
-            code: String(item.code || 'SAVE10').toUpperCase(),
-            label: String(item.label || `${Number(item.value) || 0}%`),
-            type: item.type === 'tryAgain' ? 'tryAgain' : 'percent',
-            value: Number(item.value) || 0,
-            color: item.color || '#1a4ea8',
-            maxDiscountAmount: Number(item.maxDiscountAmount) || 0,
-            weight: Number(item.weight) || 0
-          }));
+          return saved.map(item => {
+            const type = item.type === 'tryAgain' ? 'tryAgain' : 'percent';
+            const value = type === 'tryAgain' ? 0 : Math.min(Math.max(Number(item.value) || 0, 0), 100);
+            return {
+              code: String(item.code || 'SAVE10').toUpperCase(),
+              label: type === 'tryAgain' ? String(item.label || 'TRY AGAIN') : `${value}%`,
+              type,
+              value,
+              color: item.color || '#1a4ea8',
+              maxDiscountAmount: Number(item.maxDiscountAmount) || 0,
+              weight: Number(item.weight) || 0
+            };
+          });
         }
       } catch (error) {
         console.warn('Could not read stored spin prize config:', error);
@@ -1022,8 +1419,46 @@
     function resolveCoupon(code){
       const normalized = String(code||'').trim().toUpperCase();
       if(!normalized)return null;
-      const catalog = getSpinPrizeCatalog();
-      return catalog.find(coupon => coupon.code === normalized) || null;
+      let coupons=[];
+      try{coupons=JSON.parse(localStorage.getItem('roshan-brand-coupons')||'[]')}catch(error){console.warn('Could not read saved coupons:',error)}
+      const coupon = Array.isArray(coupons) ? coupons.find(item =>
+        String(item.code||'').trim().toUpperCase() === normalized &&
+        (!item.expiresAt || new Date(item.expiresAt).getTime() > Date.now())
+      ) : null;
+      return coupon ? {
+        ...coupon,
+        type: coupon.type === 'tryAgain' ? 'tryAgain' : 'percent',
+        value: Number(coupon.value) || 0,
+        maxDiscountAmount: Number(coupon.maxDiscountAmount) || 0
+      } : null;
+    }
+
+    function isCouponCodeFormatValid(code){
+      return /^RB(?:100|[1-9][0-9]?)-[A-HJ-NP-Z2-9]{8}$/i.test(String(code||'').trim());
+    }
+
+    function getUsedCouponCodes(){
+      try{
+        const codes=JSON.parse(localStorage.getItem('roshan-brand-used-coupons')||'[]');
+        return new Set(Array.isArray(codes)?codes.map(code=>String(code).toUpperCase()):[]);
+      }catch(error){console.warn('Could not read used coupons:',error);return new Set()}
+    }
+
+    function markCouponUsed(code){
+      const used=getUsedCouponCodes();
+      used.add(String(code).toUpperCase());
+      localStorage.setItem('roshan-brand-used-coupons',JSON.stringify([...used]));
+    }
+
+    function getSuggestedCheckoutCoupon(){
+      const used=getUsedCouponCodes();
+      let savedCoupons=[];
+      try{
+        const saved=JSON.parse(localStorage.getItem('roshan-brand-coupons')||'[]');
+        if(Array.isArray(saved))savedCoupons=saved;
+      }catch(error){console.warn('Could not read saved coupons for checkout:',error)}
+      const candidates=[state.spinCoupon,...savedCoupons,...state.myCoupons];
+      return candidates.find(coupon=>coupon?.code&&isCouponCodeFormatValid(coupon.code)&&!used.has(String(coupon.code).toUpperCase())&&resolveCoupon(coupon.code))?.code||'';
     }
 
     function calculateDiscountedPrice(productPrice, coupon){
@@ -1040,8 +1475,9 @@
       if(!coupon || coupon.type === 'tryAgain') return {originalPrice:price, discountAmount:0, finalPrice:price};
       const percent = Math.min(Math.max(Number(coupon.value) || 0, 0), 100);
       const maxDiscount = Number(coupon.maxDiscountAmount) || 0;
-      const discountAmount = maxDiscount > 0 ? Math.min(price * (percent / 100), maxDiscount) : price * (percent / 100);
-      const finalPrice = Math.max(0, price - discountAmount);
+      const roundMoney=value=>Math.round((value+Number.EPSILON)*100)/100;
+      const discountAmount = roundMoney(maxDiscount > 0 ? Math.min(price * (percent / 100), maxDiscount) : price * (percent / 100));
+      const finalPrice = roundMoney(Math.max(0, price - discountAmount));
       return {originalPrice:price, discountAmount, finalPrice};
     }
 
@@ -1058,9 +1494,10 @@
       });
       wheel.style.background = `conic-gradient(${gradientStops.join(',')})`;
       wheel.innerHTML = rewards.map((reward,index) => {
-        const angle = (index * slice + slice / 2) - 90;
+        const angle = index * slice + slice / 2;
         const isGoldSegment = String(reward.color).toLowerCase() === '#f5c04a';
-        return `<span class="spin-wheel-label" data-dark="${isGoldSegment}" style="--angle:${angle}deg">${reward.label}</span>`;
+        const label = reward.type === 'tryAgain' ? reward.label : `${Math.min(Math.max(Number(reward.value)||0,0),100)}%`;
+        return `<span class="spin-wheel-label" data-dark="${isGoldSegment}" style="--angle:${angle}deg">${escapeHtml(label)}</span>`;
       }).join('');
     }
 
@@ -1073,9 +1510,33 @@
         return;
       }
       const amountText = state.spinCoupon.type === 'tryAgain' ? 'Try again' : `${state.spinCoupon.label} OFF`;
-      const codeText = state.spinCoupon.type === 'tryAgain' ? '' : `<span class="reward-code">${state.spinCoupon.code}</span>`;
+      const codeText = state.spinCoupon.type === 'tryAgain' ? '' : `<span class="coupon-code-group"><span class="reward-code">${escapeHtml(state.spinCoupon.code)}</span><button class="coupon-copy" id="copy-spin-coupon" type="button" aria-label="Copy coupon code">Copy</button></span>`;
       banner.classList.remove('hidden');
       banner.innerHTML = `<strong>🎉 Reward:</strong><span class="reward-value">${amountText}</span>${codeText}`;
+      $('copy-spin-coupon')?.addEventListener('click',()=>copyCustomerValue(state.spinCoupon.code,'Coupon code'));
+    }
+
+    function createUniqueCouponCode(value, coupons){
+      const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      const prefix = `RB${Math.round(Number(value)||0)}`;
+      const history = JSON.parse(localStorage.getItem('roshan-brand-coupon-history') || '[]');
+      const usedCodes = new Set([
+        ...(Array.isArray(coupons) ? coupons.map(coupon=>String(coupon.code||'').toUpperCase()) : []),
+        ...(Array.isArray(history) ? history.map(code=>String(code).toUpperCase()) : [])
+      ]);
+      let code;
+      do {
+        let suffix = '';
+        if(window.crypto?.getRandomValues){
+          const bytes = new Uint8Array(8);
+          window.crypto.getRandomValues(bytes);
+          suffix = Array.from(bytes,byte=>alphabet[byte % alphabet.length]).join('');
+        }else{
+          suffix = Math.random().toString(36).slice(2,10).toUpperCase().padEnd(8,'X');
+        }
+        code = `${prefix}-${suffix}`;
+      } while(usedCodes.has(code));
+      return code;
     }
 
     function addCouponToWallet(coupon){
@@ -1090,6 +1551,11 @@
         createdAt: new Date().toISOString()
       });
       localStorage.setItem('roshan-brand-coupons', JSON.stringify(existing.slice(0, 10)));
+      const history = JSON.parse(localStorage.getItem('roshan-brand-coupon-history') || '[]');
+      if(!history.includes(coupon.code)){
+        history.push(coupon.code);
+        localStorage.setItem('roshan-brand-coupon-history', JSON.stringify(history));
+      }
       state.myCoupons = JSON.parse(localStorage.getItem('roshan-brand-coupons') || '[]');
     }
 
@@ -1103,8 +1569,10 @@
       if(spinButton) spinButton.disabled = true;
       const reward = pickWeightedPrize(rewards);
       const slice = 360 / rewards.length;
-      const selectedIndex = rewards.findIndex(item => item.code === reward.code);
-      const finalAngle = 360 * 6 + (360 - (selectedIndex * slice + slice / 2)) + 15;
+      const selectedIndex = rewards.indexOf(reward);
+      const finalAngle = 360 * 6 + (360 - (selectedIndex * slice + slice / 2));
+      const wheelWrap=wheel.closest('.spin-wheel-wrap');
+      wheelWrap?.classList.remove('spin-finished');
       wheel.style.transform = `rotate(${finalAngle}deg)`;
       setTimeout(() => {
         if(reward.type === 'tryAgain'){
@@ -1115,17 +1583,19 @@
           const rewardCoupon = {
             ...reward,
             type: 'percent',
-            label: reward.label,
-            code: reward.code,
+            label: `${Math.min(Math.max(Number(reward.value)||0,0),100)}%`,
+            code: createUniqueCouponCode(reward.value,JSON.parse(localStorage.getItem('roshan-brand-coupons') || '[]')),
             maxDiscountAmount: Number(reward.maxDiscountAmount) || 0
           };
           state.spinCoupon = rewardCoupon;
           addCouponToWallet(rewardCoupon);
           renderCouponBanner();
-          showNotice(`Coupon unlocked: ${reward.label} OFF — ${reward.code}. Use it on your next software purchase.`);
+          showNotice(`Coupon unlocked: ${rewardCoupon.label} OFF — ${rewardCoupon.code}. Use it on your next software purchase.`);
         }
         state.isSpinning = false;
-        wheel.closest('.spin-wheel-wrap')?.classList.remove('spinning');
+        wheelWrap?.classList.remove('spinning');
+        wheelWrap?.classList.add('spin-finished');
+        setTimeout(()=>wheelWrap?.classList.remove('spin-finished'),500);
         if(spinButton) spinButton.disabled = false;
       }, 4500);
     }
@@ -1151,8 +1621,8 @@
       hideNotice();
     }
 
-    function showNotice(message){$('notice-message').textContent=message;$('retry-products').classList.add('hidden');$('notice').classList.remove('hidden')}
-    function hideNotice(){$('notice').classList.add('hidden');$('retry-products').classList.add('hidden')}
+    function showNotice(message){$('notice-message').textContent=message;$('notice-logo').classList.toggle('hidden',message!=='Loading products…');$('retry-products').classList.add('hidden');$('notice').classList.remove('hidden')}
+    function hideNotice(){$('notice').classList.add('hidden');$('notice-logo').classList.add('hidden');$('retry-products').classList.add('hidden')}
     function setProductsLoading(loading){
       state.productsLoading=loading;
       if(loading&&!state.products.length)showNotice('Loading products…');
@@ -1168,27 +1638,305 @@
       $('notice').classList.remove('hidden');
       renderCategories();
       if(state.selected){
-        $('product-grid').innerHTML='<div class="empty">Products could not be loaded. Please try again.</div>';
+        const errorMessage='<div class="empty">Products could not be loaded. Please try again.</div>';
+        if(isPlanCategory(state.selected))$('vps-products').innerHTML=errorMessage;
+        else $('product-grid').innerHTML=errorMessage;
       }
     }
 
-    function orderStatus(status){
+    function orderStatus(order){
+      const status=typeof order==='string'?order:order.status;
+      if(order&&typeof order==='object'&&order.status==='pending_payment')return {label:'Pending Payment',className:'payment-due'};
+      if(order&&typeof order==='object'&&order.status==='expired')return {label:'Expired',className:'rejected'};
+      if(order&&typeof order==='object'&&order.is_offer_free)return {label:'Free',className:order.status==='delivered'?'delivered':'processing'};
+      if(order&&typeof order==='object'&&order.payment_method!=='wallet'){
+        if(order.payment_status==='pending')return {label:'Pending verification',className:'processing'};
+        if(order.payment_status==='paid')return {label:status==='delivered'?'Approved · Delivered':'Approved',className:status==='delivered'?'delivered':'processing'};
+      }
+      if(status==='pending_verification')return {label:'Pending verification',className:'processing'};
       if(status==='pending'||status==='completed')return {label:'Processing',className:'processing'};
       if(status==='delivered')return {label:'Delivered',className:'delivered'};
       if(status==='refunded')return {label:'Refunded',className:'refunded'};
       return {label:'Rejected',className:'rejected'};
     }
 
+    const seenOffersStorageKey='roshan-brand-seen-offers';
+    function getSeenOfferIds(){
+      try{
+        const saved=JSON.parse(localStorage.getItem(seenOffersStorageKey)||'[]');
+        return new Set(Array.isArray(saved)?saved.filter(id=>typeof id==='string') : []);
+      }catch(error){
+        console.error('Could not read viewed offer IDs:',error);
+        showNotice('Offers could not be remembered on this device. Check your browser storage settings.');
+        return new Set();
+      }
+    }
+    function markOffersSeen(offers){
+      const seen=getSeenOfferIds();
+      offers.forEach(offer=>seen.add(String(offer.id)));
+      try{localStorage.setItem(seenOffersStorageKey,JSON.stringify([...seen]))}
+      catch(error){
+        console.error('Could not save viewed offer IDs:',error);
+        showNotice('Offers were shown, but this browser could not save which ones you have seen.');
+      }
+    }
+    function offerIsActive(offer,now=Date.now()){
+      const startsAt=Date.parse(offer.starts_at);
+      const endsAt=Date.parse(offer.ends_at);
+      return Number.isFinite(startsAt)&&Number.isFinite(endsAt)&&startsAt<=now&&endsAt>now;
+    }
+    function countdownLabel(endsAt){
+      const remaining=Math.max(0,Date.parse(endsAt)-Date.now());
+      const totalSeconds=Math.floor(remaining/1000);
+      const days=Math.floor(totalSeconds/86400);
+      const hours=Math.floor(totalSeconds%86400/3600);
+      const minutes=Math.floor(totalSeconds%3600/60);
+      const seconds=totalSeconds%60;
+      const clock=[hours,minutes,seconds].map(value=>String(value).padStart(2,'0')).join(':');
+      return remaining>0?`Ends in ${days?`${days}d `:''}${clock}`:'Offer ended';
+    }
+    function renderOffersTrigger(){
+      const count=state.offers.filter(offer=>offerIsActive(offer)).length;
+      if(!count)return '';
+      return `<button class="offers-trigger" id="offers-trigger" type="button" aria-label="${count} active offer${count===1?'':'s'}" title="${escapeHtml(state.offers.slice(0,3).map(offer=>offer.title).join(' · '))}">✦ Offers ${count}</button>`;
+    }
+    function renderOffersModal(){
+      const offers=state.offerPopupOffers.filter(offer=>offerIsActive(offer));
+      state.offerPopupOffers=offers;
+      if(!offers.length){
+        closeOffersModal();
+        return;
+      }
+      $('offers-content').innerHTML=offers.map(offer=>{
+        const collection=categories.find(category=>category.id===offer.collection)?.title||offer.collection;
+        const product=offer.product_id?state.products.find(item=>String(item.id)===String(offer.product_id)):null;
+        const target=product?`${collection} · ${product.name}`:`${collection} collection`;
+        const existing=state.myOfferClaims.find(claim=>claim.offer_id===offer.id);
+        const rejected=existing?.status==='rejected';
+        const alreadyClaimed=existing&&existing.status!=='rejected';
+        const buttonText=alreadyClaimed?existing.status==='approved'?'✓ Approved · Pay in My Orders':existing.status==='transferred'?'✓ Reward transferred':existing.status==='expired'?'Offer claim expired':'✓ Sent for review':rejected?'Resubmit screenshot':'Claim Now';
+        const buttonClass=alreadyClaimed?'offer-claim':'offer-claim claim-available';
+        const disabled=Boolean(alreadyClaimed);
+        const benefitCount=offer.benefit_count_enabled&&Number(offer.benefit_count)>Number(offer.benefit_count_minimum)
+          ?`<p class="offer-benefit-count">अब तक ${escapeHtml(money(offer.benefit_count))} लोगों ने इस ऑफ़र का फ़ायदा उठाया।</p>`:'';
+        return `<article class="offer-card"><span class="offer-target">${escapeHtml(target)}</span><h3>${escapeHtml(offer.title)}</h3><p>${escapeHtml(offer.description)}</p>${benefitCount}<div class="offer-card-bottom"><span class="offer-countdown" data-offer-countdown data-ends-at="${escapeHtml(offer.ends_at)}">${countdownLabel(offer.ends_at)}</span><button class="${buttonClass}" type="button" data-claim-offer="${escapeHtml(offer.id)}" ${disabled?'disabled':''}>${buttonText}</button></div>${rejected?`<p class="offer-claim-error">Claim rejected: ${escapeHtml(existing.rejection_reason||'Please upload a new screenshot.')}</p>`:''}</article>`;
+      }).join('');
+      $('offers-content').querySelectorAll('[data-claim-offer]').forEach(button=>button.addEventListener('click',()=>claimOffer(button.dataset.claimOffer)));
+      updateOfferCountdowns();
+    }
+    function openOffersModal(offers=state.offers){
+      const active=offers.filter(offer=>offerIsActive(offer)).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+      if(!active.length)return;
+      closeOrdersPanel();
+      closeModal();
+      state.offerPopupOffers=active;
+      markOffersSeen(active);
+      renderOffersModal();
+      if($('offers-modal').classList.contains('hidden'))return;
+      $('offers-modal').classList.remove('hidden');
+      $('offers-modal').setAttribute('aria-hidden','false');
+      document.body.style.overflow='hidden';
+    }
+    function closeOffersModal(){
+      $('offers-modal').classList.add('hidden');
+      $('offers-modal').setAttribute('aria-hidden','true');
+      if($('auth-page').classList.contains('hidden')&&$('offer-claim-modal').classList.contains('hidden')&&!state.ordersPanelOpen&&!$('wallet-modal').classList.contains('open'))document.body.style.overflow='';
+    }
+    function updateOfferCountdowns(){
+      const now=Date.now();
+      const active=state.offers.filter(offer=>offerIsActive(offer,now));
+      if(active.length!==state.offers.length){
+        state.offers=active;
+        renderHeader();
+        if(!$('offers-modal').classList.contains('hidden'))renderOffersModal();
+      }
+      document.querySelectorAll('[data-offer-countdown]').forEach(node=>{
+        node.textContent=countdownLabel(node.dataset.endsAt);
+      });
+    }
+    async function refreshOffers(showUnseen=false){
+      if(!state.client)return;
+      const now=new Date().toISOString();
+      const {data,error}=await state.client.from('offers')
+        .select('id,title,description,collection,product_id,starts_at,ends_at,created_at,claim_enabled,paid_quantity,free_quantity,benefit_count_enabled,benefit_count,benefit_count_minimum')
+        .eq('enabled',true).lte('starts_at',now).gt('ends_at',now)
+        .order('created_at',{ascending:false});
+      if(error)throw error;
+      state.offers=(data||[]).filter(offer=>offerIsActive(offer));
+      renderHeader();
+      if(showUnseen&&$('auth-page').classList.contains('hidden')){
+        const seen=getSeenOfferIds();
+        const unseen=state.offers.filter(offer=>!seen.has(String(offer.id)));
+        if(unseen.length)openOffersModal(unseen);
+      }else if(!$('offers-modal').classList.contains('hidden')){
+        state.offerPopupOffers=state.offers;
+        renderOffersModal();
+      }
+    }
+    function claimOffer(offerId){
+      const offer=state.offers.find(item=>String(item.id)===String(offerId));
+      if(!offer||!offerIsActive(offer))return closeOffersModal();
+      if(offer.claim_enabled){
+        const rejectedClaim=state.myOfferClaims.find(claim=>claim.offer_id===offerId&&claim.status==='rejected');
+        openOfferClaim(offerId,rejectedClaim||null);
+        return;
+      }
+      closeOffersModal();
+      showCategory(offer.collection);
+      if(offer.product_id){
+        setTimeout(()=>{
+          const target=[...document.querySelectorAll('[data-product-id]')].find(element=>element.dataset.productId===String(offer.product_id));
+          if(!target)return;
+          target.scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'center'});
+          target.classList.add('offer-product-highlight');
+          setTimeout(()=>target.classList.remove('offer-product-highlight'),2600);
+        },80);
+      }
+    }
+
+    async function refreshMyOfferClaims(){
+      if(!state.client||!state.user){state.myOfferClaims=[];return}
+      const {data,error}=await state.client.rpc('my_offer_claims');
+      if(error)throw error;
+      state.myOfferClaims=Array.isArray(data)?data:[];
+      if(!$('offers-modal').classList.contains('hidden'))renderOffersModal();
+      if(state.ordersPanelOpen)renderOrdersPanel();
+    }
+
+    function openOfferClaim(offerId,existingClaim=null){
+      const offer=state.offers.find(item=>item.id===offerId)|| (existingClaim?{
+        id:existingClaim.offer_id,title:existingClaim.offer_title,description:existingClaim.offer_description,
+        collection:existingClaim.offer_collection,product_id:existingClaim.offer_product_id,
+        paid_quantity:existingClaim.paid_quantity,free_quantity:existingClaim.free_quantity,claim_enabled:true
+      }:null);
+      if(!offer||!offer.claim_enabled)return;
+      state.activeClaimOffer=offer;
+      if(!state.user){
+        sessionStorage.setItem('pending_offer_claim',offerId);
+        openAuthPage('signin','offer');
+        return;
+      }
+      const eligibleProducts=state.products.filter(product=>product.category==='software'&&product.in_stock&&(!offer.product_id||String(product.id)===String(offer.product_id)));
+      $('offer-claim-product').innerHTML=eligibleProducts.map(product=>`<option value="${escapeHtml(product.id)}">${escapeHtml(product.name)} · ₹${money(product.price)}</option>`).join('');
+      if(existingClaim?.product_id)$('offer-claim-product').value=String(existingClaim.product_id);
+      $('offer-claim-product').disabled=Boolean(offer.product_id||existingClaim?.product_id);
+      $('offer-claim-title').textContent=existingClaim?'Resubmit offer claim':`Claim ${offer.title}`;
+      $('offer-claim-description').textContent=`Pay for ${offer.paid_quantity} unit(s) of one software product and receive ${offer.free_quantity} free unit(s) after payment approval. Upload a screenshot showing that you shared the offer on WhatsApp. Your amount is calculated and locked by the server.`;
+      $('offer-claim-screenshot').value='';
+      $('offer-claim-share-name').checked=false;
+      $('offer-claim-error').textContent='';
+      $('offer-claim-submit').disabled=false;
+      if(!eligibleProducts.length){
+        $('offer-claim-error').textContent='No available software products currently match this offer.';
+        $('offer-claim-submit').disabled=true;
+      }
+      $('offer-claim-modal').classList.remove('hidden');
+      $('offer-claim-modal').setAttribute('aria-hidden','false');
+      document.body.style.overflow='hidden';
+    }
+
+    function closeOfferClaimModal(){
+      $('offer-claim-modal').classList.add('hidden');
+      $('offer-claim-modal').setAttribute('aria-hidden','true');
+      $('offer-claim-form').reset();
+      if($('offers-modal').classList.contains('hidden')&&!state.ordersPanelOpen&&!$('wallet-modal').classList.contains('open'))document.body.style.overflow='';
+    }
+
+    async function submitOfferClaim(event){
+      event.preventDefault();
+      const offer=state.activeClaimOffer;
+      const file=$('offer-claim-screenshot').files[0];
+      const productId=Number($('offer-claim-product').value);
+      if(!offer||!state.user){$('offer-claim-error').textContent='Sign in to submit an offer claim.';return}
+      if(!productId){$('offer-claim-error').textContent='Choose an available software product.';return}
+      if(!file||!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>2*1024*1024){
+        $('offer-claim-error').textContent='Choose a PNG, JPG, or WebP screenshot up to 2 MB.';
+        return;
+      }
+      const button=$('offer-claim-submit');
+      button.disabled=true;
+      $('offer-claim-error').textContent='';
+      try{
+        const dataUrl=await new Promise((resolve,reject)=>{
+          const reader=new FileReader();
+          reader.onload=()=>resolve(reader.result);
+          reader.onerror=()=>reject(new Error('Could not read the screenshot file.'));
+          reader.readAsDataURL(file);
+        });
+        const screenshotBase64=String(dataUrl).split(',')[1]||'';
+        const {data,error}=await state.client.rpc('submit_offer_claim',{
+          p_offer_id:offer.id,p_product_id:productId,p_screenshot_base64:screenshotBase64,
+          p_screenshot_mime:file.type,p_share_name:$('offer-claim-share-name').checked
+        });
+        if(error||!data?.ok)throw new Error(error?.message||data?.message||'Could not submit the offer claim.');
+        button.textContent='✓ Sent for review';
+        await refreshMyOfferClaims();
+        closeOfferClaimModal();
+        renderOffersModal();
+        showNotice('Offer claim sent for review. Payment opens after admin approval.');
+      }catch(error){
+        console.error('Could not submit offer claim:',error);
+        $('offer-claim-error').textContent=error.message||'Could not submit the offer claim.';
+      }finally{button.disabled=false}
+    }
+
+    function renderOffersTriggerHandler(){
+      $('offers-trigger')?.addEventListener('click',()=>openOffersModal(state.offers));
+    }
+
+    function offerNotificationSeenIds(){
+      try{
+        const ids=JSON.parse(localStorage.getItem('roshan-brand-seen-offer-claims')||'[]');
+        return new Set(Array.isArray(ids)?ids.filter(id=>typeof id==='string'):[]);
+      }catch(error){
+        console.error('Could not read recent claim notification history:',error);
+        return new Set();
+      }
+    }
+
+    async function showRecentOfferClaimNotification(){
+      if(!state.client)return;
+      try{
+        const [claimsResult,intervalResult]=await Promise.all([
+          state.client.rpc('public_recent_offer_claim_names'),
+          state.client.rpc('public_offer_notification_interval')
+        ]);
+        if(claimsResult.error)throw claimsResult.error;
+        if(intervalResult.error)throw intervalResult.error;
+        const interval=Number(intervalResult.data);
+        if(Number.isInteger(interval)&&interval>=15&&interval<=3600)state.offerNotificationInterval=interval;
+        const claims=Array.isArray(claimsResult.data)?claimsResult.data:[];
+        const seen=offerNotificationSeenIds();
+        const next=claims.find(claim=>!seen.has(String(claim.claim_id)));
+        if(next){
+          seen.add(String(next.claim_id));
+          try{localStorage.setItem('roshan-brand-seen-offer-claims',JSON.stringify([...seen].slice(-150)))}
+          catch(error){console.error('Could not save claim notification history:',error)}
+          const notification=$('offer-name-notification');
+          notification.innerHTML=`<strong>${escapeHtml(next.display_name)}</strong> ने अभी <strong>${escapeHtml(next.offer_title)}</strong> क्लेम किया।`;
+          notification.classList.add('visible');
+          clearTimeout(state.offerNotificationHideTimer);
+          state.offerNotificationHideTimer=setTimeout(()=>notification.classList.remove('visible'),5500);
+        }
+      }catch(error){
+        console.error('Could not load recent offer claim notifications:',error);
+      }finally{
+        clearTimeout(state.offerNotificationTimer);
+        state.offerNotificationTimer=setTimeout(showRecentOfferClaimNotification,state.offerNotificationInterval*1000);
+      }
+    }
+
     function renderOrdersTrigger(){
-      const hasProcessingOrder=Boolean(state.myOrders?.some(order=>order.status==='pending'||order.status==='completed'));
+      const hasProcessingOrder=Boolean(state.myOrders?.some(order=>['pending_payment','pending','pending_verification','completed'].includes(order.status)));
       return `<button class="orders-trigger" data-card-tone="lime" id="orders-trigger" type="button" aria-label="My Orders" title="My Orders" aria-expanded="${state.ordersPanelOpen}"><span class="orders-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>${hasProcessingOrder?'<span class="orders-dot" aria-label="Processing orders"></span>':''}</span><span class="orders-trigger-label">My Orders</span></button>`;
     }
 
     function renderOrdersPanel(){
       const content=$('orders-panel-content');
       if(!state.user){
-        content.innerHTML='<div class="orders-signin"><p>Sign in with Google to see your orders</p><button id="orders-signin" type="button">Sign in with Google</button></div>';
-        $('orders-signin').addEventListener('click',signInWithGoogle);
+        content.innerHTML='';
+        closeOrdersPanel();
+        openAuthPage('signin','orders');
         return;
       }
       if(state.myOrdersLoading){
@@ -1204,26 +1952,35 @@
       const orders=(state.myOrders||[]).slice(0,5);
       const coupons=(state.myCoupons||[]).slice(0,5);
       const ordersMarkup=orders.length ? `<div class="orders-list">${orders.map(order=>{
-        const status=orderStatus(order.status);
+        const status=orderStatus(order);
         const delivered=order.status==='delivered';
         const link=delivered?safeHttpUrl(order.delivery_link):'';
-        const orderInfo=`<p>Order #${escapeHtml(order.id)} · ${escapeHtml(order.product_type||'Product')}</p>`;
+        const orderInfo=`<p>Order #${escapeHtml(order.id)} · ${escapeHtml(order.product_type||'Product')} · Quantity ${Number(order.quantity)||1}${order.is_offer_free?' · Free offer item':''}</p>`;
         const delivery=delivered
           ? `${orderInfo}${order.delivery_note?`<p>${escapeHtml(order.delivery_note)}</p>`:''}${order.delivery_text?`<pre>${escapeHtml(order.delivery_text)}</pre>`:''}${link?`<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(order.product_name)}</a>`:''}<button class="orders-copy" type="button" data-copy-order="${escapeHtml(order.id)}">Copy</button>`
-          : `${orderInfo}<p>${status.label==='Processing'?'Your order is being processed.':`This order was ${status.label.toLowerCase()}.`}</p>`;
-        return `<article class="orders-item"><button class="orders-item-trigger" type="button" data-orders-item="${escapeHtml(order.id)}" aria-expanded="false"><span class="orders-item-main"><strong>${escapeHtml(order.product_name)}</strong><small>₹${money(order.price)} · ${formatDate(order.created_at)}</small></span><span class="orders-status ${status.className}">${status.label}</span></button><div class="orders-item-detail hidden" data-orders-detail="${escapeHtml(order.id)}">${delivery}</div></article>`;
+          : `${orderInfo}<p>${order.status==='pending_payment'?'Payment is due. Open this order to scan the exact-amount QR code.':order.status==='pending_verification'?'Payment submitted. Waiting for admin verification.':status.label==='Processing'?'Your order is being processed.':`This order was ${status.label.toLowerCase()}.`}</p>${order.payment_method&&order.payment_method!=='wallet'?`<p>Payment: ${escapeHtml(order.payment_method==='upi_qr'?'Scan QR (UPI)':'UPI app')} · ₹${money(order.price)}</p>`:''}${order.coupon_code?`<p>Coupon ${escapeHtml(order.coupon_code)} · ${escapeHtml(order.discount_percent)}% off · Original ₹${money(order.original_price)} · Final ₹${money(order.price)}</p>`:''}${order.reject_reason?`<p>Reason: ${escapeHtml(order.reject_reason)}</p>`:''}${order.status==='pending_payment'?`<button class="orders-pay-button" type="button" data-pay-offer-order="${escapeHtml(order.id)}">Pay now</button><button class="orders-delete-button" type="button" data-delete-offer-order="${escapeHtml(order.id)}">Delete unpaid order</button>`:''}`;
+        const itemName=order.is_offer_free?`Free · ${order.product_name}`:order.product_name;
+        return `<article class="orders-item"><button class="orders-item-trigger" type="button" data-orders-item="${escapeHtml(order.id)}" aria-expanded="false"><span class="orders-item-main"><strong>${escapeHtml(itemName)}</strong><small>${Number(order.quantity)||1} item(s) · ₹${money(order.price)} · ${formatDate(order.created_at)}</small></span><span class="orders-status ${status.className}">${status.label}</span></button><div class="orders-item-detail hidden" data-orders-detail="${escapeHtml(order.id)}">${delivery}</div></article>`;
       }).join('')}</div>` : '';
+      const claims=state.myOfferClaims||[];
+      const claimsMarkup=claims.length?`<div class="orders-list" style="margin-top:16px"><div style="padding:8px 0 4px;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.04em">OFFER CLAIMS</div>${claims.map(claim=>{
+        const label=claim.status==='pending'?'Claim under review':claim.status==='approved'?'Approved · payment order created':claim.status==='transferred'?'Free software transferred':claim.status==='expired'?'Claim expired':'Rejected';
+        const statusClass=claim.status==='rejected'||claim.status==='expired'?'rejected':claim.status==='transferred'?'delivered':'processing';
+        return `<article class="orders-item"><div class="orders-item-trigger" style="cursor:default"><span class="orders-item-main"><strong>${escapeHtml(claim.offer_title)}</strong><small>${escapeHtml(claim.product_name)} · ${formatDate(claim.created_at)}${claim.payment_order_id?` · Order #${escapeHtml(claim.payment_order_id)}`:''}${claim.rejection_reason?` · Reason: ${escapeHtml(claim.rejection_reason)}`:''}</small></span><span class="orders-status ${statusClass}">${label}</span></div>${claim.status==='rejected'?`<button class="orders-pay-button" type="button" data-resubmit-offer-claim="${escapeHtml(claim.id)}">Resubmit screenshot</button>`:''}</article>`;
+      }).join('')}</div>`:'';
       const couponsMarkup=coupons.length ? `<div class="orders-list" style="margin-top:18px"><div style="padding:8px 0 4px;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.04em">MY COUPONS</div>${coupons.map(coupon=>{
         const expiry=coupon.expiresAt ? formatDate(coupon.expiresAt) : 'No expiry';
         return `<article class="orders-item"><div class="orders-item-trigger" style="cursor:default;border-bottom:0"><span class="orders-item-main"><strong>${escapeHtml(coupon.label || 'Coupon')} OFF</strong><small>${escapeHtml(coupon.code)} · Expires ${escapeHtml(expiry)}</small></span><button class="orders-copy" type="button" data-copy-coupon="${escapeHtml(coupon.code)}">Copy</button></div></article>`;
       }).join('')}</div>` : '';
-      if(!orders.length && !coupons.length){
+      if(!orders.length && !coupons.length && !claims.length){
         content.innerHTML='<div class="orders-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><p>No orders yet</p><button id="orders-browse" type="button">Browse products</button></div>';
         $('orders-browse').addEventListener('click',()=>{closeOrdersPanel();navigateSection('categories-view')});
         return;
       }
-      content.innerHTML=`${ordersMarkup}${couponsMarkup}`;
+      content.innerHTML=`${ordersMarkup}${claimsMarkup}${couponsMarkup}`;
       content.querySelectorAll('[data-orders-item]').forEach(button=>button.addEventListener('click',()=>{
+        const order=orders.find(item=>String(item.id)===button.dataset.ordersItem);
+        if(order?.status==='pending_payment'){showOfferOrderPayment(order.id);return}
         const detail=content.querySelector(`[data-orders-detail="${CSS.escape(button.dataset.ordersItem)}"]`);
         const expanded=detail.classList.toggle('hidden')===false;
         button.setAttribute('aria-expanded',String(expanded));
@@ -1236,6 +1993,12 @@
       content.querySelectorAll('[data-copy-coupon]').forEach(button=>button.addEventListener('click',()=>{
         copyCustomerValue(button.dataset.copyCoupon, 'Coupon code');
       }));
+      content.querySelectorAll('[data-pay-offer-order]').forEach(button=>button.addEventListener('click',()=>showOfferOrderPayment(button.dataset.payOfferOrder)));
+      content.querySelectorAll('[data-delete-offer-order]').forEach(button=>button.addEventListener('click',()=>deleteOfferOrder(button.dataset.deleteOfferOrder)));
+      content.querySelectorAll('[data-resubmit-offer-claim]').forEach(button=>button.addEventListener('click',()=>{
+        const claim=claims.find(item=>item.id===button.dataset.resubmitOfferClaim);
+        if(claim)openOfferClaim(claim.offer_id,claim);
+      }));
     }
 
     async function refreshMyOrders(){
@@ -1244,9 +2007,14 @@
       state.myOrdersError=null;
       if(state.ordersPanelOpen)renderOrdersPanel();
       try{
-        const {data,error}=await state.client.rpc('my_orders');
-        if(error)throw error;
-        state.myOrders=Array.isArray(data)?data:[];
+        const [ordersResult,claimsResult]=await Promise.all([
+          state.client.rpc('my_orders'),
+          state.client.rpc('my_offer_claims')
+        ]);
+        if(ordersResult.error)throw ordersResult.error;
+        if(claimsResult.error)throw claimsResult.error;
+        state.myOrders=Array.isArray(ordersResult.data)?ordersResult.data:[];
+        state.myOfferClaims=Array.isArray(claimsResult.data)?claimsResult.data:[];
         state.myOrdersError=null;
       }catch(error){
         console.error('Could not load customer orders:',error);
@@ -1260,6 +2028,7 @@
     }
 
     function openOrdersPanel(){
+      if(!state.user){openAuthPage('signin','orders');return}
       closeMobileMenu();
       $('profile-menu')?.classList.add('hidden');
       state.ordersPanelOpen=true;
@@ -1268,7 +2037,7 @@
       $('orders-trigger')?.setAttribute('aria-expanded','true');
       document.body.style.overflow='hidden';
       renderOrdersPanel();
-      if(state.user&&(state.myOrders===null||state.myOrdersError))refreshMyOrders();
+      refreshMyOrders();
     }
 
     function closeOrdersPanel(){
@@ -1276,16 +2045,151 @@
       $('orders-panel').classList.add('hidden');
       $('orders-panel').setAttribute('aria-hidden','true');
       $('orders-trigger')?.setAttribute('aria-expanded','false');
-      document.body.style.overflow='';
+      document.body.style.overflow=$('auth-page').classList.contains('hidden')?'':'hidden';
+    }
+
+    function setAuthMode(mode){
+      state.authMode=mode;
+      const signup=mode==='signup';
+      const forgot=mode==='forgot';
+      const reset=mode==='reset';
+      const title=reset?'Choose a new password':signup?'Create your account':'Welcome back';
+      $('auth-title').textContent=title;
+      $('auth-subtitle').textContent=reset?'Set a new password for your Roshan Brand account':signup?'Create your Roshan Brand account':'Sign in to your dashboard';
+      $('auth-google').classList.toggle('hidden',forgot||reset);
+      $('auth-divider').classList.toggle('hidden',forgot||reset);
+      $('auth-password-field').classList.toggle('hidden',forgot);
+      $('auth-email').closest('.auth-field').classList.toggle('hidden',reset);
+      $('auth-forgot-row').classList.toggle('hidden',signup||forgot||reset);
+      $('auth-switch').classList.toggle('hidden',reset);
+      $('auth-email').required=!reset;
+      $('auth-password').required=!forgot;
+      $('auth-password').autocomplete=signup||reset?'new-password':'current-password';
+      $('auth-password').placeholder=reset?'Enter a new password':signup?'At least 6 characters':'Enter your password';
+      $('auth-submit').textContent=reset?'Update password':forgot?'Send reset link':signup?'Create account':'Sign in';
+      $('auth-switch').innerHTML=signup?'Already have an account? <button class="auth-link" id="auth-switch-link" type="button">Sign in</button>':forgot?'Remembered your password? <button class="auth-link" id="auth-switch-link" type="button">Sign in</button>':'Don&#39;t have an account? <button class="auth-link" id="auth-switch-link" type="button">Create one free</button>';
+      $('auth-message').textContent='';
+      $('auth-message').classList.remove('success');
+      $('auth-password').value='';
+      $('auth-password').type='password';
+      $('auth-password-toggle').setAttribute('aria-label','Show password');
+      $('auth-password-toggle').setAttribute('aria-pressed','false');
+      $('auth-switch-link')?.addEventListener('click',()=>setAuthMode(signup||forgot?'signin':'signup'));
+    }
+
+    function openAuthPage(mode='signin',intent=''){
+      closeMobileMenu();
+      closeOrdersPanel();
+      $('profile-menu')?.classList.add('hidden');
+      if(intent==='orders')sessionStorage.setItem('wallet_pending_track_order','true');
+      setAuthMode(mode);
+      $('auth-page').classList.remove('hidden');
+      $('auth-page').setAttribute('aria-hidden','false');
+      document.body.style.overflow='hidden';
+      if(mode==='reset')$('auth-password').focus();
+      else $('auth-email').focus();
+    }
+
+    function closeAuthPage(clearPending=true){
+      $('auth-page').classList.add('hidden');
+      $('auth-page').setAttribute('aria-hidden','true');
+      if(clearPending)sessionStorage.removeItem('wallet_pending_track_order');
+      document.body.style.overflow=state.ordersPanelOpen?'hidden':'';
+      state.authMode='signin';
+    }
+
+    function setAuthMessage(message,success=false){
+      $('auth-message').textContent=message;
+      $('auth-message').classList.toggle('success',success);
+    }
+
+    async function submitAuth(event){
+      event.preventDefault();
+      if(!state.client){setAuthMessage('Sign-in is unavailable until Supabase is configured.');return}
+      const mode=state.authMode;
+      const email=$('auth-email').value.trim();
+      const password=$('auth-password').value;
+      if(mode!=='reset'&&(!email||!$('auth-email').checkValidity())){
+        setAuthMessage('Enter a valid email address.');
+        $('auth-email').focus();
+        return;
+      }
+      if(mode!=='forgot'&&mode!=='reset'&&!password){
+        setAuthMessage('Enter your password.');
+        $('auth-password').focus();
+        return;
+      }
+      const submit=$('auth-submit');
+      const google=$('auth-google');
+      submit.disabled=true;
+      google.disabled=true;
+      setAuthMessage('');
+      try{
+        if(mode==='forgot'){
+          const {error}=await state.client.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
+          if(error)throw error;
+          setAuthMessage('If an account exists for this email, a password reset link is on its way.',true);
+          return;
+        }
+        if(mode==='reset'){
+          if(password.length<6){setAuthMessage('Use a password with at least 6 characters.');return}
+          const {error}=await state.client.auth.updateUser({password});
+          if(error)throw error;
+          history.replaceState(null,'',window.location.pathname+window.location.search);
+          setAuthMessage('Your password has been updated.',true);
+          const {data,error:sessionError}=await state.client.auth.getSession();
+          if(sessionError)throw sessionError;
+          if(data.session)await updateSession(data.session);
+          closeAuthPage(false);
+          if(data.session&&sessionStorage.getItem('wallet_pending_track_order')){
+            sessionStorage.removeItem('wallet_pending_track_order');
+            openOrdersPanel();
+          }
+          return;
+        }
+        if(mode==='signup'){
+          if(password.length<6){setAuthMessage('Use a password with at least 6 characters.');return}
+          const {data,error}=await state.client.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+window.location.pathname}});
+          if(error)throw error;
+          if(data.session){
+            await updateSession(data.session);
+            closeAuthPage(false);
+          }else{
+            setAuthMessage('Account created. Check your email to confirm your address, then sign in.',true);
+            setAuthMode('signin');
+            $('auth-email').value=email;
+            setAuthMessage('Account created. Check your email to confirm your address, then sign in.',true);
+          }
+          return;
+        }
+        const {data,error}=await state.client.auth.signInWithPassword({email,password});
+        if(error){
+          const message=/invalid login credentials/i.test(error.message)?'Email or password is incorrect.':error.message;
+          setAuthMessage(message);
+          return;
+        }
+        if(data.session)await updateSession(data.session);
+        closeAuthPage(false);
+      }catch(error){
+        console.error('Authentication action failed:',error);
+        const message=/already registered/i.test(error.message||'')?'An account already exists for this email. Sign in instead.':error.message||'Authentication failed. Please try again.';
+        setAuthMessage(message);
+      }finally{
+        submit.disabled=false;
+        google.disabled=false;
+      }
     }
 
     function renderHeader(){
       const host=$('nav-actions-content');
       document.getElementById('profile-menu')?.remove();
       if(!state.user){
-        host.innerHTML=renderOrdersTrigger()+'<button class="google-login" id="google-login" title="Sign in with Google" aria-label="Sign in with Google"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.73 7.18l7.27 5.64c4.25-3.92 7.5-9.72 7.5-17.29z"/><path fill="#FBBC05" d="M10.53 28.59a14.4 14.4 0 0 1 0-9.18l-7.98-6.19a23.95 23.95 0 0 0 0 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.9-5.8l-7.27-5.64c-2.02 1.35-4.6 2.15-8.63 2.15-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg></button>';
+        host.innerHTML=renderOffersTrigger()+renderOrdersTrigger()+'<button class="google-login" id="google-login" title="Sign in with Google" aria-label="Sign in with Google"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.73 7.18l7.27 5.64c4.25-3.92 7.5-9.72 7.5-17.29z"/><path fill="#FBBC05" d="M10.53 28.59a14.4 14.4 0 0 1 0-9.18l-7.98-6.19a23.95 23.95 0 0 0 0 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.9-5.8l-7.27-5.64c-2.02 1.35-4.6 2.15-8.63 2.15-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg></button>';
+        renderOffersTriggerHandler();
           $('orders-trigger').addEventListener('click',()=>state.ordersPanelOpen?closeOrdersPanel():openOrdersPanel());
-        $('google-login').addEventListener('click',signInWithGoogle);
+        $('google-login').title='Sign in';
+        $('google-login').setAttribute('aria-label','Sign in');
+        $('google-login').addEventListener('click',()=>openAuthPage('signin'));
         return;
       }
       const avatar=String(state.user.user_metadata?.avatar_url||'');
@@ -1293,34 +2197,44 @@
         ? `<img src="${escapeHtml(avatar)}" alt="" referrerpolicy="no-referrer">`
         : `<span class="avatar-fallback">${escapeHtml((state.user.email||'U').slice(0,1).toUpperCase())}</span>`;
       host.innerHTML=renderOrdersTrigger()+`<button class="wallet-chip" id="wallet-chip" aria-label="Open wallet, balance ₹${money(state.balance)}" title="Wallet balance ₹${money(state.balance)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 9h18M16 14h2"/></svg><span>₹${money(state.balance)}</span></button><div class="avatar-wrap"><button class="avatar-button" id="avatar-button" aria-label="Open account menu" title="Account menu" aria-expanded="false">${avatarMarkup}</button><div class="profile-menu hidden" id="profile-menu"><div class="profile-email">${escapeHtml(state.user.email||'')}</div><div class="profile-balance">Wallet balance · ₹${money(state.balance)}</div><button data-menu="wallet">Add Money</button><button data-menu="orders">My Orders</button><button data-menu="history">Wallet History</button><button data-menu="logout">Logout</button></div></div>`;
+      host.insertAdjacentHTML('afterbegin',renderOffersTrigger());
       document.body.append($('profile-menu'));
       $('orders-trigger').addEventListener('click',()=>{
         if(state.ordersPanelOpen)closeOrdersPanel();
         else openOrdersPanel();
       });
+      renderOffersTriggerHandler();
       $('wallet-chip').addEventListener('click',()=>openWallet('wallet'));
       $('avatar-button').addEventListener('click',toggleProfileMenu);
       $('profile-menu').querySelector('[data-menu="wallet"]').addEventListener('click',()=>openWallet('wallet').then(showAddMoney));
-      $('profile-menu').querySelector('[data-menu="orders"]').addEventListener('click',()=>openWallet('orders'));
+      $('profile-menu').querySelector('[data-menu="orders"]').addEventListener('click',openOrdersPanel);
       $('profile-menu').querySelector('[data-menu="history"]').addEventListener('click',()=>openWallet('history'));
       $('profile-menu').querySelector('[data-menu="logout"]').addEventListener('click',signOut);
     }
 
     async function signInWithGoogle(){
-      if(!state.client)return showNotice('Sign-in is unavailable until Supabase is configured.');
-      const {error}=await state.client.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin}});
-      if(error)showNotice(`Google sign-in failed: ${error.message}`);
+      if(!state.client){
+        if(!$('auth-page').classList.contains('hidden'))setAuthMessage('Sign-in is unavailable until Supabase is configured.');
+        else showNotice('Sign-in is unavailable until Supabase is configured.');
+        return;
+      }
+      try{
+        const {error}=await state.client.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin}});
+        if(error)throw error;
+      }catch(error){
+        if(!$('auth-page').classList.contains('hidden'))setAuthMessage(`Google sign-in failed: ${error.message||'Please try again.'}`);
+        else showNotice(`Google sign-in failed: ${error.message||'Please try again.'}`);
+      }
     }
 
     async function trackOrders(){
       closeOrdersPanel();
       closeMobileMenu();
       if(!state.user){
-        sessionStorage.setItem('wallet_pending_track_order','true');
-        await signInWithGoogle();
+        openAuthPage('signin','orders');
         return;
       }
-      await openWallet('orders');
+      openOrdersPanel();
     }
 
     function closeMobileMenu(){
@@ -1347,6 +2261,7 @@
     }
 
     async function updateSession(session){
+      if(session?.user&&state.user?.id===session.user.id)return;
       state.user=session?.user||null;
       if(state.walletChannel){state.client.removeChannel(state.walletChannel);state.walletChannel=null}
       if(state.ordersChannel){state.client.removeChannel(state.ordersChannel);state.ordersChannel=null}
@@ -1364,6 +2279,7 @@
       }else{
         state.balance=0;
         state.myOrders=[];
+        state.myOfferClaims=[];
         state.myOrdersError=null;
         closeOrdersPanel();
       }
@@ -1374,9 +2290,23 @@
         setTimeout(()=>buyProduct(pendingId),0);
       }
       const pendingOrders=sessionStorage.getItem('wallet_pending_track_order');
-      if(state.user&&pendingOrders){
+      if(state.user&&pendingOrders&&state.authMode!=='reset'){
         sessionStorage.removeItem('wallet_pending_track_order');
-        setTimeout(()=>openWallet('orders'),0);
+        setTimeout(()=>{
+          if(!$('auth-page').classList.contains('hidden'))closeAuthPage(false);
+          openOrdersPanel();
+        },0);
+      }
+      const pendingOffer=sessionStorage.getItem('pending_offer_claim');
+      if(state.user&&pendingOffer&&state.authMode!=='reset'){
+        sessionStorage.removeItem('pending_offer_claim');
+        setTimeout(async()=>{
+          if(!$('auth-page').classList.contains('hidden'))closeAuthPage(false);
+          try{
+            if(!state.offers.some(offer=>offer.id===pendingOffer))await refreshOffers(false);
+            openOfferClaim(pendingOffer);
+          }catch(error){showNotice(`Could not reopen the offer claim: ${error.message}`)}
+        },0);
       }
     }
 
@@ -1389,7 +2319,7 @@
     }
 
     function openModal(){ $('wallet-modal').classList.add('open');document.body.style.overflow='hidden'; }
-    function closeModal(){ $('wallet-modal').classList.remove('open');document.body.style.overflow=''; }
+    function closeModal(){ $('wallet-modal').classList.remove('open');$('wallet-dialog').classList.remove('checkout-dialog');document.body.style.overflow='';state.checkout=null; }
     function transactionLabel(type){return ({topup:'Wallet top-up',purchase:'Purchase',refund:'Refund',admin_credit:'Balance added',admin_debit:'Balance deducted'})[type]||type}
     function formatDate(value){return new Date(value).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'})}
     async function copyCustomerValue(value,label){
@@ -1400,9 +2330,62 @@
       }catch(error){showNotice(`Could not copy ${label.toLowerCase()}: ${error.message}`)}
     }
 
+    async function showOfferOrderPayment(orderId){
+      const order=(state.myOrders||[]).find(item=>String(item.id)===String(orderId));
+      if(!order||order.status!=='pending_payment'||!order.offer_claim_id)return;
+      closeOrdersPanel();
+      const upiId=String(state.settings.upi_id||'').trim();
+      const payee=String(state.settings.upi_payee_name||'').trim();
+      $('modal-title').textContent='Pay for your offer order';
+      $('wallet-dialog').classList.add('checkout-dialog');
+      openModal();
+      if(!upiId||!payee||state.settings.enable_upi_qr!==true){
+        $('modal-body').innerHTML='<div class="modal-error">Offer UPI QR payment is unavailable right now. Please contact the store admin.</div>';
+        return;
+      }
+      const params=new URLSearchParams({pa:upiId,pn:payee,am:Number(order.price).toFixed(2),cu:'INR',tn:`${state.settings.site_title||'Roshan Brand'} Offer ${order.id}`});
+      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(order.product_name)} · ${Number(order.quantity)||1} paid item(s)</strong><div class="checkout-amounts"><span>Pending Payment</span><strong>₹${money(order.price)}</strong></div></div><p class="checkout-note">Scan this exact-amount QR, then enter the 12-digit UTR. Payment expires ${escapeHtml(formatDate(order.expires_at))}.</p><div class="qr-box" id="offer-payment-qr" aria-label="Offer order payment QR code"></div><label class="checkout-utr-label" for="offer-payment-utr">UTR / Transaction ID (12 digits)</label><input class="checkout-utr" id="offer-payment-utr" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Enter 12-digit UTR"><div class="modal-error" id="offer-payment-error"></div><button class="modal-primary" id="offer-payment-submit" type="button">I have paid</button>`;
+      if(window.QRCode)new QRCode($('offer-payment-qr'),{text:`upi://pay?${params.toString()}`,width:230,height:230,colorDark:'#060b17',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+      $('offer-payment-utr').addEventListener('input',event=>{event.currentTarget.value=event.currentTarget.value.replace(/\D/g,'').slice(0,12)});
+      $('offer-payment-submit').addEventListener('click',()=>submitOfferOrderPayment(order));
+    }
+
+    async function submitOfferOrderPayment(order){
+      const utr=$('offer-payment-utr').value.trim();
+      if(!/^\d{12}$/.test(utr)){$('offer-payment-error').textContent='Enter the 12-digit UTR / transaction ID.';return}
+      const button=$('offer-payment-submit');
+      button.disabled=true;
+      try{
+        const {data,error}=await state.client.rpc('submit_offer_order_payment',{p_order_id:order.id,p_utr:utr});
+        if(error||!data?.ok)throw new Error(error?.message||data?.message||'Could not submit payment.');
+        await refreshMyOrders();
+        $('modal-title').textContent='Payment submitted';
+        $('modal-body').innerHTML=`<div class="wallet-balance"><strong style="font-size:18px">Payment submitted. Waiting for admin verification.</strong><small style="margin-top:9px">${escapeHtml(order.product_name)} · Quantity ${Number(order.quantity)||1} · ₹${money(order.price)}</small><small>Order #${escapeHtml(order.id)} · UTR ${escapeHtml(utr)}</small></div><button class="modal-primary" id="offer-payment-done" type="button">Done</button>`;
+        $('offer-payment-done').addEventListener('click',closeModal);
+      }catch(error){
+        $('offer-payment-error').textContent=error.message||'Could not submit payment.';
+        button.disabled=false;
+      }
+    }
+
+    async function deleteOfferOrder(orderId){
+      if(!window.confirm('Delete this unpaid offer order? You cannot claim the same offer again.'))return;
+      try{
+        const {data,error}=await state.client.rpc('delete_my_unpaid_order',{p_order_id:Number(orderId)});
+        if(error||!data?.ok)throw new Error(error?.message||data?.message||'Could not delete the unpaid order.');
+        await refreshMyOrders();
+      }catch(error){showNotice(error.message)}
+    }
+
     async function openWallet(mode='wallet'){
+      if(mode==='orders'){openOrdersPanel();return}
       $('profile-menu')?.classList.add('hidden');
-      state.modalMode=mode;openModal();await renderWalletModal();
+      $('wallet-dialog').classList.remove('checkout-dialog');state.modalMode=mode;openModal();await renderWalletModal();
+    }
+
+    function openWalletTopup(){
+      $('wallet-dialog').classList.remove('checkout-dialog');
+      state.modalMode='wallet';openModal();showAddMoney();
     }
 
     async function renderWalletModal(){
@@ -1415,11 +2398,20 @@
           const {data,error}=await state.client.rpc('my_orders');
           if(error)throw error;
           body.innerHTML=data.length?data.map(order=>{
-            const orderStatus=order.status==='completed'?'pending':order.status;
-            const delivered=orderStatus==='delivered';
+            const orderStatusValue=order.status==='completed'?'pending':order.status;
+            const status=orderStatus(order);
+            const delivered=orderStatusValue==='delivered';
             const link=delivered?safeHttpUrl(order.delivery_link):'';
             const delivery=delivered?`<div class="customer-order-detail">${order.delivery_note?`<p>${escapeHtml(order.delivery_note)}</p>`:''}${order.delivery_text?`<pre class="customer-delivery-text">${escapeHtml(order.delivery_text)}</pre>`:link?'<p class="modal-note">Your software download is ready.</p>':'<p class="modal-note">No text delivery details.</p>'}${link?`<a class="delivery-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(order.product_name)}</a>`:''}<div class="customer-order-actions">${order.delivery_text?`<button class="back" type="button" data-copy-delivery="${order.id}">Copy delivery</button>`:''}${link?`<button class="back" type="button" data-copy-link="${order.id}">Copy link</button>`:''}</div></div>`:`<div class="customer-order-detail"><small>${orderStatus==='pending'?'Your order is awaiting delivery.':`Order status: ${escapeHtml(orderStatus)}`}</small></div>`;
-            return `<article class="customer-order"><button class="customer-order-head" type="button" data-customer-order="${order.id}" aria-expanded="false"><span><strong>Order #${order.id} · ${escapeHtml(order.product_name)}</strong><small>${escapeHtml(order.product_type||'')} · ₹${money(order.price)} · ${formatDate(order.created_at)}</small></span><span class="status-badge ${delivered?'delivered':escapeHtml(orderStatus)}">${escapeHtml(orderStatus)}</span></button><div class="customer-order-content hidden" data-order-detail="${order.id}">${delivery}</div></article>`;
+            const detailMessage=order.payment_method!=='wallet'&&order.payment_status==='pending'
+              ?'Payment submitted. Waiting for admin verification.'
+              :order.payment_method!=='wallet'&&order.payment_status==='paid'
+                ?'Payment approved. Your order is awaiting delivery.'
+                :orderStatusValue==='pending'?'Your order is awaiting delivery.':`Order status: ${status.label}`;
+            const orderDetails=`${order.payment_method&&order.payment_method!=='wallet'?`<small>Payment: ${escapeHtml(order.payment_method==='upi_qr'?'Scan QR (UPI)':'UPI app')} · ₹${money(order.price)}</small>`:''}${order.coupon_code?`<small>Coupon ${escapeHtml(order.coupon_code)} · ${escapeHtml(order.discount_percent)}% off · Original ₹${money(order.original_price)} · Final ₹${money(order.price)}</small>`:''}${order.reject_reason?`<small>Reason: ${escapeHtml(order.reject_reason)}</small>`:''}`;
+            const statusClass=status.className==='processing'?'pending':status.className;
+            const details=delivered?delivery:`<div class="customer-order-detail"><small>${escapeHtml(detailMessage)}</small>${orderDetails}</div>`;
+            return `<article class="customer-order"><button class="customer-order-head" type="button" data-customer-order="${order.id}" aria-expanded="false"><span><strong>Order #${order.id} · ${escapeHtml(order.product_name)}</strong><small>${escapeHtml(order.product_type||'')} · ₹${money(order.price)} · ${formatDate(order.created_at)}</small></span><span class="status-badge ${statusClass}">${escapeHtml(status.label)}</span></button><div class="customer-order-content hidden" data-order-detail="${order.id}">${details}</div></article>`;
           }).join(''):'<div class="empty">No orders yet.</div>';
           body.querySelectorAll('[data-customer-order]').forEach(button=>button.addEventListener('click',()=>{
             const detail=body.querySelector(`[data-order-detail="${CSS.escape(button.dataset.customerOrder)}"]`);
@@ -1465,8 +2457,12 @@
       const amount=Number($('topup-amount').value);
       if(!Number.isInteger(amount)||amount<10||amount>100000){$('wallet-error').textContent='Enter a whole amount between ₹10 and ₹100,000.';return}
       const upiId=String(state.settings.upi_id||'').trim();
-      if(!upiId){$('wallet-error').textContent='UPI payments are not configured. Please contact the store.';return}
-      const upiParams=new URLSearchParams({pa:upiId,pn:state.settings.site_title||'Roshan Brand',am:String(amount),cu:'INR',tn:'Wallet Topup'});
+      const payee=String(state.settings.upi_payee_name||'').trim();
+      const qrEnabled=state.settings.enable_upi_qr===true;
+      const appEnabled=state.settings.enable_upi_app===true;
+      if(!qrEnabled&&!appEnabled){$('wallet-error').textContent='UPI payments are currently unavailable.';return}
+      if(!upiId||!payee){$('wallet-error').textContent='UPI payments are not configured. Please contact the store.';return}
+      const upiParams=new URLSearchParams({pa:upiId,pn:payee,am:String(amount),cu:'INR',tn:'Wallet Topup'});
       const upiUrl=`upi://pay?${upiParams.toString()}`;
       const appLinks=[
         {name:'Google Pay',scheme:'gpay://upi/pay'},
@@ -1476,10 +2472,16 @@
       ].map(app=>`<a class="upi-app-link" href="${app.scheme}?${upiParams.toString()}">${app.name}</a>`).join('');
       const isPhone=window.innerWidth<640;
       $('modal-title').textContent='Pay with UPI';
-      $('modal-body').innerHTML=`<div class="wallet-balance"><small>Top-up amount</small><strong>₹${money(amount)}</strong></div><p class="modal-note">Pay ₹${money(amount)} using UPI. Then enter the UTR / transaction ID to submit your payment for verification.</p><div class="upi-app-options">${appLinks}</div>${isPhone?'<button class="upi-qr-toggle" id="upi-qr-toggle" type="button" aria-expanded="false">Show QR code instead</button>':''}<div class="upi-qr-mobile" id="upi-qr-mobile"${isPhone?' hidden':''}><div class="qr-box" id="upi-qr"></div>${isPhone?'':'<a class="modal-primary" style="display:block;text-align:center" href="'+upiUrl+'">Open UPI app</a>'}</div><div class="modal-field" style="margin-top:16px"><label for="utr">UTR / transaction ID</label><input id="utr" maxlength="64" autocomplete="off" placeholder="Enter UTR after payment"></div><button class="modal-primary" id="submit-topup">I have paid</button><button class="back" id="back-topup" style="margin-left:7px">Back</button><div class="modal-error" id="wallet-error"></div>`;
-      if(window.QRCode)new QRCode($('upi-qr'),{text:upiUrl,width:165,height:165,colorDark:'#060b17',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
-      else $('upi-qr').textContent='QR unavailable. Use the UPI app button below.';
-      if(isPhone)$('upi-qr-toggle').addEventListener('click',event=>{
+      const appMarkup=appEnabled?`<div class="upi-app-options">${appLinks}</div>`:'';
+      const qrMarkup=qrEnabled?`${isPhone?'<button class="upi-qr-toggle" id="upi-qr-toggle" type="button" aria-expanded="false">Show QR code instead</button>':''}<div class="upi-qr-mobile" id="upi-qr-mobile"${isPhone?' hidden':''}><div class="qr-box" id="upi-qr"></div></div>`:'';
+      const desktopAppLink=appEnabled&&!isPhone?`<a class="modal-primary" style="display:block;text-align:center;margin-top:10px" href="${upiUrl}">Open UPI app</a>`:'';
+      $('modal-body').innerHTML=`<div class="wallet-balance"><small>Top-up amount</small><strong>₹${money(amount)}</strong></div><p class="modal-note">Pay ₹${money(amount)} using UPI. Then enter the UTR / transaction ID to submit your payment for verification.</p>${appMarkup}${qrMarkup}${desktopAppLink}<div class="modal-field" style="margin-top:16px"><label for="utr">UTR / transaction ID</label><input id="utr" maxlength="64" autocomplete="off" placeholder="Enter UTR after payment"></div><button class="modal-primary" id="submit-topup">I have paid</button><button class="back" id="back-topup" style="margin-left:7px">Back</button><div class="modal-error" id="wallet-error"></div>`;
+      if(qrEnabled&&window.QRCode)new QRCode($('upi-qr'),{text:upiUrl,width:165,height:165,colorDark:'#060b17',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+      else if(qrEnabled){
+        const qrImageUrl=safeHttpUrl(state.settings.upi_qr_image_url);
+        $('upi-qr').innerHTML=qrImageUrl?`<img src="${escapeHtml(qrImageUrl)}" alt="Saved UPI QR code" style="max-width:165px">`:'QR unavailable. Use the UPI app button below.';
+      }
+      if(isPhone&&qrEnabled)$('upi-qr-toggle').addEventListener('click',event=>{
         const qr=$('upi-qr-mobile');
         const open=qr.hidden;
         qr.hidden=!open;
@@ -1501,70 +2503,203 @@
       $('wallet-done').addEventListener('click',()=>openWallet('wallet'));
     }
 
+    function availableCheckoutMethods(){
+      const settings=state.settings||{};
+      const upiConfigured=Boolean(String(settings.upi_id||'').trim()&&String(settings.upi_payee_name||'').trim());
+      return [
+        ...(settings.enable_wallet_payments===true?['wallet']:[]),
+        ...(settings.enable_upi_qr===true&&upiConfigured?['upi_qr']:[]),
+        ...(settings.enable_upi_app===true&&upiConfigured?['upi_app']:[])
+      ];
+    }
+
+    function checkoutPrice(){
+      const checkout=state.checkout;
+      if(!checkout)return {originalPrice:0,discountAmount:0,finalPrice:0};
+      return checkout.method==='wallet'||!checkout.coupon
+        ? {originalPrice:Number(checkout.product.price),discountAmount:0,finalPrice:Number(checkout.product.price)}
+        : getDiscountBreakdown(checkout.product.price,checkout.coupon);
+    }
+
+    function renderCheckout(){
+      const checkout=state.checkout;
+      if(!checkout)return;
+      const product=checkout.product;
+      const pricing=checkoutPrice();
+      const upiId=String(state.settings.upi_id||'').trim();
+      const payee=String(state.settings.upi_payee_name||'').trim();
+      const methods=availableCheckoutMethods();
+      if(!methods.includes(checkout.method))checkout.method=methods[0]||'';
+      const method=checkout.method;
+      const qrParams=new URLSearchParams({pa:upiId,pn:payee,am:pricing.finalPrice.toFixed(2),cu:'INR',tn:`${state.settings.site_title||'Roshan Brand'} ${product.name}`});
+      const qrMarkup='<div class="qr-box" id="product-payment-qr" aria-label="UPI payment QR code"></div>';
+      let paymentPanel='';
+      if(method==='wallet'){
+        const canPay=state.balance>=pricing.finalPrice;
+        paymentPanel=`<section class="checkout-panel"><h3>Pay from Wallet</h3><div class="wallet-balance"><small>Available wallet balance</small><strong>₹${money(state.balance)}</strong></div><p class="checkout-note">Coupons apply to QR / UPI payments only.</p>${canPay?`<button class="modal-primary checkout-submit" id="checkout-wallet-pay" type="button">Pay with Wallet · ₹${money(pricing.finalPrice)}</button>`:`<div class="modal-error">Insufficient balance. Add money to your wallet to continue.</div><button class="modal-primary checkout-submit" id="checkout-add-money" type="button">Add money to wallet</button>`}</section>`;
+      }else if(method==='upi_qr'){
+        paymentPanel=`<section class="checkout-panel"><h3>Scan QR (UPI)</h3><p class="checkout-note">Scan with a UPI app and pay exactly ₹${money(pricing.finalPrice)}.</p>${qrMarkup}<label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID (12 digits)</label><input class="checkout-utr" id="checkout-utr" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error">${escapeHtml(checkout.paymentError||'')}</div><button class="modal-primary checkout-submit" id="checkout-submit-payment" type="button">I have paid</button></section>`;
+      }else if(method==='upi_app'){
+        const deepLinks=[
+          ['Google Pay','gpay://upi/pay'],
+          ['PhonePe','phonepe://pay'],
+          ['Paytm','paytmmp://pay'],
+          ['Other UPI app','upi://pay']
+        ].map(([label,scheme])=>`<a href="${scheme}?${qrParams.toString()}">${label}</a>`).join('');
+        paymentPanel=`<section class="checkout-panel"><h3>Pay with UPI ID / UPI App</h3><div class="checkout-upi-id"><strong>${escapeHtml(upiId||'UPI ID not configured')}</strong><button class="btn ghost" id="copy-checkout-upi" type="button" ${upiId?'':'disabled'}>Copy UPI ID</button></div><div class="checkout-app-links">${deepLinks}</div><p class="checkout-note">Pay exactly ₹${money(pricing.finalPrice)} using your UPI app.</p><label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID (12 digits)</label><input class="checkout-utr" id="checkout-utr" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error">${escapeHtml(checkout.paymentError||'')}</div><button class="modal-primary checkout-submit" id="checkout-submit-payment" type="button">I have paid</button></section>`;
+      }else{
+        paymentPanel='<section class="checkout-panel"><p class="modal-error">No payment methods are currently available. Please contact the store.</p></section>';
+      }
+      $('modal-title').textContent='Checkout';
+      $('wallet-dialog').classList.add('checkout-dialog');
+      const methodLabels={wallet:'Pay from Wallet',upi_qr:'Scan QR (UPI)',upi_app:'UPI ID / App'};
+      const tabs=methods.length?`<div class="checkout-tabs" role="tablist" aria-label="Payment method">${methods.map(item=>`<button type="button" class="checkout-tab ${method===item?'active':''}" data-checkout-method="${item}" role="tab" aria-selected="${method===item}">${methodLabels[item]}</button>`).join('')}</div>`:'';
+      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(product.name)}</strong><div class="checkout-amounts"><span>${pricing.discountAmount?`Original ₹${money(pricing.originalPrice)} · Discount −₹${money(pricing.discountAmount)}`:'Amount due'}</span><strong>₹${money(pricing.finalPrice)}</strong></div></div><div class="checkout-coupon"><label for="checkout-coupon">Have a coupon code?</label><input id="checkout-coupon" autocomplete="off" placeholder="Enter coupon code, e.g. RB20-ABC123" value="${escapeHtml(checkout.couponInput||'')}"><button class="modal-primary" id="apply-checkout-coupon" type="button">Apply</button><div class="checkout-coupon-message ${checkout.couponMessageType||''}" id="checkout-coupon-message">${escapeHtml(checkout.couponMessage||'')}</div></div>${tabs}${paymentPanel}`;
+      $('modal-body').querySelectorAll('[data-checkout-method]').forEach(button=>button.addEventListener('click',()=>{
+        state.checkout.method=button.dataset.checkoutMethod;state.checkout.paymentError='';
+        if(state.checkout.coupon){
+          const discount=Number(state.checkout.coupon.value)||0;
+          state.checkout.couponMessage=state.checkout.method==='wallet'
+            ?`Coupon saved: ${discount}% off for QR / UPI payments.`
+            :`Coupon applied: ${discount}% off`;
+        }
+        renderCheckout();
+      }));
+      $('apply-checkout-coupon').addEventListener('click',()=>{
+        const code=$('checkout-coupon').value.trim().toUpperCase();
+        checkout.couponInput=code;checkout.coupon=null;checkout.couponMessage='';checkout.couponMessageType='';
+        if(code){
+          const used=getUsedCouponCodes();
+          const coupon=isCouponCodeFormatValid(code)&&!used.has(code)?resolveCoupon(code):null;
+          if(!coupon||coupon.type==='tryAgain'){
+            checkout.couponMessage='Invalid coupon';checkout.couponMessageType='error';
+          }else{
+            checkout.coupon=coupon;checkout.couponMessage=method==='wallet'
+              ?`Coupon saved: ${Number(coupon.value)||0}% off for QR / UPI payments.`
+              :`Coupon applied: ${Number(coupon.value)||0}% off`;
+            checkout.couponMessageType='success';
+          }
+        }
+        renderCheckout();
+      });
+      $('checkout-utr')?.addEventListener('input',event=>{checkout.utr=event.currentTarget.value.replace(/\D/g,'').slice(0,12)});
+      $('checkout-wallet-pay')?.addEventListener('click',purchaseWithWallet);
+      $('checkout-add-money')?.addEventListener('click',openWalletTopup);
+      $('checkout-submit-payment')?.addEventListener('click',submitUpiProductPayment);
+      $('copy-checkout-upi')?.addEventListener('click',async event=>{
+        try{
+          if(!navigator.clipboard)throw new Error('Clipboard unavailable');
+          await navigator.clipboard.writeText(upiId);
+          event.currentTarget.textContent='Copied';
+          setTimeout(()=>{if(event.currentTarget.isConnected)event.currentTarget.textContent='Copy UPI ID'},1400);
+        }catch(error){showNotice('Could not copy the UPI ID. Please copy it manually.')}
+      });
+      if(method==='upi_qr'&&window.QRCode){
+        new QRCode($('product-payment-qr'),{text:`upi://pay?${qrParams.toString()}`,width:230,height:230,colorDark:'#060b17',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+      }else if(method==='upi_qr'){
+        const qrImageUrl=safeHttpUrl(state.settings.upi_qr_image_url);
+        $('product-payment-qr').innerHTML=qrImageUrl
+          ?`<img src="${escapeHtml(qrImageUrl)}" alt="Configured UPI payment QR" style="display:block;width:min(220px,100%);height:auto;max-height:240px;object-fit:contain">`
+          :'Payment QR is unavailable. Try Pay with UPI ID / UPI App.';
+      }
+    }
+
     async function buyProduct(productId){
+      if(state.authReadyPromise)await state.authReadyPromise;
+      console.log('[buy-debug] session state', {initialized:state.authInitialized,authenticated:Boolean(state.user)});
       const product=state.products.find(item=>String(item.id)===String(productId));
       if(!product||!product.in_stock)return;
       if(!state.user){
         sessionStorage.setItem('wallet_pending_product',String(product.id));
+        console.log('[buy-debug] redirect reason:', 'No authenticated session after the initial Supabase session check.');
         await signInWithGoogle();
         return;
       }
-      await refreshWalletBalance();
-      const basePrice=Number(product.price);
-      const suggestedCode = state.spinCoupon ? state.spinCoupon.code : '';
-      const enteredCode = window.prompt(`Enter coupon code (optional)\nExample: ${suggestedCode || 'SAVE20'}`, suggestedCode || '');
-      let appliedCoupon = null;
-      if(enteredCode !== null && String(enteredCode).trim()){
-        appliedCoupon = resolveCoupon(enteredCode);
-        if(!appliedCoupon){
-          showNotice('Coupon code is invalid. Try SAVE10, SAVE20, SAVE50, SAVE100, SAVE200 or TRY_AGAIN.');
-          return;
-        }
-      } else if(state.spinCoupon){
-        appliedCoupon = state.spinCoupon;
-      }
-      const discountDetails = appliedCoupon ? getDiscountBreakdown(basePrice, appliedCoupon) : {originalPrice:basePrice, discountAmount:0, finalPrice:basePrice};
-      const finalPrice = discountDetails.finalPrice;
-      const discountAmount = discountDetails.discountAmount;
-      if(state.balance < finalPrice){
-        $('modal-title').textContent='Insufficient balance';
-        $('modal-body').innerHTML=`<div class="wallet-balance"><small>Original ₹${money(discountDetails.originalPrice)} · Discount -₹${money(discountAmount)} · Final ₹${money(finalPrice)}</small><strong>Need ₹${money(finalPrice-state.balance)} more</strong></div><button class="modal-primary" id="insufficient-add">Add Money</button>`;
-        openModal();$('insufficient-add').addEventListener('click',showAddMoney);return;
-      }
-      const buyMessage = appliedCoupon ? `Buy ${product.name}?\nOriginal: ₹${money(basePrice)}\nDiscount: -₹${money(discountAmount)}\nFinal: ₹${money(finalPrice)}\nCoupon: ${appliedCoupon.label || appliedCoupon.code}` : `Buy ${product.name} for ₹${money(finalPrice)} from your wallet?`;
-      if(!confirm(buyMessage))return;
-      const {data,error}=await state.client.rpc('purchase_product',{p_product_id:product.id,p_expected_price:finalPrice});
-      if(error){showNotice(`Purchase failed: ${error.message}`);return}
+      try{await refreshWalletBalance()}catch(error){showNotice(`Could not load wallet balance: ${error.message}`);return}
+      const suggestedCoupon=getSuggestedCheckoutCoupon();
+      state.checkout={product,method:availableCheckoutMethods()[0]||'',coupon:null,couponInput:suggestedCoupon,couponMessage:'',couponMessageType:'',utr:'',paymentError:''};
+      openModal();renderCheckout();
+    }
+
+    async function purchaseWithWallet(){
+      const checkout=state.checkout;
+      if(!checkout)return;
+      const button=$('checkout-wallet-pay');
+      if(button)button.disabled=true;
+      const product=checkout.product;
+      const price=Number(product.price);
+      const {data,error}=await state.client.rpc('purchase_product',{p_product_id:product.id,p_expected_price:price});
+      if(error){checkout.paymentError=`Purchase failed: ${error.message}`;renderCheckout();return}
       if(!data?.ok){
         if(data?.reason==='price_changed'){
           await refreshStore();
-          showNotice('The product price changed. Please review the updated price and confirm again.');
+          showNotice('The product price changed. Please review the updated price.');
           return;
         }
-        if(data?.reason==='insufficient_balance'){state.balance=Number(data.balance||0);renderHeader();return buyProduct(productId)}
-        showNotice(data?.message||'Purchase could not be completed.');return;
+        if(data?.reason==='insufficient_balance'){
+          state.balance=Number(data.balance||0);renderHeader();renderCheckout();return;
+        }
+        checkout.paymentError=data?.message||'Purchase could not be completed.';
+        renderCheckout();return;
       }
-      state.balance=Number(data.balance);renderHeader();
-      if(appliedCoupon){state.spinCoupon=null;renderCouponBanner();}
-      await refreshMyOrders();
+      state.balance=Number(data.balance);renderHeader();await refreshMyOrders();
       $('modal-title').textContent='Purchase complete';
       const fulfillmentMessage=data.download_ready?'Your software download is ready below the product and in My Orders.':'Admin will deliver your order soon. Check My Orders for delivery details.';
-      $('modal-body').innerHTML=`<div class="wallet-balance"><strong style="font-size:19px">Purchase successful</strong><small style="margin-top:8px">${escapeHtml(data.product_name)}</small><small>Original: ₹${money(discountDetails.originalPrice)} · Discount: -₹${money(discountAmount)} · Final: ₹${money(finalPrice)}</small><small>Order #${escapeHtml(data.order_id)} · ${formatDate(data.created_at)}</small>${appliedCoupon?`<small>Coupon ${escapeHtml(appliedCoupon.code)} · ${escapeHtml(appliedCoupon.label || `${appliedCoupon.value}% OFF`)} applied</small>`:''}<small>${fulfillmentMessage}</small><small>Remaining balance ₹${money(data.balance)}</small></div><button class="modal-primary" id="purchase-orders">View My Orders</button><button class="back" id="purchase-done" style="margin-left:7px">Done</button>`;
-      openModal();$('purchase-orders').addEventListener('click',()=>openWallet('orders'));$('purchase-done').addEventListener('click',closeModal);
+      $('modal-body').innerHTML=`<div class="wallet-balance"><strong style="font-size:19px">Purchase successful</strong><small style="margin-top:8px">${escapeHtml(data.product_name)}</small><small>Paid from wallet: ₹${money(price)}</small><small>Order #${escapeHtml(data.order_id)} · ${formatDate(data.created_at)}</small><small>${fulfillmentMessage}</small><small>Remaining balance ₹${money(data.balance)}</small></div><button class="modal-primary" id="purchase-orders">View My Orders</button><button class="back" id="purchase-done" style="margin-left:7px">Done</button>`;
+      $('purchase-orders').addEventListener('click',()=>openWallet('orders'));$('purchase-done').addEventListener('click',closeModal);
+    }
+
+    async function submitUpiProductPayment(){
+      const checkout=state.checkout;
+      if(!checkout)return;
+      checkout.paymentError='';
+      const utr=String(checkout.utr||'').trim();
+      if(!/^\d{12}$/.test(utr)){
+        checkout.paymentError='Enter a valid 12-digit UTR / Transaction ID.';renderCheckout();return;
+      }
+      if(checkout.coupon&&getUsedCouponCodes().has(String(checkout.coupon.code).toUpperCase())){
+        checkout.coupon=null;checkout.couponMessage='Invalid coupon';checkout.couponMessageType='error';renderCheckout();return;
+      }
+      const pricing=checkoutPrice();
+      const submit=$('checkout-submit-payment');
+      if(submit)submit.disabled=true;
+      try{
+        const {data,error}=await state.client.rpc('create_upi_product_order',{
+          p_product_id:checkout.product.id,
+          p_expected_price:pricing.finalPrice,
+          p_original_price:pricing.originalPrice,
+          p_discount_percent:checkout.coupon?Number(checkout.coupon.value)||0:0,
+          p_coupon_code:checkout.coupon?.code||null,
+          p_payment_method:checkout.method,
+          p_utr:utr
+        });
+        if(error)throw error;
+        if(!data?.ok){
+          if(data?.reason==='price_changed'){await refreshStore();checkout.paymentError='The product price changed. Please review the updated price.'}
+          else checkout.paymentError=data?.message||'Could not submit this payment.';
+          renderCheckout();return;
+        }
+        if(checkout.coupon)markCouponUsed(checkout.coupon.code);
+        if(checkout.coupon&&state.spinCoupon?.code===checkout.coupon.code){state.spinCoupon=null;renderCouponBanner()}
+        await refreshMyOrders();
+        $('modal-title').textContent='Payment submitted';
+        $('modal-body').innerHTML=`<div class="wallet-balance"><strong style="font-size:18px">Payment submitted. Waiting for admin verification.</strong><small style="margin-top:9px">${escapeHtml(data.product_name)} · ₹${money(data.price)}</small><small>Order #${escapeHtml(data.order_id)} · UTR ${escapeHtml(utr)}</small>${data.coupon_code?`<small>Coupon ${escapeHtml(data.coupon_code)} · ${escapeHtml(data.discount_percent)}% off · Original ₹${money(data.original_price)} · Paid ₹${money(data.price)}</small>`:''}</div><button class="modal-primary" id="upi-order-view" type="button">View My Orders</button><button class="back" id="upi-order-done" type="button" style="margin-left:7px">Done</button>`;
+        $('upi-order-view').addEventListener('click',()=>openWallet('orders'));$('upi-order-done').addEventListener('click',closeModal);
+      }catch(error){checkout.paymentError=error.message||'Could not submit this payment.';renderCheckout()}
     }
 
     async function refreshStore(){
       setProductsLoading(!state.products.length);
       const [products,settings] = await Promise.all([
-        state.client.from('products').select('id,category,name,description,image_url,price,unit,in_stock,sort_order,pinned')
+        state.client.from('products').select('id,category,name,description,image_url,price,unit,in_stock,sort_order,pinned,plan_section,os_type,ip_series,data_size,specs,ip_count,validity,badge,stock_status,price_prefix,details')
           .order('sort_order',{ascending:true}).order('created_at',{ascending:true}),
-        state.client.from('settings').select('site_title,whatsapp_number,telegram_link,upi_id').eq('id',true).maybeSingle()
+        state.client.from('settings').select('site_title,whatsapp_number,telegram_link,upi_id,upi_payee_name,upi_qr_image_url,enable_wallet_payments,enable_upi_qr,enable_upi_app').eq('id',true).maybeSingle()
       ]);
       if(products.error){showProductsError(products.error);return}
       state.products = (products.data || []).map(product=>({
         ...product,
         category:normalizeCategory(product.category),
-        in_stock:product.in_stock !== false
+        in_stock:product.stock_status?product.stock_status==='available':product.in_stock !== false
       }));
       state.productsLoading=false;
       state.productsError=null;
@@ -1583,6 +2718,19 @@
     }
 
     $('back-button').addEventListener('click',showCategories);
+    $('vps-search').addEventListener('input',event=>{state.vpsSearch=event.currentTarget.value;renderVpsProducts()});
+    $('products-view').addEventListener('click',event=>{
+      const target=event.target instanceof Element?event.target:null;
+      const button=target?.closest('[data-buy]');
+      if(!button||!$('products-view').contains(button))return;
+      event.preventDefault();
+      event.stopPropagation();
+      console.log('[buy-debug] click received', {productId:button.dataset.buy});
+      buyProduct(button.dataset.buy).catch(error=>{
+        console.error('[buy-debug] Buy Now handler failed:',error);
+        showNotice(`Could not start checkout: ${error.message||'Please try again.'}`);
+      });
+    });
     $('menu-toggle').addEventListener('click',()=>{
       const drawer=$('mobile-drawer');
       const open=drawer.classList.toggle('open');
@@ -1601,6 +2749,22 @@
     $('orders-panel-close').addEventListener('click',closeOrdersPanel);
     $('orders-backdrop').addEventListener('click',closeOrdersPanel);
     $('orders-view-all').addEventListener('click',trackOrders);
+    $('offers-close').addEventListener('click',closeOffersModal);
+    $('offers-backdrop').addEventListener('click',closeOffersModal);
+    $('offer-claim-close').addEventListener('click',closeOfferClaimModal);
+    $('offer-claim-backdrop').addEventListener('click',closeOfferClaimModal);
+    $('offer-claim-form').addEventListener('submit',submitOfferClaim);
+    $('auth-back').addEventListener('click',()=>closeAuthPage());
+    $('auth-form').addEventListener('submit',submitAuth);
+    $('auth-google').addEventListener('click',signInWithGoogle);
+    $('auth-forgot').addEventListener('click',()=>setAuthMode('forgot'));
+    $('auth-password-toggle').addEventListener('click',()=>{
+      const password=$('auth-password');
+      const visible=password.type==='password';
+      password.type=visible?'text':'password';
+      $('auth-password-toggle').setAttribute('aria-label',visible?'Hide password':'Show password');
+      $('auth-password-toggle').setAttribute('aria-pressed',String(visible));
+    });
     $('retry-products').addEventListener('click',()=>refreshStore().catch(error=>{
       console.error('Could not retry the Supabase store query:',error);
       showNotice('The store could not reach Supabase. Check your connection and try again.');
@@ -1611,13 +2775,19 @@
       const menu=$('profile-menu');
       if(menu&&!menu.classList.contains('hidden')&&!event.target.closest('.avatar-wrap')){menu.classList.add('hidden');$('avatar-button')?.setAttribute('aria-expanded','false')}
       if(state.ordersPanelOpen&&!event.target.closest('#orders-panel')&&!event.target.closest('#orders-trigger'))closeOrdersPanel();
+      if(!$('offers-modal').classList.contains('hidden')&&!event.target.closest('.offers-dialog')&&!event.target.closest('.offer-claim-dialog'))closeOffersModal();
       const drawer=$('mobile-drawer');
       if(drawer&&drawer.classList.contains('open')&&!event.target.closest('#mobile-drawer')&&!event.target.closest('#menu-toggle')){
         closeMobileMenu();
       }
     });
     document.addEventListener('keydown',event=>{
-      if(event.key==='Escape'){closeModal();closeMobileMenu();closeOrdersPanel();$('profile-menu')?.classList.add('hidden')}
+      if(event.key==='Escape'){
+        closeModal();closeMobileMenu();closeOrdersPanel();$('profile-menu')?.classList.add('hidden');
+        if(!$('auth-page').classList.contains('hidden'))closeAuthPage();
+        if(!$('offer-claim-modal').classList.contains('hidden'))closeOfferClaimModal();
+        else if(!$('offers-modal').classList.contains('hidden'))closeOffersModal();
+      }
     });
     window.addEventListener('resize',()=>{
       if(window.innerWidth>=640)closeMobileMenu();
@@ -1630,12 +2800,15 @@
     });
     $('theme-toggle').addEventListener('click',()=>setTheme(document.documentElement.dataset.theme==='light'?'dark':'light'));
     setTheme(document.documentElement.dataset.theme);
+    renderBrandLogos();
+    window.setInterval(updateOfferCountdowns,1000);
     initPointerEffects();
     revealPage();
     $('year').textContent = new Date().getFullYear();
     renderSettings();
     renderHeader();
     (async function init(){
+      const offerLoadDeadline=Date.now()+1000;
       renderCategories();
       showNotice('Loading products…');
       try{
@@ -1645,19 +2818,45 @@
         if(!config.supabaseUrl || !config.supabaseAnonKey) throw new Error('Store setup is incomplete. Add your Supabase URL and anon key to the .env file.');
         if(!window.supabase) throw new Error('The store could not load its database client. Check your internet connection and reload.');
         state.client = window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey);
-        await refreshStore();
-        const {data:sessionData,error:sessionError}=await state.client.auth.getSession();
-        if(sessionError)throw sessionError;
-        await updateSession(sessionData.session);
-        state.client.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>updateSession(session).catch(error=>showNotice(error.message)),0)});
+        const recoveryHash=new URLSearchParams(window.location.hash.slice(1));
+        if(recoveryHash.get('type')==='recovery')openAuthPage('reset',sessionStorage.getItem('wallet_pending_track_order')?'orders':'');
+        state.authReadyPromise=(async()=>{
+          const {data:sessionData,error:sessionError}=await state.client.auth.getSession();
+          if(sessionError)throw sessionError;
+          state.authInitialized=true;
+          console.log('[buy-debug] initial Supabase session check complete', {authenticated:Boolean(sessionData.session?.user)});
+          await updateSession(sessionData.session);
+        })();
+        await Promise.all([refreshStore(),state.authReadyPromise]);
+        window.setTimeout(()=>refreshOffers(true).catch(error=>{
+          console.error('Could not load active offers:',error);
+          showNotice('Offers could not be loaded. Please try again later.');
+        }),Math.max(0,offerLoadDeadline-Date.now()));
+        window.setTimeout(showRecentOfferClaimNotification,3000);
+        state.client.auth.onAuthStateChange((event,session)=>{
+          if(event==='PASSWORD_RECOVERY')openAuthPage('reset',sessionStorage.getItem('wallet_pending_track_order')?'orders':'');
+          setTimeout(()=>updateSession(session).catch(error=>showNotice(error.message)),0);
+        });
         state.client.channel('public-store-changes')
           .on('postgres_changes',{event:'*',schema:'public',table:'products'},refreshStore)
           .on('postgres_changes',{event:'*',schema:'public',table:'settings'},refreshStore)
+          .on('postgres_changes',{event:'*',schema:'public',table:'offers'},()=>refreshOffers(true).catch(error=>{
+            console.error('Could not refresh active offers:',error);
+            showNotice('Offers could not be refreshed. Please try again later.');
+          }))
           .subscribe();
         window.addEventListener('focus',()=>refreshStore().catch(error=>{
           console.error('Could not refresh the Supabase store:',error);
           showNotice('The store could not reach Supabase. Check your connection and try again.');
         }));
+        window.addEventListener('focus',()=>refreshOffers(true).catch(error=>{
+          console.error('Could not refresh active offers:',error);
+          showNotice('Offers could not be refreshed. Please try again later.');
+        }));
+        setInterval(()=>refreshOffers(true).catch(error=>{
+          console.error('Could not refresh active offers:',error);
+          showNotice('Offers could not be refreshed. Please try again later.');
+        }),60000);
         setInterval(()=>refreshStore().catch(error=>{
           console.error('Could not refresh the Supabase store:',error);
           showNotice('The store could not reach Supabase. Check your connection and try again.');

@@ -8,8 +8,11 @@
   <title>Store Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/brand-logo.css">
+  <script src="/brand-logo.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script>
     try {
       document.documentElement.dataset.theme = localStorage.getItem('roshan-theme') === 'light' ? 'light' : 'dark';
@@ -22,7 +25,7 @@
     :root{color-scheme:dark;--bg:#060b17;--card:#0a1226;--line:#1a2340;--gold:#f5c04a;--gold2:#e0a82a;--text:#f4f6fc;--muted:#98a3bd;--red:#ff6d79;--surface-raised:#101a30;--font-heading:"Sora","Space Grotesk",sans-serif;--font-body:"Inter",sans-serif}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px var(--font-body);min-height:100vh}
     button,input,textarea,select{font:inherit}button{cursor:pointer}.wrap{width:min(1100px,calc(100% - 36px));margin:0 auto}
-    header{border-bottom:1px solid var(--line);padding:19px 0}.bar{display:flex;align-items:center;justify-content:space-between;gap:15px}.brand{font-size:17px;font-weight:700}.brand span{color:var(--gold)}
+    header{border-bottom:1px solid var(--line);padding:19px 0}.bar{display:flex;align-items:center;justify-content:space-between;gap:15px}.brand{display:inline-flex;align-items:center;gap:9px;white-space:nowrap;color:var(--gold);font-size:15px;font-weight:700}.admin-brand-copy small{display:block;color:var(--muted);font:700 9px var(--font-body);letter-spacing:.16em;margin-top:3px}
     h1,h2,h3{font-family:var(--font-heading)}h1{font-size:23px;margin:0}h2{font-size:18px;margin:0 0 5px}h3{font-size:15px;margin:0 0 14px}
     main{padding:34px 0 70px}.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:17px}
     #login-panel{max-width:430px;margin:8vh auto}.sub{color:var(--muted);font-size:12px;line-height:1.7;margin:4px 0 19px}
@@ -32,19 +35,33 @@
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:600;font-size:12px}
     .gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#191200}.ghost{background:#111b32;border:1px solid var(--line);color:var(--text)}.danger{background:#371922;color:#ffb5bb}.btn:hover{filter:brightness(1.1)}
     .error{color:#ff858e;font-size:12px;min-height:18px;margin-top:8px}.hidden{display:none!important}
+    .success{color:#84e4b6}.login-links{margin:12px 0 0;text-align:right}.text-link{padding:0;border:0;background:none;color:var(--gold);font-size:12px;text-decoration:underline;text-underline-offset:3px}.text-link:hover{color:#ffe49a}
     .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:23px 0 16px}.tabs button{background:#0b1429;border:1px solid var(--line);color:var(--muted);padding:9px 13px;border-radius:10px;font-size:12px}.tabs button.active{border-color:#6d5727;color:var(--gold);background:#1b1920}
     .admin-grid{display:grid;grid-template-columns:minmax(260px,.75fr) minmax(0,1.5fr);gap:17px;align-items:start}.product-list{display:grid;gap:9px}
     .finance-list{display:grid;gap:10px}.finance-row{border:1px solid var(--line);border-radius:13px;padding:14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}.finance-row strong{overflow-wrap:anywhere}.finance-row small{display:block;color:var(--muted);font-size:11px;margin-top:4px;overflow-wrap:anywhere}.finance-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:end}.finance-controls input{width:125px;padding:8px;font-size:12px}.finance-controls .note-input{width:170px}.amount{color:var(--gold);font-weight:700}
     .order-tools{display:grid;grid-template-columns:minmax(200px,1fr) auto;gap:10px;margin-bottom:12px}.order-filters{display:flex;gap:6px;flex-wrap:wrap}.order-filter{background:#0b1429;border:1px solid var(--line);color:var(--muted);padding:8px 11px;border-radius:9px;font-size:11px}.order-filter.active{border-color:#6d5727;color:var(--gold);background:#1b1920}
-    .order-row{color:var(--text);background:#0b1429;border:1px solid var(--line);border-radius:13px;padding:14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}.order-row:hover{border-color:#6d5727}.order-row.pending{border-color:#6d5727;background:#171609}.order-open{width:100%;text-align:left;color:inherit;background:transparent;border:0;padding:0;display:grid;grid-template-columns:70px minmax(0,1.3fr) minmax(0,1fr) auto;gap:12px;align-items:center;cursor:pointer;min-width:0}.order-cell{min-width:0}.order-cell small{display:block;color:var(--muted);font-size:11px;margin-top:4px;overflow-wrap:anywhere}.status-badge{font-size:10px;border:1px solid var(--line);border-radius:999px;padding:5px 9px;color:var(--muted);white-space:nowrap}.status-badge.pending{color:var(--gold);border-color:#6d5727}.status-badge.delivered{color:#84e4b6;border-color:#23563f}.status-badge.rejected,.status-badge.refunded{color:#ffb5bb;border-color:#71303b}
+    .order-row{color:var(--text);background:#0b1429;border:1px solid var(--line);border-radius:13px;padding:14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}.order-row:hover{border-color:#6d5727}.order-row.pending,.order-row.pending_verification{border-color:#6d5727;background:#171609}.order-open{width:100%;text-align:left;color:inherit;background:transparent;border:0;padding:0;display:grid;grid-template-columns:70px minmax(0,1.3fr) minmax(0,1fr) auto;gap:12px;align-items:center;cursor:pointer;min-width:0}.order-cell{min-width:0}.order-cell small{display:block;color:var(--muted);font-size:11px;margin-top:4px;overflow-wrap:anywhere}.status-badge{font-size:10px;border:1px solid var(--line);border-radius:999px;padding:5px 9px;color:var(--muted);white-space:nowrap}    .status-badge.pending,.status-badge.pending_verification,.status-badge.pending_payment{color:var(--gold);border-color:#6d5727}.status-badge.delivered{color:#84e4b6;border-color:#23563f}.status-badge.rejected,.status-badge.refunded,.status-badge.expired{color:#ffb5bb;border-color:#71303b}.order-row-actions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
     .order-drawer{position:fixed;inset:0;z-index:20;display:flex;justify-content:flex-end;overflow:hidden;visibility:hidden;pointer-events:none}.order-drawer.open{visibility:visible;pointer-events:auto}.order-overlay{position:absolute;inset:0;border:0;background:#02050bcc;opacity:0;transition:opacity .2s}.order-drawer.open .order-overlay{opacity:1}.order-panel{position:relative;width:min(620px,100%);height:100%;overflow:auto;background:var(--card);border-left:1px solid var(--line);padding:23px;box-shadow:-18px 0 50px #0008;transform:translateX(100%);transition:transform .25s}.order-drawer.open .order-panel{transform:translateX(0)}.order-panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.order-details{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}.order-detail{min-width:0;border:1px solid var(--line);border-radius:10px;padding:11px}.order-detail small{display:block;color:var(--muted);font-size:10px;margin-bottom:4px}.order-detail strong{font-size:12px;overflow-wrap:anywhere}.delivery-text{min-height:220px;white-space:pre-wrap;overflow-wrap:anywhere}.order-panel-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
     .product-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:13px;padding:13px}
     .product-row strong{display:block;overflow-wrap:anywhere}.product-row small{color:var(--muted);display:block;margin-top:4px}
     .actions{display:flex;align-items:center;justify-content:end;gap:6px;flex-wrap:wrap}.actions .btn{padding:8px 10px}
     .pill{font-size:10px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;color:var(--muted)}.pill.live{color:#84e4b6;border-color:#23563f}.pill.pinned{color:var(--gold);border-color:#665325}
+    .pill.offer-active{color:#ffe49a;border-color:rgba(245,192,74,.45);background:rgba(245,192,74,.08)}
+    :root[data-theme="light"] .pill.offer-active{color:#70500c;border-color:#e4d3a7;background:#fff8e6}
+    .offer-claim-settings{padding:12px;border:1px solid var(--line);border-radius:12px;margin:12px 0}
+    .offer-operations-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:18px}
+    .offer-operation-panel{min-width:0;margin:0}
+    .offer-operation-panel .bar{margin-bottom:10px}
+    .offer-operation-panel .bar h3{margin:0}
+    .offer-review-note{width:100%;min-height:70px;margin-top:8px}
+    .offer-screenshot{display:block;max-width:min(100%,520px);max-height:60vh;object-fit:contain;margin:12px auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+    .offer-report-row{display:grid;grid-template-columns:minmax(0,1.5fr) repeat(4,minmax(70px,1fr));gap:8px;align-items:center;padding:11px 8px;border-bottom:1px solid var(--line);font-size:11px}
+    .offer-report-row strong{overflow-wrap:anywhere}
+    .offer-report-head{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase}
     .check{display:flex;gap:9px;align-items:center;color:var(--muted);font-size:12px;margin:9px 0 15px}.check input{width:auto;accent-color:var(--gold)}
     .settings{max-width:620px}.empty{border:1px dashed var(--line);border-radius:12px;padding:20px;color:var(--muted);text-align:center;font-size:12px}
     .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#14213a;border:1px solid var(--line);border-radius:11px;padding:12px 17px;box-shadow:0 12px 40px #0008;z-index:4;font-size:12px}
+    .admin-confirm{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:18px}.admin-confirm-backdrop{position:absolute;inset:0;border:0;background:#02050bcc}.admin-confirm-dialog{position:relative;width:min(420px,100%);padding:22px;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:0 24px 70px #000b}.admin-confirm-dialog h2{margin:0 0 8px;font-size:17px}.admin-confirm-dialog p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}.admin-confirm-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
     :root[data-theme="light"]{color-scheme:light;--bg:#edf2fa;--card:#f8faff;--line:#d5deed;--gold:#a56b00;--gold2:#c18100;--text:#17233a;--muted:#60708c;--red:#c13f50;--surface-raised:#fff}
     html{scroll-behavior:smooth;scroll-padding-top:90px}
     .theme-toggle{width:40px;height:40px;flex:none;display:grid;place-items:center;border:1px solid rgba(137,157,197,.25);border-radius:50%;background:linear-gradient(145deg,rgba(24,38,64,.92),rgba(9,16,31,.94));color:#ffdc88;font-size:19px;cursor:pointer;box-shadow:inset 0 1px rgba(255,255,255,.12),0 7px 17px rgba(0,0,0,.22);transition:transform .2s,border-color .2s,box-shadow .2s}
@@ -76,13 +93,14 @@
     :root[data-theme="light"] .empty{color:#60708c;border-color:#c8d4e5;background:rgba(255,255,255,.55)}
     :where(a,button,input,textarea,select):focus-visible{outline:2px solid rgba(193,129,0,.85);outline-offset:3px}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.page-enter{animation:none}.reveal{opacity:1;transform:none;transition:none}*,*:before,*:after{transition-duration:.01ms!important}}
-    @media(max-width:780px){.admin-grid{grid-template-columns:1fr}.row{grid-template-columns:1fr 1fr}}
+    @media(max-width:780px){.admin-grid{grid-template-columns:1fr}.offer-operations-grid{grid-template-columns:1fr}.row{grid-template-columns:1fr 1fr}}
     @media(max-width:520px){.wrap{width:calc(100% - 26px)}main{padding-top:22px}.panel{padding:16px}.row{grid-template-columns:1fr}.product-row,.finance-row{grid-template-columns:1fr}.actions,.finance-controls{justify-content:start}.finance-controls input,.finance-controls .note-input{width:100%}.bar{flex-wrap:wrap}.bar h1{font-size:18px;flex:1;text-align:right}}
     body{background:radial-gradient(ellipse at 50% -18%,#1b2b4a 0,transparent 45%),linear-gradient(180deg,#080e1d 0%,#060b17 50%,#080d19 100%)}
     body:before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse at 8% 30%,rgba(41,152,255,.07),transparent 30%),radial-gradient(ellipse at 92% 70%,rgba(245,192,74,.06),transparent 30%);pointer-events:none}
     header{position:sticky;top:0;z-index:10;background:rgba(7,12,25,.82);backdrop-filter:blur(16px);box-shadow:0 10px 32px rgba(0,0,0,.2)}
     .brand{text-shadow:0 0 20px rgba(245,192,74,.16)}
     .panel{position:relative;overflow:hidden;border-color:rgba(111,132,174,.22);background:linear-gradient(145deg,rgba(17,29,53,.96),rgba(8,15,32,.98));box-shadow:0 18px 38px rgba(0,0,0,.27),inset 0 1px rgba(255,255,255,.065)}
+    .panel.editing-product{border-color:rgba(245,192,74,.72);box-shadow:0 0 0 2px rgba(245,192,74,.16),0 18px 38px rgba(0,0,0,.27),0 0 28px rgba(245,192,74,.16),inset 0 1px rgba(255,255,255,.065)}
     .panel:before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,.055),transparent 35%,transparent 75%,rgba(41,152,255,.025));pointer-events:none}
     #login-panel{box-shadow:0 26px 56px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.09)}
     .tabs button,.order-filter{box-shadow:inset 0 1px rgba(255,255,255,.06),0 6px 15px rgba(0,0,0,.2);transition:transform .18s,border-color .18s,box-shadow .18s,background .18s}
@@ -208,21 +226,27 @@
   </style>
 </head>
 <body>
-  <header><div class="wrap bar"><div class="brand">STORE <span>ADMIN</span></div><h1 id="page-title">Admin login</h1><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch to light theme"><span id="theme-toggle-icon" aria-hidden="true">☼</span></button><button id="logout" class="btn ghost hidden">Sign out</button></div></header>
+  <header><div class="wrap bar"><a class="brand" href="/" aria-label="Roshan Brand home"><span class="rb-logo-slot" data-logo-size="rb-logo-admin" aria-hidden="true"></span><span class="admin-brand-copy"><span class="brand-wordmark">ROSHAN<span>BRAND</span></span><small>ADMIN</small></span></a><h1 id="page-title"></h1><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch to light theme"><span id="theme-toggle-icon" aria-hidden="true">☼</span></button><button id="logout" class="btn ghost hidden">Sign out</button></div></header>
   <main class="wrap page-enter">
     <section id="login-panel" class="panel" data-card-tone="software">
       <h2>Sign in</h2><p class="sub">Use the admin email and password created in your Supabase project.</p>
       <form id="login-form">
         <div class="field"><label for="email">Admin email</label><input id="email" type="email" autocomplete="username" required></div>
         <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div>
-        <button class="btn gold" type="submit" style="width:100%">Sign in</button><div class="error" id="login-error"></div>
+        <button class="btn gold" type="submit" style="width:100%">Sign in</button><div class="login-links"><button class="text-link" id="forgot-password" type="button">Forgot password?</button></div><div class="error" id="login-error" aria-live="polite"></div>
+      </form>
+      <form id="password-reset-form" class="hidden">
+        <div class="field"><label for="new-password">New password</label><input id="new-password" type="password" autocomplete="new-password" minlength="8" required></div>
+        <div class="field"><label for="confirm-password">Confirm new password</label><input id="confirm-password" type="password" autocomplete="new-password" minlength="8" required></div>
+        <button class="btn gold" type="submit" style="width:100%">Update password</button>
+        <div class="error" id="password-reset-error" aria-live="polite"></div>
       </form>
     </section>
     <section id="dashboard" class="hidden">
       <nav class="tabs" id="tabs"></nav>
       <div id="products-panel">
         <div class="admin-grid">
-          <section class="panel" data-card-tone="software">
+          <section class="panel" id="product-form-panel" data-card-tone="software">
             <h2 class="title-premium" id="form-title">Add product</h2><p class="sub desc-premium">Manage product details and availability.</p>
             <form id="product-form">
               <div class="field"><label for="product-name">Name</label><input id="product-name" maxlength="120" required></div>
@@ -230,9 +254,33 @@
               <div class="field"><label for="product-image">Product photo</label><input id="product-image" type="file" accept="image/jpeg,image/png,image/webp,image/gif"><label class="check"><input id="remove-image" type="checkbox"> Remove current photo</label><img id="image-preview" class="hidden" alt="Product photo preview" style="width:100%;max-height:180px;object-fit:contain;border:1px solid var(--line);border-radius:10px;background:#080f20"><input id="image-url" type="hidden"></div>
               <div class="field"><label for="download-url">Software download link</label><input id="download-url" type="url" maxlength="2048" placeholder="https://..."><small class="sub" style="display:block;margin:5px 0 0">Shown to a customer only after their purchase is complete.</small></div>
               <div class="row"><div class="field"><label for="price">Price (₹)</label><input id="price" type="number" min="0" step="0.01" required></div><div class="field"><label for="unit">Optional unit</label><input id="unit" placeholder="month, IP, GB" maxlength="30"></div></div>
-              <label class="check"><input id="in-stock" type="checkbox" checked> In stock</label>
+              <div id="plan-fields" class="hidden">
+                <div class="row">
+                  <div class="field"><label for="plan-section">Plan section</label><select id="plan-section"><option>Advance</option><option>New Launch</option><option>Flex</option><option>Premium</option><option>Custom</option><option value="__custom__">Type a new section…</option></select></div>
+                  <div class="field" id="os-type-field"><label for="os-type">OS type</label><select id="os-type"><option value="Linux">Linux</option><option value="Windows">Windows</option></select></div>
+                </div>
+                <div class="field hidden" id="custom-section-field"><label for="custom-section">New section name</label><input id="custom-section" maxlength="80" placeholder="e.g. Premium Plans"></div>
+                <div class="row">
+                  <div class="field"><label for="ip-series">IP series</label><input id="ip-series" maxlength="100" placeholder="103.163.xx"></div>
+                  <div class="field hidden" id="data-size-field"><label for="data-size">Data size</label><input id="data-size" maxlength="40" placeholder="2 GB, 4 GB, 8 GB"></div>
+                </div>
+                <div class="row">
+                  <div class="field"><label for="specs">Specs</label><input id="specs" maxlength="180" placeholder="2.Ghz | 8GB / 4vCPU or speed / location"></div>
+                  <div class="field hidden" id="ip-count-field"><label for="ip-count">IP count</label><input id="ip-count" maxlength="40" placeholder="1 IP, 10 IP"></div>
+                </div>
+                <div class="row">
+                  <div class="field hidden" id="validity-field"><label for="validity">Validity</label><input id="validity" maxlength="40" placeholder="30 days"></div>
+                  <div class="field"><label for="product-badge">Badge (optional)</label><input id="product-badge" maxlength="80" placeholder="New Series, Limited Stock"></div>
+                </div>
+                <div class="row">
+                  <div class="field"><label for="stock-status">Stock status</label><select id="stock-status"><option value="available">Available</option><option value="out_of_stock">Out of stock</option></select></div>
+                  <div class="field"><label for="price-prefix">Price prefix</label><input id="price-prefix" maxlength="30" value="From" placeholder="From"></div>
+                </div>
+                <div class="field"><label for="product-details">Details (shown when expanded)</label><textarea id="product-details" maxlength="2000" placeholder="Additional plan details"></textarea></div>
+              </div>
+              <label class="check" id="legacy-stock-field"><input id="in-stock" type="checkbox" checked> In stock</label>
               <button class="btn gold" type="submit" id="save-product">Add product</button>
-              <button class="btn ghost hidden" type="button" id="cancel-edit">Cancel</button>
+              <button class="btn ghost hidden" type="button" id="cancel-edit">Cancel edit</button>
               <div class="error" id="product-error"></div>
             </form>
           </section>
@@ -243,11 +291,58 @@
         <div class="bar" style="margin-bottom:16px"><div><h2 class="title-premium">Spin &amp; Win</h2><p class="sub desc-premium">Manage reward labels, discount percentages, and probability weights for the wheel.</p></div><button id="reset-spin-prizes" class="btn ghost" type="button">Reset defaults</button></div>
         <div id="spin-prize-list" class="product-list"></div>
       </section>
+      <section id="offers-panel" class="panel hidden" data-card-tone="support">
+        <div class="bar" style="margin-bottom:16px"><div><h2 class="title-premium">Offers</h2><p class="sub desc-premium">Create timed offers for a collection or a specific product. Claim Now sends customers to the selected destination.</p></div><button id="offer-new" class="btn ghost" type="button">New offer</button></div>
+        <div class="admin-grid">
+          <section class="panel" style="margin:0">
+            <h3 id="offer-form-title">Create offer</h3>
+            <form id="offer-form">
+              <input id="offer-id" type="hidden">
+              <div class="field"><label for="offer-title">Offer title</label><input id="offer-title" maxlength="120" required placeholder="e.g. Two for one"></div>
+              <div class="field"><label for="offer-description">Short description</label><textarea id="offer-description" maxlength="500" placeholder="Tell customers what this offer includes"></textarea></div>
+              <div class="field"><label for="offer-collection">Collection</label><select id="offer-collection" required><option value="software">Software</option><option value="vps">Linux VPS</option><option value="proxy">Linux Proxy</option><option value="residential">Residential Proxies</option></select></div>
+              <div class="field"><label for="offer-product">Product (optional)</label><select id="offer-product"><option value="">Entire collection</option></select><small class="sub" style="display:block;margin:5px 0 0">Choose a product to take customers directly to it, or leave empty for the full collection.</small></div>
+              <section class="offer-claim-settings">
+                <label class="check" for="offer-claim-enabled"><input id="offer-claim-enabled" type="checkbox"> Enable screenshot-verified claim and free-software transfer</label>
+                <div id="offer-claim-fields" class="hidden">
+                  <p class="sub">Claim rewards are limited to Software. Customers choose one product; its current server price is captured when they claim.</p>
+                  <div class="row"><div class="field"><label for="offer-paid-quantity">Paid software quantity</label><input id="offer-paid-quantity" type="number" min="1" max="100" value="2"></div><div class="field"><label for="offer-free-quantity">Free software quantity</label><input id="offer-free-quantity" type="number" min="1" max="100" value="1"></div></div>
+                  <label class="check" for="offer-benefit-count-enabled"><input id="offer-benefit-count-enabled" type="checkbox"> Show admin-entered benefit count in offer popup</label>
+                  <div class="row"><div class="field"><label for="offer-benefit-count">Display count</label><input id="offer-benefit-count" type="number" min="0" max="100000000" value="0"></div><div class="field"><label for="offer-benefit-minimum">Show only above minimum</label><input id="offer-benefit-minimum" type="number" min="1" max="100000000" value="10"></div></div>
+                </div>
+              </section>
+              <div class="row"><div class="field"><label for="offer-starts-at">Starts at</label><input id="offer-starts-at" type="datetime-local" required></div><div class="field"><label for="offer-ends-at">Ends at</label><input id="offer-ends-at" type="datetime-local" required></div></div>
+              <label class="check" for="offer-enabled"><input id="offer-enabled" type="checkbox" checked> Offer is enabled</label>
+              <button id="offer-save" class="btn gold" type="submit">Create offer</button>
+              <button id="offer-cancel" class="btn ghost hidden" type="button">Cancel edit</button>
+              <div class="error" id="offer-error" aria-live="polite"></div>
+            </form>
+          </section>
+          <section class="panel" style="margin:0"><div class="bar" style="margin-bottom:14px"><h3 style="margin:0">All offers</h3><button id="offers-refresh" class="btn ghost" type="button">Refresh</button></div><div id="admin-offer-list" class="product-list"></div></section>
+        </div>
+        <div class="offer-operations-grid">
+          <section class="panel offer-operation-panel"><div class="bar"><h3>Claim Requests</h3><button class="btn ghost" id="offer-claims-refresh" type="button">Refresh</button></div><div id="offer-claim-requests" class="product-list"></div></section>
+          <section class="panel offer-operation-panel"><div class="bar"><h3>Free Software Transfers</h3><button class="btn ghost" id="offer-transfers-refresh" type="button">Refresh</button></div><div id="offer-transfer-list" class="product-list"></div></section>
+          <section class="panel offer-operation-panel"><div class="bar"><h3>Offer Reports</h3><button class="btn ghost" id="offer-reports-refresh" type="button">Refresh</button></div><div id="offer-report-list" class="product-list"></div></section>
+          <section class="panel offer-operation-panel"><div class="bar"><h3>Recent Claims</h3><button class="btn ghost" id="offer-names-refresh" type="button">Refresh</button></div><div id="offer-recent-claims" class="product-list"></div></section>
+          <section class="panel offer-operation-panel"><h3>Customer name notifications</h3><form id="offer-notification-form"><div class="field"><label for="offer-notification-interval">Seconds between notifications (15–3600)</label><input id="offer-notification-interval" type="number" min="15" max="3600" value="30" required></div><button class="btn gold" type="submit">Save interval</button><div class="error" id="offer-notification-error" aria-live="polite"></div></form></section>
+          <section class="panel offer-operation-panel"><div class="bar"><h3>Offer Audit Log</h3><button class="btn ghost" id="offer-audit-refresh" type="button">Refresh</button></div><div id="offer-audit-list" class="product-list"></div></section>
+        </div>
+      </section>
       <section id="settings-panel" class="panel settings hidden" data-card-tone="support">
         <h2 class="title-premium">Store settings</h2><p class="sub desc-premium">These settings are displayed on the public store.</p>
         <form id="settings-form">
           <div class="field"><label for="site-title">Site title</label><input id="site-title" maxlength="80" required></div>
-          <div class="field"><label for="upi-id">UPI ID for wallet top-ups</label><input id="upi-id" maxlength="120" placeholder="roshanbrand@airtel" required></div>
+          <section style="border:1px solid var(--line);border-radius:14px;padding:16px;margin:17px 0">
+            <h3 style="margin-bottom:5px">Payment settings</h3>
+            <p class="sub">Configure the customer payment methods. UPI details are used only when saved here.</p>
+            <div class="field"><label for="upi-id">UPI ID</label><input id="upi-id" inputmode="email" autocapitalize="none" spellcheck="false" maxlength="129" placeholder="yourname@bank" pattern="[A-Za-z0-9][A-Za-z0-9._-]{0,63}@[A-Za-z0-9][A-Za-z0-9.-]{0,63}" title="Enter a valid UPI ID such as name@bank"></div>
+            <div class="field"><label for="upi-payee-name">UPI payee name</label><input id="upi-payee-name" maxlength="80" placeholder="Your payee name"></div>
+            <div class="field"><label for="upi-qr-image">QR image (optional)</label><input id="upi-qr-image" type="file" accept="image/png,image/jpeg,image/webp"><div id="upi-qr-preview" style="display:grid;place-items:center;width:190px;min-height:190px;margin-top:9px;padding:12px;border-radius:12px;background:#fff;color:#161616"></div><label class="check" for="remove-upi-qr"><input id="remove-upi-qr" type="checkbox">Remove saved QR image</label><small class="sub" style="display:block;margin-top:7px">PNG, JPG, or WebP up to 5 MB. Checkout creates an exact-amount QR from your saved UPI settings.</small></div>
+            <label class="check" for="enable-wallet-payments"><input id="enable-wallet-payments" type="checkbox">Enable wallet payments</label>
+            <label class="check" for="enable-upi-qr"><input id="enable-upi-qr" type="checkbox">Enable Scan QR (UPI)</label>
+            <label class="check" for="enable-upi-app"><input id="enable-upi-app" type="checkbox">Enable UPI ID / UPI App</label>
+          </section>
           <div class="field"><label for="whatsapp">WhatsApp number (country code, digits only)</label><input id="whatsapp" inputmode="tel" placeholder="919876543210"></div>
           <div class="field"><label for="telegram">Telegram link</label><input id="telegram" type="url" placeholder="https://t.me/yourchannel"></div>
           <button class="btn gold" type="submit">Save settings</button><div class="error" id="settings-error"></div>
@@ -263,16 +358,27 @@
       <div class="order-details" id="order-details"></div>
       <div class="field"><label for="delivery-text">Delivery details</label><textarea class="delivery-text" id="delivery-text" maxlength="100000" placeholder="Paste access details, product keys or IP information. Line breaks are preserved."></textarea></div>
       <div class="field"><label for="delivery-link">Download link (optional)</label><input id="delivery-link" type="url" maxlength="2048" placeholder="https://..."></div>
+      <div class="field hidden" id="payment-rejection-field"><label for="payment-rejection-reason">Rejection reason (optional)</label><textarea id="payment-rejection-reason" maxlength="4000" placeholder="Explain why this payment was rejected"></textarea></div>
       <div class="field"><label for="delivery-note">Note to customer (optional)</label><textarea id="delivery-note" maxlength="4000" placeholder="Add a note for the customer"></textarea></div>
       <div class="error" id="delivery-error"></div>
       <div class="order-panel-actions"><button class="btn gold" id="deliver-order" type="button">Deliver</button><button class="btn ghost" id="save-delivery-draft" type="button">Save draft</button><button class="btn danger" id="reject-order" type="button">Reject</button></div>
     </section>
   </div>
   <div class="toast hidden" id="toast" role="status"></div>
+  <div class="admin-confirm hidden" id="admin-confirm" role="alertdialog" aria-modal="true" aria-labelledby="admin-confirm-title" aria-describedby="admin-confirm-message">
+    <button class="admin-confirm-backdrop" id="admin-confirm-backdrop" type="button" aria-label="Cancel confirmation"></button>
+    <section class="admin-confirm-dialog"><h2 id="admin-confirm-title"></h2><p id="admin-confirm-message"></p><div class="admin-confirm-actions"><button class="btn ghost" id="admin-confirm-cancel" type="button">Cancel</button><button class="btn danger" id="admin-confirm-accept" type="button">Confirm</button></div></section>
+  </div>
+  <div class="admin-confirm hidden" id="offer-screenshot-modal" role="dialog" aria-modal="true" aria-label="Offer claim screenshot">
+    <button class="admin-confirm-backdrop" id="offer-screenshot-backdrop" type="button" aria-label="Close screenshot"></button>
+    <section class="admin-confirm-dialog"><h2>Claim screenshot</h2><img class="offer-screenshot hidden" id="offer-screenshot" alt="Customer-provided offer claim screenshot"><button class="btn ghost" id="offer-screenshot-close" type="button">Close</button></section>
+  </div>
   <script>
     const categories=[{id:'software',title:'Software'},{id:'vps',title:'Linux VPS'},{id:'proxy',title:'Linux Proxy'},{id:'residential',title:'Residential Proxies'}];
-    const DEFAULT_SPIN_PRIZES=[{code:'SAVE20',label:'20%',type:'percent',value:20,color:'#dc3434',maxDiscountAmount:500,weight:15},{code:'SAVE50',label:'50%',type:'percent',value:50,color:'#1a4ea8',maxDiscountAmount:500,weight:10},{code:'SAVE100',label:'100%',type:'percent',value:100,color:'#f4d77a',maxDiscountAmount:500,weight:4},{code:'SAVE200',label:'200%',type:'percent',value:200,color:'#dc3434',maxDiscountAmount:500,weight:1},{code:'TRY_AGAIN',label:'TRY AGAIN',type:'tryAgain',value:0,color:'#4a4a4a',maxDiscountAmount:0,weight:45},{code:'SAVE10',label:'10%',type:'percent',value:10,color:'#1a4ea8',maxDiscountAmount:500,weight:25}];
-    const state={client:null,category:'software',products:[],editing:null,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null};
+    const DEFAULT_SPIN_PRIZES=[{code:'SAVE20',label:'20%',type:'percent',value:20,color:'#dc3434',maxDiscountAmount:500,weight:15},{code:'SAVE50',label:'50%',type:'percent',value:50,color:'#1a4ea8',maxDiscountAmount:500,weight:10},{code:'SAVE100',label:'100%',type:'percent',value:100,color:'#f4d77a',maxDiscountAmount:500,weight:4},{code:'BONUS100',label:'100%',type:'percent',value:100,color:'#dc3434',maxDiscountAmount:500,weight:1},{code:'TRY_AGAIN',label:'TRY AGAIN',type:'tryAgain',value:0,color:'#4a4a4a',maxDiscountAmount:0,weight:45},{code:'SAVE10',label:'10%',type:'percent',value:10,color:'#1a4ea8',maxDiscountAmount:500,weight:25}];
+    const state={client:null,category:'software',products:[],editing:null,editingDownloadUrl:null,downloadLinkLoaded:true,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null,paymentQrImageUrl:'',offers:[],offerProducts:[],offerReports:[]};
+    let productPreviewUrl=null;
+    let paymentQrPreviewUrl=null;
     const $=id=>document.getElementById(id);
     const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     const money=value=>new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(Number(value)||0);
@@ -316,7 +422,11 @@
       try {
         const stored=JSON.parse(localStorage.getItem('roshan-spin-prizes-admin')||'null');
         if(Array.isArray(stored)&&stored.length){
-          return stored.map(item=>({code:String(item.code||'SAVE10').toUpperCase(),label:String(item.label||`${Number(item.value)||0}%`),type:item.type==='tryAgain'?'tryAgain':'percent',value:Number(item.value)||0,color:item.color||'#1a4ea8',maxDiscountAmount:Number(item.maxDiscountAmount)||0,weight:Number(item.weight)||0}));
+          return stored.map(item=>{
+            const type=item.type==='tryAgain'?'tryAgain':'percent';
+            const value=type==='tryAgain'?0:Math.min(Math.max(Number(item.value)||0,0),100);
+            return {code:String(item.code||'SAVE10').toUpperCase(),label:type==='tryAgain'?String(item.label||'TRY AGAIN'):`${value}%`,type,value,color:item.color||'#1a4ea8',maxDiscountAmount:Number(item.maxDiscountAmount)||0,weight:Number(item.weight)||0};
+          });
         }
       } catch (error) {
         console.warn('Could not read stored spin prizes:', error);
@@ -325,32 +435,329 @@
     }
     function notify(message){$('toast').textContent=message;$('toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),2600)}
     function setError(id,message=''){$(id).textContent=message}
+    const isVpsCategory=category=>category==='vps'||category==='windows-vps';
+    const isProxyCategory=category=>category==='proxy'||category==='residential';
+    const isPlanCategory=category=>isVpsCategory(category)||isProxyCategory(category);
+    const productIsAvailable=product=>product.stock_status?product.stock_status==='available':product.in_stock!==false;
+    function syncPlanFields(){
+      const isVps=isVpsCategory(state.category);
+      const isProxy=isProxyCategory(state.category);
+      $('plan-fields').classList.toggle('hidden',!isPlanCategory(state.category));
+      $('os-type-field').classList.toggle('hidden',!isVps);
+      $('data-size-field').classList.toggle('hidden',!isProxy);
+      $('ip-count-field').classList.toggle('hidden',!isProxy);
+      $('validity-field').classList.toggle('hidden',!isProxy);
+      $('legacy-stock-field').classList.toggle('hidden',isPlanCategory(state.category));
+      const customSection=$('plan-section').value==='__custom__'||$('plan-section').value==='Custom';
+      $('custom-section-field').classList.toggle('hidden',!customSection);
+      $('custom-section').required=isPlanCategory(state.category)&&$('plan-section').value==='__custom__';
+    }
+    function confirmAdminAction(title,message,acceptLabel='Confirm',danger=true){
+      return new Promise(resolve=>{
+        const modal=$('admin-confirm');
+        const accept=$('admin-confirm-accept');
+        const finish=accepted=>{
+          modal.classList.add('hidden');document.body.style.overflow='';
+          accept.removeEventListener('click',acceptAction);
+          $('admin-confirm-cancel').removeEventListener('click',cancelAction);
+          $('admin-confirm-backdrop').removeEventListener('click',cancelAction);
+          document.removeEventListener('keydown',handleKey);
+          resolve(accepted);
+        };
+        const acceptAction=()=>finish(true);
+        const cancelAction=()=>finish(false);
+        const handleKey=event=>{if(event.key==='Escape')cancelAction()};
+        $('admin-confirm-title').textContent=title;
+        $('admin-confirm-message').textContent=message;
+        accept.textContent=acceptLabel;
+        accept.className=`btn ${danger?'danger':'gold'}`;
+        accept.addEventListener('click',acceptAction);
+        $('admin-confirm-cancel').addEventListener('click',cancelAction);
+        $('admin-confirm-backdrop').addEventListener('click',cancelAction);
+        document.addEventListener('keydown',handleKey);
+        document.body.style.overflow='hidden';modal.classList.remove('hidden');accept.focus();
+      });
+    }
+    function showPasswordReset(){
+      $('login-form').classList.add('hidden');
+      $('password-reset-form').classList.remove('hidden');
+      $('login-panel').querySelector('h2').textContent='Set a new password';
+      $('login-panel').querySelector('.sub').textContent='Choose a new password with at least 8 characters.';
+      setError('login-error');
+      setError('password-reset-error');
+    }
+    function showPasswordLogin(message=''){
+      $('password-reset-form').classList.add('hidden');
+      $('login-form').classList.remove('hidden');
+      $('login-panel').querySelector('h2').textContent='Sign in';
+      $('login-panel').querySelector('.sub').textContent='Use the admin email and password created in your Supabase project.';
+      $('password-reset-form').reset();
+      $('login-error').classList.toggle('success',Boolean(message));
+      setError('login-error',message);
+    }
+    let isPasswordRecovery=new URLSearchParams(location.hash.slice(1)).get('type')==='recovery';
+    if(isPasswordRecovery)showPasswordReset();
     function renderTabs(){
-      $('tabs').innerHTML=categories.map(category=>`<button type="button" data-category="${category.id}" class="${state.activeView===category.id?'active':''}">${category.title}</button>`).join('')+'<button type="button" data-spin="true" class="'+(state.activeView==='spin'?'active':'')+'">Spin &amp; Win</button><button type="button" data-finance="topups" class="'+(state.activeView==='topups'?'active':'')+'">Top-up Requests</button><button type="button" data-finance="orders" class="'+(state.activeView==='orders'?'active':'')+'">Orders</button><button type="button" data-finance="users" class="'+(state.activeView==='users'?'active':'')+'">Users</button><button type="button" data-settings="true" class="'+(state.activeView==='settings'?'active':'')+'">Settings</button>';
+      $('tabs').innerHTML=categories.map(category=>`<button type="button" data-category="${category.id}" class="${state.activeView===category.id?'active':''}">${category.title}</button>`).join('')+'<button type="button" data-spin="true" class="'+(state.activeView==='spin'?'active':'')+'">Spin &amp; Win</button><button type="button" data-offers="true" class="'+(state.activeView==='offers'?'active':'')+'">Offers</button><button type="button" data-finance="topups" class="'+(state.activeView==='topups'?'active':'')+'">Top-up Requests</button><button type="button" data-finance="orders" class="'+(state.activeView==='orders'?'active':'')+'">Orders</button><button type="button" data-finance="users" class="'+(state.activeView==='users'?'active':'')+'">Users</button><button type="button" data-settings="true" class="'+(state.activeView==='settings'?'active':'')+'">Settings</button>';
       $('tabs').querySelectorAll('[data-category]').forEach(button=>button.addEventListener('click',()=>selectCategory(button.dataset.category)));
       $('tabs').querySelectorAll('[data-finance]').forEach(button=>button.addEventListener('click',()=>showFinance(button.dataset.finance)));
       $('tabs').querySelector('[data-spin]').addEventListener('click',showSpinWin);
+      $('tabs').querySelector('[data-offers]').addEventListener('click',showOffers);
       $('tabs').querySelector('[data-settings]').addEventListener('click',showSettings);
     }
     function selectCategory(category){
       state.category=category;state.activeView=category;
-      $('products-panel').classList.remove('hidden');$('spin-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');
+      $('products-panel').classList.remove('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');
       $('page-title').textContent=categories.find(item=>item.id===category).title;
       $('list-title').textContent=`${categories.find(item=>item.id===category).title} products`;
-      renderTabs();renderProducts();resetForm();
+      renderTabs();renderProducts();resetForm();syncPlanFields();
     }
     function showSettings(){
-      state.activeView='settings';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('settings-panel').classList.remove('hidden');$('finance-panel').classList.add('hidden');$('page-title').textContent='Settings';
+      state.activeView='settings';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.remove('hidden');$('finance-panel').classList.add('hidden');$('page-title').textContent='Settings';
       renderTabs();loadSettings().catch(error=>setError('settings-error',error.message));
     }
     function showSpinWin(){
-      state.activeView='spin';$('products-panel').classList.add('hidden');$('spin-panel').classList.remove('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('page-title').textContent='Spin & Win';
+      state.activeView='spin';$('products-panel').classList.add('hidden');$('spin-panel').classList.remove('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('page-title').textContent='Spin & Win';
       renderTabs();renderSpinPrizeEditor();
     }
+    function showOffers(){
+      state.activeView='offers';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.remove('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('page-title').textContent='Offers';
+      renderTabs();resetOfferForm();
+      Promise.all([renderOffers(),renderOfferOperations()]).catch(error=>setError('offer-error',`Could not load offer data: ${error.message}`));
+    }
     async function showFinance(tab){
-      state.activeView=tab;$('products-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.remove('hidden');
+      state.activeView=tab;$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.remove('hidden');
       const titles={topups:['Top-up Requests','Review customer UPI payments before crediting wallets.'],orders:['Orders','Deliver customer purchases manually or issue a wallet refund.'],users:['Users','Manage customer wallet balances with an audit note.']};
       $('page-title').textContent=titles[tab][0];$('finance-title').textContent=titles[tab][0];$('finance-description').textContent=titles[tab][1];renderTabs();await renderFinance(tab);
+    }
+    function offerDateTimeInput(value){
+      const date=value instanceof Date?value:new Date(value);
+      if(!Number.isFinite(date.getTime()))return '';
+      return new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,16);
+    }
+    function setOfferProductOptions(selected=''){
+      const collection=$('offer-collection').value;
+      const products=state.offerProducts.filter(product=>product.category===collection);
+      $('offer-product').innerHTML='<option value="">Entire collection</option>'+products.map(product=>`<option value="${escapeHtml(product.id)}">${escapeHtml(product.name)}</option>`).join('');
+      $('offer-product').value=products.some(product=>String(product.id)===String(selected))?String(selected):'';
+    }
+    function syncOfferClaimFields(){
+      const enabled=$('offer-claim-enabled').checked;
+      $('offer-claim-fields').classList.toggle('hidden',!enabled);
+      if(enabled)$('offer-collection').value='software';
+    }
+    function resetOfferForm(){
+      $('offer-form').reset();
+      $('offer-id').value='';
+      $('offer-collection').value='software';
+      $('offer-enabled').checked=true;
+      $('offer-paid-quantity').value='2';
+      $('offer-free-quantity').value='1';
+      $('offer-benefit-count').value='0';
+      $('offer-benefit-minimum').value='10';
+      $('offer-starts-at').value=offerDateTimeInput(new Date());
+      $('offer-ends-at').value=offerDateTimeInput(new Date(Date.now()+86400000));
+      $('offer-form-title').textContent='Create offer';
+      $('offer-save').textContent='Create offer';
+      $('offer-cancel').classList.add('hidden');
+      setError('offer-error');
+      setOfferProductOptions();
+      syncOfferClaimFields();
+    }
+    async function renderOffers(){
+      const [offersResult,productsResult]=await Promise.all([
+        state.client.from('offers').select('id,title,description,collection,product_id,starts_at,ends_at,enabled,claim_enabled,paid_quantity,free_quantity,benefit_count_enabled,benefit_count,benefit_count_minimum,created_at').order('created_at',{ascending:false}),
+        state.client.from('products').select('id,name,category,price').order('category').order('name')
+      ]);
+      if(offersResult.error)throw offersResult.error;
+      if(productsResult.error)throw productsResult.error;
+      state.offers=offersResult.data||[];
+      state.offerProducts=productsResult.data||[];
+      setOfferProductOptions($('offer-product').value);
+      const now=Date.now();
+      $('admin-offer-list').innerHTML=state.offers.length?state.offers.map(offer=>{
+        const starts=Date.parse(offer.starts_at),ends=Date.parse(offer.ends_at);
+        const active=offer.enabled&&starts<=now&&ends>now;
+        const status=active?'Live':!offer.enabled?'Disabled':starts>now?'Scheduled':'Expired';
+        const product=state.offerProducts.find(item=>String(item.id)===String(offer.product_id));
+        const collection=categories.find(item=>item.id===offer.collection)?.title||offer.collection;
+        const stats=state.offerReports.find(report=>report.offer_id===offer.id);
+        const countLabel=offer.benefit_count_enabled?` · Admin display count: ${money(offer.benefit_count)} (minimum ${money(offer.benefit_count_minimum)}; ${Number(offer.benefit_count)>Number(offer.benefit_count_minimum)?'visible':'hidden'})`:'';
+        const claimLabel=offer.claim_enabled?` · Pay ${offer.paid_quantity}, free ${offer.free_quantity} · Claims ${stats?.claim_count||0} / paid ${stats?.paid_order_count||0} / free transferred ${stats?.free_software_count||0}${countLabel}`:'';
+        return `<article class="product-row"><div><strong>${escapeHtml(offer.title)}</strong><small>${escapeHtml(offer.description||'No description')} · ${escapeHtml(product?`${collection} / ${product.name}`:`${collection} collection`)} · ${escapeHtml(formatDate(offer.starts_at))} – ${escapeHtml(formatDate(offer.ends_at))}${claimLabel}</small><div style="display:flex;gap:6px;margin-top:8px"><span class="pill ${active?'offer-active':''}">${status}</span>${offer.claim_enabled?'<span class="pill">Claim + free software</span>':''}</div></div><div class="actions"><button class="btn ${offer.enabled?'danger':'gold'}" type="button" data-offer-toggle="${escapeHtml(offer.id)}" data-enabled="${offer.enabled}">${offer.enabled?'Turn off':'Turn on'}</button><button class="btn ghost" type="button" data-offer-edit="${escapeHtml(offer.id)}">Edit</button><button class="btn danger" type="button" data-offer-delete="${escapeHtml(offer.id)}">Delete</button></div></article>`;
+      }).join(''):'<div class="empty">No offers created yet.</div>';
+      $('admin-offer-list').querySelectorAll('[data-offer-edit]').forEach(button=>button.addEventListener('click',()=>editOffer(button.dataset.offerEdit)));
+      $('admin-offer-list').querySelectorAll('[data-offer-delete]').forEach(button=>button.addEventListener('click',()=>deleteOffer(button.dataset.offerDelete)));
+      $('admin-offer-list').querySelectorAll('[data-offer-toggle]').forEach(button=>button.addEventListener('click',()=>toggleOffer(button.dataset.offerToggle,button.dataset.enabled!=='true')));
+      revealAdmin($('admin-offer-list'));
+      renderOfferReports(state.offerReports);
+    }
+    async function renderOfferOperations(){
+      const calls=[
+        ['admin_list_offer_claims','offer-claim-requests'],
+        ['admin_list_offer_transfers','offer-transfer-list'],
+        ['admin_offer_reports','offer-report-list'],
+        ['admin_recent_offer_claim_names','offer-recent-claims'],
+        ['admin_offer_audit_log','offer-audit-list']
+      ];
+      const results=await Promise.all(calls.map(([name])=>state.client.rpc(name)));
+      results.forEach((result,index)=>{if(result.error)throw new Error(`${calls[index][0]}: ${result.error.message}`)});
+      const claims=results[0].data||[];
+      const transfers=results[1].data||[];
+      state.offerReports=results[2].data||[];
+      const recentNames=results[3].data||[];
+      const audit=results[4].data||[];
+      $('offer-claim-requests').innerHTML=claims.length?claims.map(claim=>{
+        const review=claim.status==='pending'?`<div class="field"><label for="claim-reason-${escapeHtml(claim.id)}">Reject reason (required if rejecting)</label><textarea class="offer-review-note" id="claim-reason-${escapeHtml(claim.id)}" maxlength="1000"></textarea></div><div class="actions"><button class="btn gold" type="button" data-claim-screenshot="${escapeHtml(claim.id)}">View screenshot</button><button class="btn gold" type="button" data-claim-approve="${escapeHtml(claim.id)}">Approve</button><button class="btn danger" type="button" data-claim-reject="${escapeHtml(claim.id)}">Reject</button></div>`:`<div class="actions"><button class="btn ghost" type="button" data-claim-screenshot="${escapeHtml(claim.id)}">View screenshot</button></div>`;
+        return `<article class="finance-row"><div><strong>${escapeHtml(claim.customer_name)} · ${escapeHtml(claim.offer_title)}</strong><small>${escapeHtml(claim.user_email)} · ${escapeHtml(claim.product_name)} · Pay ${claim.paid_quantity}, free ${claim.free_quantity} · ₹${money(Number(claim.unit_price)*Number(claim.paid_quantity))} · ${escapeHtml(formatDate(claim.created_at))}</small><div style="margin-top:7px"><span class="pill">${escapeHtml(claim.status)}</span>${claim.rejection_reason?`<small>Rejected: ${escapeHtml(claim.rejection_reason)}</small>`:''}</div>${review}</div></article>`;
+      }).join(''):'<div class="empty">No offer claim requests.</div>';
+      $('offer-claim-requests').querySelectorAll('[data-claim-screenshot]').forEach(button=>button.addEventListener('click',()=>showOfferClaimScreenshot(button.dataset.claimScreenshot)));
+      $('offer-claim-requests').querySelectorAll('[data-claim-approve]').forEach(button=>button.addEventListener('click',()=>reviewOfferClaim(button.dataset.claimApprove,true)));
+      $('offer-claim-requests').querySelectorAll('[data-claim-reject]').forEach(button=>button.addEventListener('click',()=>reviewOfferClaim(button.dataset.claimReject,false)));
+      $('offer-transfer-list').innerHTML=transfers.length?transfers.map(item=>`<article class="finance-row"><div><strong>${escapeHtml(item.customer_name)} · ${escapeHtml(item.offer_title)}</strong><small>${escapeHtml(item.user_email)} · ${escapeHtml(item.product_name)} · Paid qty ${item.paid_quantity} · Free qty ${item.free_quantity} · ₹${money(item.paid_amount)} · ${escapeHtml(formatDate(item.paid_at))}</small></div><button class="btn gold" type="button" data-transfer-free="${escapeHtml(item.claim_id)}">Transfer Free Software</button></article>`).join(''):'<div class="empty">No paid offers are waiting for a free-software transfer.</div>';
+      $('offer-transfer-list').querySelectorAll('[data-transfer-free]').forEach(button=>button.addEventListener('click',()=>transferOfferFreeSoftware(button.dataset.transferFree)));
+      renderOfferReports(state.offerReports);
+      $('offer-recent-claims').innerHTML=recentNames.length?recentNames.map(item=>`<article class="finance-row"><div><strong>${escapeHtml(item.display_name)} · ${escapeHtml(item.offer_title)}</strong><small>${escapeHtml(item.status)} · ${escapeHtml(formatDate(item.created_at))}${item.share_name?'':' · Customer did not consent to display their name'}</small></div><label class="check"><input type="checkbox" data-claim-name-visibility="${escapeHtml(item.claim_id)}" ${item.name_enabled?'checked':''} ${item.share_name?'':'disabled'}> Show name</label></article>`).join(''):'<div class="empty">No claims yet.</div>';
+      $('offer-recent-claims').querySelectorAll('[data-claim-name-visibility]').forEach(input=>input.addEventListener('change',()=>setOfferClaimNameVisibility(input.dataset.claimNameVisibility,input.checked)));
+      $('offer-audit-list').innerHTML=audit.length?audit.map(item=>`<article class="finance-row"><div><strong>${escapeHtml(item.action.replaceAll('_',' '))} · ${escapeHtml(item.offer_title||'Offer system')}</strong><small>${escapeHtml(item.actor_email||'System')} · ${escapeHtml(formatDate(item.created_at))}${Object.keys(item.details||{}).length?` · ${escapeHtml(JSON.stringify(item.details))}`:''}</small></div></article>`).join(''):'<div class="empty">No offer actions recorded.</div>';
+      const {data:interval,error}=await state.client.rpc('public_offer_notification_interval');
+      if(error)throw error;
+      $('offer-notification-interval').value=String(interval||30);
+      if(state.activeView==='offers')renderOffers();
+    }
+    function renderOfferReports(reports){
+      $('offer-report-list').innerHTML=reports.length?`<div class="offer-report-row offer-report-head"><span>Offer</span><span>Claims</span><span>Approved</span><span>Paid</span><span>Free units</span></div>${reports.map(report=>`<div class="offer-report-row"><strong>${escapeHtml(report.title)}</strong><span>${Number(report.claim_count)||0}</span><span>${Number(report.approved_count)||0}</span><span>${Number(report.paid_order_count)||0}</span><span>${Number(report.free_software_count)||0}</span></div>`).join('')}`:'<div class="empty">No offers to report.</div>';
+    }
+    async function showOfferClaimScreenshot(claimId){
+      try{
+        const {data,error}=await state.client.rpc('admin_offer_claim_screenshot',{p_claim_id:claimId});
+        if(error)throw error;
+        const screenshot=data?.[0];
+        if(!screenshot?.screenshot_base64)throw new Error('Screenshot not found.');
+        const image=$('offer-screenshot');
+        image.src=`data:${screenshot.screenshot_mime};base64,${screenshot.screenshot_base64}`;
+        image.classList.remove('hidden');
+        $('offer-screenshot-modal').classList.remove('hidden');
+      }catch(error){notify(`Could not load screenshot: ${error.message}`)}
+    }
+    async function reviewOfferClaim(claimId,approve){
+      const reason=approve?'':$(`claim-reason-${CSS.escape(claimId)}`).value.trim();
+      if(!approve&&!reason){notify('Enter a rejection reason for the customer.');return}
+      try{
+        const {data,error}=await state.client.rpc('admin_review_offer_claim',{p_claim_id:claimId,p_approve:approve,p_reason:reason});
+        if(error||!data?.ok)throw new Error(error?.message||data?.message||'Could not review the claim.');
+        notify(approve?`Claim approved. Pending payment order #${data.order_id} created.`:'Claim rejected. The customer can submit a new screenshot.');
+        await Promise.all([renderOfferOperations(),renderOffers()]);
+      }catch(error){notify(error.message)}
+    }
+    async function transferOfferFreeSoftware(claimId){
+      if(!await confirmAdminAction('Transfer free software','Add the free software item to the customer’s My Orders?','Transfer'))return;
+      try{
+        const {data,error}=await state.client.rpc('admin_transfer_offer_free_software',{p_claim_id:claimId});
+        if(error||!data?.ok)throw new Error(error?.message||data?.message||'Could not transfer the free software.');
+        notify(`Transferred ${data.quantity} free software item(s) to My Orders.`);
+        await Promise.all([renderOfferOperations(),renderOffers()]);
+      }catch(error){notify(error.message)}
+    }
+    async function setOfferClaimNameVisibility(claimId,enabled){
+      try{
+        const {data,error}=await state.client.rpc('admin_set_claim_name_visibility',{p_claim_id:claimId,p_enabled:enabled});
+        if(error||!data?.ok)throw new Error(error?.message||data?.message||'Could not update name visibility.');
+        await renderOfferOperations();
+      }catch(error){notify(error.message)}
+    }
+    async function saveOfferNotificationInterval(event){
+      event.preventDefault();
+      const interval=Number($('offer-notification-interval').value);
+      if(!Number.isInteger(interval)||interval<15||interval>3600){setError('offer-notification-error','Choose a whole number from 15 to 3600 seconds.');return}
+      try{
+        const {data,error}=await state.client.rpc('admin_set_offer_notification_interval',{p_interval_seconds:interval});
+        if(error||!data?.ok)throw new Error(error?.message||data?.message||'Could not save notification interval.');
+        setError('offer-notification-error');
+        notify('Notification interval saved.');
+        await renderOfferOperations();
+      }catch(error){setError('offer-notification-error',error.message)}
+    }
+    function editOffer(offerId){
+      const offer=state.offers.find(item=>String(item.id)===String(offerId));
+      if(!offer)return;
+      $('offer-id').value=offer.id;
+      $('offer-title').value=offer.title;
+      $('offer-description').value=offer.description||'';
+      $('offer-collection').value=offer.collection;
+      setOfferProductOptions(offer.product_id||'');
+      $('offer-claim-enabled').checked=offer.claim_enabled;
+      $('offer-paid-quantity').value=offer.paid_quantity;
+      $('offer-free-quantity').value=offer.free_quantity;
+      $('offer-benefit-count-enabled').checked=offer.benefit_count_enabled;
+      $('offer-benefit-count').value=offer.benefit_count;
+      $('offer-benefit-minimum').value=offer.benefit_count_minimum;
+      syncOfferClaimFields();
+      $('offer-starts-at').value=offerDateTimeInput(offer.starts_at);
+      $('offer-ends-at').value=offerDateTimeInput(offer.ends_at);
+      $('offer-enabled').checked=offer.enabled;
+      $('offer-form-title').textContent='Edit offer';
+      $('offer-save').textContent='Save changes';
+      $('offer-cancel').classList.remove('hidden');
+      setError('offer-error');
+      $('offer-title').focus();
+    }
+    async function saveOffer(event){
+      event.preventDefault();
+      setError('offer-error');
+      const title=$('offer-title').value.trim();
+      const description=$('offer-description').value.trim();
+      const startsAt=new Date($('offer-starts-at').value);
+      const endsAt=new Date($('offer-ends-at').value);
+      if(!title||title.length>120){setError('offer-error','Enter an offer title of up to 120 characters.');return}
+      if(description.length>500){setError('offer-error','Offer descriptions must be 500 characters or less.');return}
+      if(!Number.isFinite(startsAt.getTime())||!Number.isFinite(endsAt.getTime())||endsAt<=startsAt){setError('offer-error','Choose valid offer dates. The end time must be after the start time.');return}
+      const claimEnabled=$('offer-claim-enabled').checked;
+      const paidQuantity=Number($('offer-paid-quantity').value),freeQuantity=Number($('offer-free-quantity').value);
+      const benefitCount=Number($('offer-benefit-count').value),benefitMinimum=Number($('offer-benefit-minimum').value);
+      if(claimEnabled&&$('offer-collection').value!=='software'){setError('offer-error','Claim and free-software offers must use the Software collection.');return}
+      if(!Number.isInteger(paidQuantity)||paidQuantity<1||paidQuantity>100||!Number.isInteger(freeQuantity)||freeQuantity<1||freeQuantity>100){setError('offer-error','Paid and free quantities must be whole numbers from 1 to 100.');return}
+      if(!Number.isInteger(benefitCount)||benefitCount<0||benefitCount>100000000||!Number.isInteger(benefitMinimum)||benefitMinimum<1||benefitMinimum>100000000){setError('offer-error','Benefit display count and minimum must be valid whole numbers.');return}
+      const payload={title,description,collection:$('offer-collection').value,product_id:$('offer-product').value?Number($('offer-product').value):null,starts_at:startsAt.toISOString(),ends_at:endsAt.toISOString(),enabled:$('offer-enabled').checked,claim_enabled:claimEnabled,paid_quantity:paidQuantity,free_quantity:freeQuantity,benefit_count_enabled:$('offer-benefit-count-enabled').checked,benefit_count:benefitCount,benefit_count_minimum:benefitMinimum};
+      const offerId=$('offer-id').value;
+      $('offer-save').disabled=true;
+      try{
+        const result=offerId
+          ?await state.client.from('offers').update(payload).eq('id',offerId)
+          :await state.client.from('offers').insert(payload);
+        if(result.error)throw result.error;
+        resetOfferForm();
+        await renderOffers();
+        notify(offerId?'Offer updated.':'Offer created.');
+      }catch(error){
+        console.error('Could not save offer:',error);
+        setError('offer-error',error.message||'Could not save the offer.');
+      }finally{$('offer-save').disabled=false}
+    }
+    async function toggleOffer(offerId,enabled){
+      try{
+        const {error}=await state.client.from('offers').update({enabled}).eq('id',offerId);
+        if(error)throw error;
+        await renderOffers();
+        notify(enabled?'Offer enabled.':'Offer turned off.');
+      }catch(error){
+        console.error('Could not update offer status:',error);
+        notify(`Could not update offer: ${error.message||'Please try again.'}`);
+      }
+    }
+    async function deleteOffer(offerId){
+      const offer=state.offers.find(item=>String(item.id)===String(offerId));
+      if(!offer||!await confirmAdminAction('Delete offer?',`Delete “${offer.title}”? This cannot be undone.`,'Delete'))return;
+      try{
+        const {error}=await state.client.from('offers').delete().eq('id',offerId);
+        if(error)throw error;
+        await renderOffers();
+        resetOfferForm();
+        notify('Offer deleted.');
+      }catch(error){
+        console.error('Could not delete offer:',error);
+        notify(`Could not delete offer: ${error.message||'Please try again.'}`);
+      }
     }
     async function renderProducts(){
       const result=await state.client.from('products').select('*').eq('category',state.category).order('pinned',{ascending:false}).order('sort_order').order('created_at');
@@ -358,14 +765,15 @@
       state.products=result.data||[];
       $('product-list').innerHTML=state.products.length?state.products.map((product,index)=>`
         <article class="product-row">
-          <div><strong>${escapeHtml(product.name)}</strong><small>₹${money(product.price)}${product.unit?` / ${escapeHtml(product.unit)}`:''} · ${escapeHtml(product.description||'No description')}</small><div style="display:flex;gap:6px;margin-top:8px"><span class="pill ${product.in_stock?'live':''}">${product.in_stock?'In stock':'Out of stock'}</span>${product.pinned?'<span class="pill pinned">Pinned</span>':''}</div></div>
-          <div class="actions"><button class="btn ghost" data-up="${index}" aria-label="Move up" ${index===0?'disabled':''}>↑</button><button class="btn ghost" data-down="${index}" aria-label="Move down" ${index===state.products.length-1?'disabled':''}>↓</button><button class="btn ghost" data-pin="${product.id}">${product.pinned?'Unpin':'Pin'}</button><button class="btn ghost" data-edit="${product.id}">Edit</button><button class="btn danger" data-delete="${product.id}">Delete</button></div>
+          <div><strong>${escapeHtml(product.name)}</strong><small>₹${money(product.price)}${product.unit?` / ${escapeHtml(product.unit)}`:''} · ${escapeHtml(product.description||'No description')}${isPlanCategory(state.category)?` · ${escapeHtml(product.plan_section||'Plans')}${product.os_type?` · ${escapeHtml(product.os_type)}`:''}${product.ip_series?` · ${escapeHtml(product.ip_series)}`:''}${product.data_size?` · ${escapeHtml(product.data_size)}`:''}${product.ip_count?` · ${escapeHtml(product.ip_count)}`:''}${product.validity?` · ${escapeHtml(product.validity)}`:''}`:''}</small><div style="display:flex;gap:6px;margin-top:8px"><span class="pill ${productIsAvailable(product)?'live':''}">${productIsAvailable(product)?'Available':'Out of stock'}</span>${product.pinned?'<span class="pill pinned">Pinned</span>':''}</div></div>
+          <div class="actions">${isPlanCategory(state.category)?`<button class="btn ${productIsAvailable(product)?'danger':'gold'}" data-stock="${product.id}" data-next-stock="${productIsAvailable(product)?'out_of_stock':'available'}">${productIsAvailable(product)?'Mark out of stock':'Mark available'}</button>`:''}<button class="btn ghost" data-up="${index}" aria-label="Move up" ${index===0?'disabled':''}>↑</button><button class="btn ghost" data-down="${index}" aria-label="Move down" ${index===state.products.length-1?'disabled':''}>↓</button><button class="btn ghost" data-pin="${product.id}">${product.pinned?'Unpin':'Pin'}</button><button class="btn ghost" data-edit="${product.id}">Edit</button><button class="btn danger" data-delete="${product.id}">Delete</button></div>
         </article>`).join(''):'<div class="empty">No products in this category yet.</div>';
       $('product-list').querySelectorAll('[data-edit]').forEach(button=>button.addEventListener('click',()=>editProduct(button.dataset.edit)));
       $('product-list').querySelectorAll('[data-delete]').forEach(button=>button.addEventListener('click',()=>deleteProduct(button.dataset.delete)));
       $('product-list').querySelectorAll('[data-pin]').forEach(button=>button.addEventListener('click',()=>togglePin(button.dataset.pin)));
       $('product-list').querySelectorAll('[data-up]').forEach(button=>button.addEventListener('click',()=>moveProduct(Number(button.dataset.up),-1)));
       $('product-list').querySelectorAll('[data-down]').forEach(button=>button.addEventListener('click',()=>moveProduct(Number(button.dataset.down),1)));
+      $('product-list').querySelectorAll('[data-stock]').forEach(button=>button.addEventListener('click',()=>setProductStock(button.dataset.stock,button.dataset.nextStock)));
       revealAdmin($('product-list'));
     }
     function renderSpinPrizeEditor(){
@@ -381,7 +789,7 @@
               <div class="field"><label>Label</label><input data-spin-field="label" data-spin-index="${index}" value="${escapeHtml(reward.label)}"></div>
             </div>
             <div class="row">
-              <div class="field"><label>Discount %</label><input data-spin-field="value" data-spin-index="${index}" type="number" min="0" max="1000" step="1" value="${Number(reward.value)||0}"></div>
+              <div class="field"><label>Discount %</label><input data-spin-field="value" data-spin-index="${index}" type="number" min="0" max="100" step="1" value="${Number(reward.value)||0}"></div>
               <div class="field"><label>Max discount ₹</label><input data-spin-field="maxDiscountAmount" data-spin-index="${index}" type="number" min="0" step="1" value="${Number(reward.maxDiscountAmount)||0}"></div>
             </div>
             <div class="row">
@@ -419,8 +827,9 @@
       if(updated.type === 'tryAgain'){
         updated.value=0;updated.maxDiscountAmount=0;
       } else {
-        updated.value = Number(updated.value) || 0;
+        updated.value = Math.min(Math.max(Number(updated.value) || 0,0),100);
         updated.maxDiscountAmount = Number(updated.maxDiscountAmount) || 0;
+        updated.label = `${updated.value}%`;
       }
       updated.weight = Math.max(0, Number(updated.weight) || 0);
       rewards[index]=updated;
@@ -434,17 +843,27 @@
       renderSpinPrizeEditor();
     }
     function resetForm(){
-      state.editing=null;$('product-form').reset();$('in-stock').checked=true;$('image-url').value='';$('image-preview').removeAttribute('src');$('image-preview').classList.add('hidden');$('form-title').textContent='Add product';$('save-product').textContent='Add product';$('cancel-edit').classList.add('hidden');setError('product-error');
+      state.editing=null;state.editingDownloadUrl=null;state.downloadLinkLoaded=true;
+      if(productPreviewUrl){URL.revokeObjectURL(productPreviewUrl);productPreviewUrl=null}
+      $('product-form').reset();$('in-stock').checked=true;$('plan-section').value='Advance';$('custom-section').value='';$('os-type').value='Linux';$('ip-series').value='';$('data-size').value='';$('specs').value='';$('ip-count').value='';$('validity').value='';$('product-badge').value='';$('stock-status').value='available';$('price-prefix').value='From';$('product-details').value='';$('image-url').value='';$('image-preview').removeAttribute('src');$('image-preview').classList.add('hidden');$('form-title').textContent='Add product';$('save-product').textContent='Add product';$('cancel-edit').classList.add('hidden');$('product-form-panel').classList.remove('editing-product');setError('product-error');syncPlanFields();
     }
     async function editProduct(id){
-      const product=state.products.find(item=>item.id===id);if(!product)return;
-      state.editing=id;$('product-name').value=product.name;$('description').value=product.description||'';$('price').value=product.price;$('unit').value=product.unit||'';$('in-stock').checked=product.in_stock;$('image-url').value=product.image_url||'';$('remove-image').checked=false;
+      const product=state.products.find(item=>String(item.id)===String(id));if(!product){setError('product-error','Could not find this product. Refresh the list and try again.');return}
+      state.editing=product.id;state.editingDownloadUrl=null;state.downloadLinkLoaded=false;
+      if(productPreviewUrl){URL.revokeObjectURL(productPreviewUrl);productPreviewUrl=null}
+      $('product-name').value=product.name;$('description').value=product.description||'';$('price').value=product.price;$('unit').value=product.unit||'';$('in-stock').checked=productIsAvailable(product);$('image-url').value=product.image_url||'';$('remove-image').checked=false;
+      const savedSection=product.plan_section||'Advance';
+      const presetSections=['Advance','New Launch','Flex','Custom'];
+      $('plan-section').value=presetSections.includes(savedSection)?savedSection:'__custom__';
+      $('custom-section').value=$('plan-section').value==='__custom__'?savedSection:savedSection==='Custom'?'Custom':'';
+      $('os-type').value=product.os_type==='Windows'?'Windows':'Linux';$('ip-series').value=product.ip_series||'';$('data-size').value=product.data_size||'';$('specs').value=product.specs||'';$('ip-count').value=product.ip_count||'';$('validity').value=product.validity||'';$('product-badge').value=product.badge||'';$('stock-status').value=product.stock_status||(product.in_stock===false?'out_of_stock':'available');$('price-prefix').value=product.price_prefix||'From';$('product-details').value=product.details||'';syncPlanFields();
       if(product.image_url){$('image-preview').src=product.image_url;$('image-preview').classList.remove('hidden')}else{$('image-preview').removeAttribute('src');$('image-preview').classList.add('hidden')}
-      $('product-image').value='';$('download-url').value='';
-      const {data:download,error}=await state.client.from('product_download_links').select('download_url').eq('product_id',id).maybeSingle();
-      if(error){setError('product-error',`Could not load this product's download link: ${error.message}`);return}
-      $('download-url').value=download?.download_url||'';
-      $('form-title').textContent='Edit product';$('save-product').textContent='Save changes';$('cancel-edit').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});
+      $('product-image').value='';$('download-url').value='';$('form-title').textContent=`Edit product: ${product.name}`;$('save-product').textContent='Save changes';$('cancel-edit').classList.remove('hidden');$('product-form-panel').classList.add('editing-product');$('product-form-panel').scrollIntoView({behavior:'smooth',block:'center'});setError('product-error');
+      try{
+        const {data:download,error}=await state.client.from('product_download_links').select('download_url').eq('product_id',product.id).maybeSingle();
+        if(error)throw error;
+        state.editingDownloadUrl=download?.download_url||'';state.downloadLinkLoaded=true;$('download-url').value=state.editingDownloadUrl;
+      }catch(error){setError('product-error',`Could not load this product's download link: ${error.message}`)}
     }
     async function uploadProductImage(file){
       const extensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
@@ -458,38 +877,79 @@
     }
     async function saveProduct(event){
       event.preventDefault();setError('product-error');
+      const isEditing=state.editing!==null;
+      const existing=isEditing?state.products.find(item=>String(item.id)===String(state.editing)):null;
+      if(isEditing&&!existing){setError('product-error','Could not find this product. Refresh the list and try again.');return}
+      if(isEditing&&!state.downloadLinkLoaded){setError('product-error',"Could not load this product's download link. Try again before saving.");return}
       const downloadUrl=$('download-url').value.trim();
       if(downloadUrl){try{const url=new URL(downloadUrl);if(!['http:','https:'].includes(url.protocol))throw new Error();}catch{setError('product-error','Enter a valid HTTP or HTTPS download link.');return}}
-      const product={category:state.category,name:$('product-name').value.trim(),description:$('description').value.trim(),price:Number($('price').value),unit:$('unit').value.trim()||null,in_stock:$('in-stock').checked,image_url:$('image-url').value||null};
+      const product={name:$('product-name').value.trim(),description:$('description').value.trim(),price:Number($('price').value),unit:$('unit').value.trim()||null,in_stock:isPlanCategory(state.category)?$('stock-status').value==='available':$('in-stock').checked,image_url:$('image-url').value||null};
+      if(isPlanCategory(state.category)){
+        const selectedSection=$('plan-section').value;
+        const planSection=selectedSection==='__custom__'||selectedSection==='Custom'
+          ?$('custom-section').value.trim()||(selectedSection==='Custom'?'Custom':'')
+          :selectedSection;
+        if(!planSection){setError('product-error','Enter a name for the plan section.');return}
+        product.plan_section=planSection;
+        product.os_type=isVpsCategory(state.category)?$('os-type').value:null;
+        product.ip_series=$('ip-series').value.trim()||null;
+        product.data_size=isProxyCategory(state.category)?$('data-size').value.trim()||null:null;
+        product.specs=$('specs').value.trim()||null;
+        product.ip_count=isProxyCategory(state.category)?$('ip-count').value.trim()||null:null;
+        product.validity=isProxyCategory(state.category)?$('validity').value.trim()||null:null;
+        product.badge=$('product-badge').value.trim()||null;
+        product.stock_status=$('stock-status').value;
+        product.price_prefix=$('price-prefix').value.trim()||'From';
+        product.details=$('product-details').value.trim()||null;
+      }
       if(!product.name||!Number.isFinite(product.price)||product.price<0){setError('product-error','Enter a product name and a valid non-negative price.');return}
       const file=$('product-image').files[0];
+      $('save-product').disabled=true;
       try{
         if(file)product.image_url=await uploadProductImage(file);
-      }catch(error){setError('product-error',`Could not upload product photo: ${error.message}`);return}
-      if($('remove-image').checked)product.image_url=null;
-      const request=state.editing
-        ? state.client.from('products').update(product).eq('id',state.editing).select('id').single()
-        : state.client.from('products').insert({...product,sort_order:Math.max(0,...state.products.map(item=>Number(item.sort_order)||0))+1}).select('id').single();
-      const result=await request;
-      if(result.error){setError('product-error',result.error.message);return}
-      const productId=state.editing||result.data.id;
-      const linkResult=downloadUrl
-        ? await state.client.from('product_download_links').upsert({product_id:productId,download_url:downloadUrl})
-        : await state.client.from('product_download_links').delete().eq('product_id',productId);
-      if(linkResult.error){await renderProducts();await editProduct(productId);setError('product-error',`Product saved, but its download link could not be saved: ${linkResult.error.message}`);return}
-      resetForm();await renderProducts();notify('Product saved.');
+        if($('remove-image').checked)product.image_url=null;
+        let productId;
+        if(isEditing){
+          const changedFields=Object.fromEntries(Object.entries(product).filter(([key,value])=>key==='price'?Number(value)!==Number(existing[key]):value!==existing[key]));
+          if(Object.keys(changedFields).length){
+            const result=await state.client.from('products').update(changedFields).eq('id',state.editing).select('*').single();
+            if(result.error)throw result.error;
+            productId=result.data.id;
+          }else productId=existing.id;
+        }else{
+          const result=await state.client.from('products').insert({...product,category:state.category,sort_order:Math.max(0,...state.products.map(item=>Number(item.sort_order)||0))+1}).select('id').single();
+          if(result.error)throw result.error;
+          productId=result.data.id;
+        }
+        const downloadChanged=!isEditing||downloadUrl!==state.editingDownloadUrl;
+        if(downloadChanged){
+          const linkResult=downloadUrl
+            ? await state.client.from('product_download_links').upsert({product_id:productId,download_url:downloadUrl})
+            : await state.client.from('product_download_links').delete().eq('product_id',productId);
+          if(linkResult.error)throw new Error(`Product ${isEditing?'updated':'saved'}, but its download link could not be saved: ${linkResult.error.message}`);
+        }
+        resetForm();await renderProducts();notify(isEditing?'Product updated':'Product saved.');
+      }catch(error){setError('product-error',error.message||'Could not save the product. Please try again.')}
+      finally{$('save-product').disabled=false}
     }
     async function deleteProduct(id){
-      if(!confirm('Delete this product?'))return;
+      if(!await confirmAdminAction('Delete product?','Are you sure you want to delete this product?','Delete'))return;
       const result=await state.client.from('products').delete().eq('id',id);
       if(result.error){notify(result.error.message);return}
       await renderProducts();notify('Product deleted.');
     }
     async function togglePin(id){
-      const product=state.products.find(item=>item.id===id);if(!product)return;
+      const product=state.products.find(item=>String(item.id)===String(id));if(!product)return;
       const result=await state.client.from('products').update({pinned:!product.pinned}).eq('id',id);
       if(result.error){notify(result.error.message);return}
       await renderProducts();
+    }
+    async function setProductStock(id,status){
+      if(!['available','out_of_stock'].includes(status))return;
+      const result=await state.client.from('products').update({stock_status:status,in_stock:status==='available'}).eq('id',id);
+      if(result.error){notify(`Could not update stock status: ${result.error.message}`);return}
+      await renderProducts();
+      notify(status==='available'?'Product marked available.':'Product marked out of stock.');
     }
     async function moveProduct(index,direction){
       const next=index+direction;if(next<0||next>=state.products.length)return;
@@ -503,18 +963,99 @@
     async function loadSettings(){
       const {data,error}=await state.client.from('settings').select('*').eq('id',true).single();
       if(error)throw error;
-      $('site-title').value=data.site_title||'';$('upi-id').value=data.upi_id||'roshanbrand@airtel';$('whatsapp').value=data.whatsapp_number||'';$('telegram').value=data.telegram_link||'';
+      state.paymentQrImageUrl=data.upi_qr_image_url||'';
+      $('site-title').value=data.site_title||'';$('upi-id').value=data.upi_id||'';$('upi-payee-name').value=data.upi_payee_name||'';$('whatsapp').value=data.whatsapp_number||'';$('telegram').value=data.telegram_link||'';
+      $('enable-wallet-payments').checked=data.enable_wallet_payments===true;
+      $('enable-upi-qr').checked=data.enable_upi_qr===true;
+      $('enable-upi-app').checked=data.enable_upi_app===true;
+      if(paymentQrPreviewUrl){URL.revokeObjectURL(paymentQrPreviewUrl);paymentQrPreviewUrl=null}
+      $('upi-qr-image').value='';$('remove-upi-qr').checked=false;renderUpiSettingsPreview();
+    }
+    function renderUpiSettingsPreview(){
+      const preview=$('upi-qr-preview');
+      const upiId=$('upi-id').value.trim();
+      const payee=$('upi-payee-name').value.trim();
+      preview.replaceChildren();
+      if(paymentQrPreviewUrl){
+        const image=new Image();
+        image.alt='Selected UPI QR image preview';
+        image.width=165;
+        image.height=165;
+        image.style.objectFit='contain';
+        image.src=paymentQrPreviewUrl;
+        preview.append(image);
+        return;
+      }
+      if(state.paymentQrImageUrl&&!$('remove-upi-qr').checked){
+        const image=new Image();
+        image.alt='Saved UPI QR image preview';
+        image.width=165;
+        image.height=165;
+        image.style.objectFit='contain';
+        image.referrerPolicy='no-referrer';
+        image.src=state.paymentQrImageUrl;
+        image.addEventListener('error',()=>{preview.textContent='Could not load saved QR image';},{once:true});
+        preview.append(image);
+        return;
+      }
+      if(!upiId||!payee){preview.textContent='Enter the saved UPI ID and payee name';return}
+      if(!window.QRCode){preview.textContent='QR preview unavailable';return}
+      const params=new URLSearchParams({pa:upiId,pn:payee,cu:'INR',tn:'Payment preview'});
+      new QRCode(preview,{text:`upi://pay?${params.toString()}`,width:165,height:165,colorDark:'#060b17',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+    }
+    async function uploadPaymentQrImage(file){
+      const extensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+      if(!extensions[file.type])throw new Error('Choose a PNG, JPG, or WebP QR image.');
+      if(file.size>5*1024*1024)throw new Error('The QR image must be 5 MB or smaller.');
+      const path=`settings/${crypto.randomUUID()}.${extensions[file.type]}`;
+      const {error}=await state.client.storage.from('payment-qr').upload(path,file,{contentType:file.type,cacheControl:'3600',upsert:false});
+      if(error)throw error;
+      const {data}=state.client.storage.from('payment-qr').getPublicUrl(path);
+      return {path,url:data.publicUrl};
     }
     async function saveSettings(event){
       event.preventDefault();setError('settings-error');
       const whatsapp=$('whatsapp').value.replace(/\D/g,'');
       const telegram=$('telegram').value.trim();
       const upiId=$('upi-id').value.trim();
+      const payeeName=$('upi-payee-name').value.trim();
+      const enableWallet=$('enable-wallet-payments').checked;
+      const enableUpiQr=$('enable-upi-qr').checked;
+      const enableUpiApp=$('enable-upi-app').checked;
+      const upiEnabled=enableUpiQr||enableUpiApp;
+      const file=$('upi-qr-image').files[0];
       if(telegram&&!/^https:\/\/t\.me\//i.test(telegram)){setError('settings-error','Use a Telegram link beginning with https://t.me/.');return}
-      if(!/^[\w.-]+@[\w.-]+$/.test(upiId)){setError('settings-error','Enter a valid UPI ID.');return}
-      const {error}=await state.client.from('settings').upsert({id:true,site_title:$('site-title').value.trim(),upi_id:upiId,whatsapp_number:whatsapp,telegram_link:telegram});
-      if(error){setError('settings-error',error.message);return}
-      notify('Settings saved.');state.client.channel('admin-store-refresh').send({type:'broadcast',event:'store-updated',payload:{}}).catch(()=>{});
+      if(upiId&&!/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}@[A-Za-z0-9][A-Za-z0-9.-]{0,63}$/.test(upiId)){setError('settings-error','Enter a valid UPI ID, for example name@bank.');return}
+      if(upiEnabled&&!upiId){setError('settings-error','Enter your UPI ID or disable both UPI payment methods.');return}
+      if(upiEnabled&&!payeeName){setError('settings-error','Enter your UPI payee name or disable both UPI payment methods.');return}
+      if(file&&(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024)){setError('settings-error','Choose a PNG, JPG, or WebP QR image up to 5 MB.');return}
+      let uploadedPath=null;
+      let qrImageUrl=$('remove-upi-qr').checked?'':state.paymentQrImageUrl;
+      try{
+        if(file){
+          const uploaded=await uploadPaymentQrImage(file);
+          uploadedPath=uploaded.path;
+          qrImageUrl=uploaded.url;
+        }
+        const {error}=await state.client.from('settings').upsert({
+          id:true,site_title:$('site-title').value.trim(),upi_id:upiId,upi_payee_name:payeeName,upi_qr_image_url:qrImageUrl,
+          enable_wallet_payments:enableWallet,enable_upi_qr:enableUpiQr,enable_upi_app:enableUpiApp,
+          whatsapp_number:whatsapp,telegram_link:telegram
+        });
+        if(error)throw error;
+        state.paymentQrImageUrl=qrImageUrl;
+        $('upi-qr-image').value='';$('remove-upi-qr').checked=false;
+        if(paymentQrPreviewUrl){URL.revokeObjectURL(paymentQrPreviewUrl);paymentQrPreviewUrl=null}
+        renderUpiSettingsPreview();
+        notify('Settings saved.');
+        state.client.channel('admin-store-refresh').send({type:'broadcast',event:'store-updated',payload:{}}).catch(()=>{});
+      }catch(error){
+        if(uploadedPath){
+          const {error:cleanupError}=await state.client.storage.from('payment-qr').remove([uploadedPath]);
+          if(cleanupError)console.error('Could not remove the unsaved payment QR upload:',cleanupError);
+        }
+        setError('settings-error',error.message||'Could not save payment settings.');
+      }
     }
     async function renderFinance(tab){
       $('finance-list').innerHTML='<div class="empty">Loading…</div>';
@@ -534,7 +1075,7 @@
     }
     function renderOrders(orders){
       state.orders=orders;
-      $('order-filters').innerHTML=['all','pending','delivered','rejected'].map(filter=>`<button class="order-filter ${state.orderFilter===filter?'active':''}" type="button" data-order-filter="${filter}">${filter[0].toUpperCase()+filter.slice(1)}</button>`).join('');
+      $('order-filters').innerHTML=['all','pending_payment','pending_verification','pending','delivered','rejected'].map(filter=>`<button class="order-filter ${state.orderFilter===filter?'active':''}" type="button" data-order-filter="${filter}">${filter==='pending_verification'?'Verification':filter==='pending_payment'?'Pending payment':filter[0].toUpperCase()+filter.slice(1)}</button>`).join('');
       $('order-filters').querySelectorAll('[data-order-filter]').forEach(button=>button.addEventListener('click',()=>{
         state.orderFilter=button.dataset.orderFilter;
         renderOrders(state.orders);
@@ -548,38 +1089,54 @@
       });
       $('finance-list').innerHTML=filtered.length?filtered.map(order=>{
         const status=order.status==='completed'?'pending':order.status;
-        const badge=['pending','delivered','rejected','refunded'].includes(status)?status:'pending';
-        return `<article class="order-row ${status==='pending'?'pending':''}"><button type="button" class="order-open" data-open-order="${order.id}"><span class="order-cell"><strong>#${order.id}</strong><small>${formatDate(order.created_at)}</small></span><span class="order-cell"><strong>${escapeHtml(order.product_name)}</strong><small>${escapeHtml(order.product_type||'Product')} · ${escapeHtml(order.user_email||'')}</small></span><span class="order-cell"><strong class="amount">₹${money(order.price)}</strong><small>Wallet purchase</small></span><span class="status-badge ${badge}">${escapeHtml(status[0].toUpperCase()+status.slice(1))}</span></button>${status==='refunded'?'<span class="pill">Refunded</span>':`<button type="button" class="btn danger" data-refund="${order.id}">Refund</button>`}</article>`;
+        const badge=['pending','pending_payment','pending_verification','delivered','rejected','refunded','expired'].includes(status)?status:'pending';
+        const statusLabel=status==='pending_verification'?'Pending verification':status==='pending_payment'?'Pending Payment':status[0].toUpperCase()+status.slice(1);
+        const method=order.payment_method==='upi_qr'?'Scan QR (UPI)':order.payment_method==='upi_app'?'UPI app':'Wallet';
+        const coupon=order.coupon_code?`<small>Coupon ${escapeHtml(order.coupon_code)} · ${escapeHtml(order.discount_percent)}% off · Original ₹${money(order.original_price)} → Final ₹${money(order.price)}</small>`:'';
+        const paymentDetails=order.utr?`<small>UTR ${escapeHtml(order.utr)} · Payment ${escapeHtml(order.payment_status||'pending')}</small>`:'';
+        const actions=status==='pending_verification'
+          ? `<button type="button" class="btn gold" data-approve-payment="${order.id}">Approve</button><button type="button" class="btn danger" data-reject-payment="${order.id}">Reject</button>`
+          : status==='pending_payment'?'<span class="pill">Waiting for customer payment</span>'
+          : status==='refunded'?'<span class="pill">Refunded</span>':status==='rejected'&&order.payment_method!=='wallet'?'<span class="pill">Rejected</span>':`<button type="button" class="btn danger" data-refund="${order.id}">Refund</button>`;
+        return `<article class="order-row ${status}"><button type="button" class="order-open" data-open-order="${order.id}"><span class="order-cell"><strong>#${order.id}</strong><small>${formatDate(order.created_at)}${order.offer_id?` · Quantity ${Number(order.quantity)||1}${order.is_offer_free?' · Free offer item':''}`:''}</small></span><span class="order-cell"><strong>${escapeHtml(order.product_name)}</strong><small>${escapeHtml(order.product_type||'Product')} · ${escapeHtml(order.user_email||'')}</small>${paymentDetails}${coupon}</span><span class="order-cell"><strong class="amount">₹${money(order.price)}</strong><small>${method}</small>${order.status==='pending_payment'&&order.expires_at?`<small>Expires ${formatDate(order.expires_at)}</small>`:''}${order.payment_status==='pending'&&order.status!=='pending_payment'?`<small>Original amount ₹${money(order.original_price||order.price)}</small>`:''}</span><span class="status-badge ${badge}">${escapeHtml(statusLabel)}</span></button><div class="order-row-actions">${actions}</div></article>`;
       }).join(''):'<div class="empty">No orders match this filter.</div>';
       $('finance-list').querySelectorAll('[data-open-order]').forEach(button=>button.addEventListener('click',()=>openOrderEditor(button.dataset.openOrder)));
       $('finance-list').querySelectorAll('[data-refund]').forEach(button=>button.addEventListener('click',()=>refundOrder(button.dataset.refund)));
+      $('finance-list').querySelectorAll('[data-approve-payment]').forEach(button=>button.addEventListener('click',()=>approveProductPayment(button.dataset.approvePayment)));
+      $('finance-list').querySelectorAll('[data-reject-payment]').forEach(button=>button.addEventListener('click',()=>openOrderEditor(button.dataset.rejectPayment,true)));
     }
     function indianDate(value){
       return new Date(value).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
     }
-    function openOrderEditor(id){
+    function openOrderEditor(id,focusRejection=false){
       const order=state.orders.find(item=>String(item.id)===String(id));
       if(!order)return;
       state.selectedOrder=order;
       const status=order.status==='completed'?'pending':order.status;
       $('order-panel-title').textContent=`Order #${order.id}`;
       const detailRows=[
-        ['Customer',order.user_email||'—'],['Contact','Wallet account email'],['UTR','Not applicable · wallet purchase'],
-        ['Product',order.product_name],['Product type',order.product_type||'—'],['Amount',`₹${money(order.price)}`],
-        ['Placed',indianDate(order.created_at)],['Status',status]
+        ['Customer',order.user_email||'—'],['Payment method',order.payment_method==='upi_qr'?'Scan QR (UPI)':order.payment_method==='upi_app'?'UPI app':'Wallet'],
+        ['UTR',order.utr||'Not applicable · wallet purchase'],['Product',order.product_name],['Product type',order.product_type||'—'],
+        ['Original amount',`₹${money(order.original_price??order.price)}`],['Discount',order.coupon_code?`${order.discount_percent}% · ${order.coupon_code}`:'None'],
+        ['Final amount',`₹${money(order.price)}`],['Quantity',order.quantity||1],['Payment status',order.payment_status||'paid'],['Placed',indianDate(order.created_at)],['Status',status],
+        ...(order.reject_reason?[['Rejection reason',order.reject_reason]]:[])
       ];
       $('order-details').innerHTML=detailRows.map(([label,value])=>`<div class="order-detail"><small>${label}</small><strong>${escapeHtml(value)}</strong></div>`).join('');
       $('delivery-text').value=order.delivery_text||'';
       $('delivery-link').value=order.delivery_link||'';
       $('delivery-note').value=order.delivery_note||'';
       $('delivery-error').textContent='';
+      $('payment-rejection-reason').value='';
+      $('payment-rejection-field').classList.toggle('hidden',status!=='pending_verification');
       $('deliver-order').textContent=status==='delivered'?'Update delivery':'Deliver';
-      $('deliver-order').disabled=status==='rejected'||status==='refunded';
-      $('save-delivery-draft').disabled=status==='rejected'||status==='refunded';
-      $('reject-order').disabled=status==='rejected'||status==='refunded';
+      $('deliver-order').disabled=status==='pending_payment'||status==='pending_verification'||status==='rejected'||status==='refunded'||status==='expired';
+      $('save-delivery-draft').disabled=status==='pending_payment'||status==='pending_verification'||status==='rejected'||status==='refunded'||status==='expired';
+      $('reject-order').disabled=status==='pending_payment'||status==='rejected'||status==='refunded'||status==='expired';
+      $('reject-order').textContent=status==='pending_verification'?'Reject payment':'Reject';
       $('order-drawer').classList.add('open');
       $('order-drawer').setAttribute('aria-hidden','false');
       document.body.style.overflow='hidden';
+      if(focusRejection)requestAnimationFrame(()=>$('payment-rejection-reason').focus());
     }
     function closeOrderEditor(){
       $('order-drawer').classList.remove('open');
@@ -606,11 +1163,24 @@
     }
     async function rejectSelectedOrder(){
       const order=state.selectedOrder;
-      if(!order||!confirm(`Reject order #${order.id}? You can still issue a wallet refund from the order list.`))return;
+      if(!order)return;
+      if(order.status==='pending_verification'){
+        const {data,error}=await state.client.rpc('admin_reject_product_payment',{
+          p_order_id:Number(order.id),p_reason:$('payment-rejection-reason').value.trim()
+        });
+        if(error||!data?.ok){$('delivery-error').textContent=error?.message||data?.message||'Could not reject this payment.';return}
+        notify(`Payment for order #${order.id} rejected.`);closeOrderEditor();await renderFinance('orders');return;
+      }
       const {data,error}=await state.client.rpc('admin_reject_order',{p_order_id:Number(order.id)});
       if(error||!data?.ok){$('delivery-error').textContent=error?.message||data?.message||'Could not reject this order.';return}
       notify(`Order #${order.id} rejected.`);
       closeOrderEditor();
+      await renderFinance('orders');
+    }
+    async function approveProductPayment(id){
+      const {data,error}=await state.client.rpc('admin_approve_product_order',{p_order_id:Number(id)});
+      if(error||!data?.ok){notify(error?.message||data?.message||'Could not approve this payment.');return}
+      notify(data.delivered?'Payment approved and product download released.':'Payment approved. Add delivery details to complete this order.');
       await renderFinance('orders');
     }
     function renderUsers(users){
@@ -620,14 +1190,14 @@
     }
     async function reviewTopup(id,approve){
       const action=approve?'approve this top-up and credit the wallet':'reject this top-up request';
-      if(!confirm(`Are you sure you want to ${action}?`))return;
+      if(!await confirmAdminAction('Review top-up request',`Are you sure you want to ${action}?`,approve?'Approve top-up':'Reject top-up',!approve))return;
       const {data,error}=await state.client.rpc('admin_review_topup',{p_request_id:Number(id),p_approve:approve});
       if(error||!data?.ok){notify(error?.message||data?.message||'Could not review top-up.');return}
       notify(approve?'Top-up approved and wallet credited.':'Top-up request rejected.');
       await renderFinance('topups');
     }
     async function refundOrder(id){
-      if(!confirm('Refund this order to the customer wallet? This action can only happen once.'))return;
+      if(!await confirmAdminAction('Refund order','Refund this order to the customer wallet? This action can only happen once.','Refund'))return;
       const {data,error}=await state.client.rpc('admin_refund_order',{p_order_id:Number(id)});
       if(error||!data?.ok){notify(error?.message||data?.message||'Could not refund this order.');return}
       notify(`Refunded ₹${money(data.amount)} to the customer wallet.`);
@@ -649,26 +1219,94 @@
       if(error||!data){await state.client.auth.signOut();throw new Error('This account is not authorized to access the store admin.')}
       $('login-panel').classList.add('hidden');$('dashboard').classList.remove('hidden');$('logout').classList.remove('hidden');
       renderTabs();revealAdmin($('dashboard'));await renderProducts();state.client.channel('admin-live-updates').on('postgres_changes',{event:'*',schema:'public',table:'products'},()=>{if(categories.some(category=>category.id===state.activeView))renderProducts()}).on('postgres_changes',{event:'*',schema:'public',table:'topup_requests'},()=>{if(state.activeView==='topups')renderFinance('topups')}).on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>{if(state.activeView==='orders')renderFinance('orders')}).subscribe();
+      state.client.channel('admin-offer-updates').on('postgres_changes',{event:'*',schema:'public',table:'offers'},()=>{
+        if(state.activeView==='offers')renderOffers().catch(failure=>setError('offer-error',`Could not refresh offers: ${failure.message}`));
+      }).subscribe();
     }
     $('login-form').addEventListener('submit',async event=>{
       event.preventDefault();setError('login-error');
+      $('login-error').classList.remove('success');
+      if(!state.client){setError('login-error','Admin configuration is unavailable. Please try again later.');return}
       const {data,error}=await state.client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
       if(error){setError('login-error','Sign in failed. Check your email and password.');return}
       try{await enterDashboard(data.session)}catch(failure){setError('login-error',failure.message)}
     });
+    $('forgot-password').addEventListener('click',async()=>{
+      const email=$('email').value.trim();
+      if(!$('email').validity.valid||!email){setError('login-error','Enter your admin email first, then choose Forgot password.');return}
+      if(!state.client){setError('login-error','Admin configuration is unavailable. Please try again later.');return}
+      setError('login-error');
+      $('login-error').classList.remove('success');
+      const redirectTo=new URL('/admin',window.location.origin).href;
+      try{
+        const {error}=await state.client.auth.resetPasswordForEmail(email,{redirectTo});
+        if(error){setError('login-error',`Could not send the password reset email: ${error.message}`);return}
+        $('login-error').classList.add('success');
+        setError('login-error','If this email has an account, Supabase will send a password reset link.');
+      }catch(error){setError('login-error',`Could not send the password reset email: ${error.message}`)}
+    });
+    $('password-reset-form').addEventListener('submit',async event=>{
+      event.preventDefault();
+      setError('password-reset-error');
+      const password=$('new-password').value;
+      if(password.length<8){setError('password-reset-error','Use a password with at least 8 characters.');return}
+      if(password!==$('confirm-password').value){setError('password-reset-error','The passwords do not match.');return}
+      if(!state.client){setError('password-reset-error','Admin configuration is unavailable. Please try again later.');return}
+      try{
+        const {error}=await state.client.auth.updateUser({password});
+        if(error){setError('password-reset-error',`Could not update the password: ${error.message}`);return}
+        const {error:signOutError}=await state.client.auth.signOut();
+        if(signOutError){setError('password-reset-error',`Password updated, but sign-out failed: ${signOutError.message}. Return to the login page and sign in.`);return}
+        showPasswordLogin('Password updated. Sign in with your new password.');
+      }catch(error){setError('password-reset-error',`Could not update the password: ${error.message}`)}
+    });
     $('product-form').addEventListener('submit',saveProduct);
+    $('plan-section').addEventListener('change',syncPlanFields);
     $('cancel-edit').addEventListener('click',resetForm);
+    $('offer-form').addEventListener('submit',saveOffer);
+    $('offer-new').addEventListener('click',resetOfferForm);
+    $('offer-cancel').addEventListener('click',resetOfferForm);
+    $('offer-collection').addEventListener('change',()=>{
+      if($('offer-collection').value!=='software'&&$('offer-claim-enabled').checked){
+        $('offer-claim-enabled').checked=false;
+        syncOfferClaimFields();
+      }
+      setOfferProductOptions();
+    });
+    $('offer-claim-enabled').addEventListener('change',()=>{
+      syncOfferClaimFields();
+      setOfferProductOptions();
+    });
+    $('offer-claims-refresh').addEventListener('click',()=>renderOfferOperations().catch(error=>notify(`Could not load offer operations: ${error.message}`)));
+    $('offer-transfers-refresh').addEventListener('click',()=>renderOfferOperations().catch(error=>notify(`Could not load transfers: ${error.message}`)));
+    $('offer-reports-refresh').addEventListener('click',()=>renderOfferOperations().catch(error=>notify(`Could not load reports: ${error.message}`)));
+    $('offer-names-refresh').addEventListener('click',()=>renderOfferOperations().catch(error=>notify(`Could not load recent claims: ${error.message}`)));
+    $('offer-audit-refresh').addEventListener('click',()=>renderOfferOperations().catch(error=>notify(`Could not load audit log: ${error.message}`)));
+    $('offer-notification-form').addEventListener('submit',saveOfferNotificationInterval);
+    $('offers-refresh').addEventListener('click',()=>renderOffers().catch(error=>setError('offer-error',`Could not load offers: ${error.message}`)));
+    $('offer-screenshot-close').addEventListener('click',()=>{$('offer-screenshot-modal').classList.add('hidden');$('offer-screenshot').src='';});
+    $('offer-screenshot-backdrop').addEventListener('click',()=>$('offer-screenshot-close').click());
     $('product-image').addEventListener('change',()=>{
       const file=$('product-image').files[0];
       if(!file)return;
       $('remove-image').checked=false;
-      $('image-preview').src=URL.createObjectURL(file);
+      if(productPreviewUrl)URL.revokeObjectURL(productPreviewUrl);
+      productPreviewUrl=URL.createObjectURL(file);$('image-preview').src=productPreviewUrl;
       $('image-preview').classList.remove('hidden');
     });
     $('remove-image').addEventListener('change',()=>{
       if($('remove-image').checked){$('product-image').value='';$('image-preview').classList.add('hidden')}
       else if(!$('product-image').files[0]&&$('image-url').value){$('image-preview').src=$('image-url').value;$('image-preview').classList.remove('hidden')}
     });
+    $('upi-id').addEventListener('input',renderUpiSettingsPreview);
+    $('upi-payee-name').addEventListener('input',renderUpiSettingsPreview);
+    $('upi-qr-image').addEventListener('change',()=>{
+      if(paymentQrPreviewUrl){URL.revokeObjectURL(paymentQrPreviewUrl);paymentQrPreviewUrl=null}
+      const file=$('upi-qr-image').files[0];
+      if(file)paymentQrPreviewUrl=URL.createObjectURL(file);
+      renderUpiSettingsPreview();
+    });
+    $('remove-upi-qr').addEventListener('change',renderUpiSettingsPreview);
     $('settings-form').addEventListener('submit',saveSettings);
     $('refresh').addEventListener('click',()=>renderProducts());
     $('reset-spin-prizes').addEventListener('click',resetSpinPrizes);
@@ -718,6 +1356,7 @@
         }
       },{passive:true});
     }
+    renderBrandLogos();
     $('logout').addEventListener('click',async()=>{await state.client.auth.signOut();location.reload()});
     (async function init(){
       try{
@@ -725,8 +1364,14 @@
         const config=await response.json();if(!config.supabaseUrl||!config.supabaseAnonKey)throw new Error('Add SUPABASE_URL and SUPABASE_ANON_KEY to .env before signing in.');
         if(!window.supabase)throw new Error('Could not load the Supabase client. Check your internet connection.');
         state.client=window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey);
+        state.client.auth.onAuthStateChange(event=>{
+          if(event==='PASSWORD_RECOVERY'){
+            isPasswordRecovery=true;
+            showPasswordReset();
+          }
+        });
         const {data,error}=await state.client.auth.getSession();if(error)throw error;
-        if(data.session){try{await enterDashboard(data.session)}catch(failure){setError('login-error',failure.message)}}
+        if(data.session&&!isPasswordRecovery){try{await enterDashboard(data.session)}catch(failure){setError('login-error',failure.message)}}
       }catch(error){setError('login-error',error.message)}
     })();
   </script>

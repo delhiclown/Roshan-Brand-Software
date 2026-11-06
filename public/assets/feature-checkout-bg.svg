@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="390" viewBox="0 0 1020 390" fill="none">
+  <defs>
+    <radialGradient id="coralGlow" cx="0" cy="0" r="1" gradientTransform="matrix(0 230 -320 0 810 198)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF593E" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#FF593E" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+  </defs>
+  <ellipse cx="810" cy="198" rx="320" ry="230" fill="url(#coralGlow)"/>
+  <g stroke="#FF6548" stroke-opacity=".48" stroke-width="3" stroke-linecap="round">
+    <path d="M568 76h126M609 102h93M558 132h72M835 66h136M876 92h97M903 118h68"/>
+    <path d="m576 262 112-18m-82 45 85-14m-67 42 71-12M821 284l132-21m-102 48 109-18"/>
+  </g>
+  <g fill="#FF714D" fill-opacity=".58">
+    <path d="m790 59-57 105h42l-19 72 91-120h-48l28-57h-37Z"/>
+    <path d="m931 161-31 58h25l-11 41 51-65h-28l16-34h-22Z"/>
+  </g>
+  <g stroke="#FFB078" stroke-opacity=".78" stroke-width="3" stroke-linejoin="round">
+    <rect x="689" y="156" width="236" height="146" rx="19"/>
+    <path d="M689 193h236"/>
+    <path d="M720 229h54v14h-54z"/>
+    <path d="M720 263h111"/>
+    <path d="M852 263h41"/>
+  </g>
+  <g fill="#FF7654" fill-opacity=".75">
+    <circle cx="720" cy="176" r="4"/><circle cx="738" cy="176" r="4"/><circle cx="756" cy="176" r="4"/>
+  </g>
+  <g stroke="#FFC28A" stroke-opacity=".55" stroke-width="2">
+    <path d="m655 77 19 19-19 19-19-19 19-19Zm309 193 15 15-15 15-15-15 15-15Z"/>
+    <path d="M580 208h44m-22-22v44M945 53h38m-19-19v38"/>
+  </g>
+  <g fill="#FF9B68">
+    <circle cx="635" cy="150" r="4"/><circle cx="967" cy="151" r="4"/><circle cx="666" cy="327" r="3"/>
+    <circle cx="962" cy="330" r="3"/><circle cx="837" cy="48" r="3"/>
+  </g>
+</svg>
