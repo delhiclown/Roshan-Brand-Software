@@ -1245,6 +1245,8 @@
       $('vps-browse').classList.add('hidden');
       $('vps-jumpbar').classList.add('hidden');
       const products = state.products.filter(product => normalizeCategory(product.category) === normalizeCategory(state.selected));
+      const checkoutAvailable=availableCheckoutMethods().length>0;
+      if(!checkoutAvailable)console.error('No checkout payment methods are configured; Buy Now is disabled.');
       $('product-grid').innerHTML = state.productsLoading && !state.products.length
         ? '<div class="empty" role="status">Loading products…</div>'
         : products.length ? products.map((product,index) => {
@@ -1253,7 +1255,7 @@
         const imageUrl=safeHttpUrl(product.image_url);
         const purchasedOrder=state.myOrders?.find(order=>String(order.product_id)===String(product.id)&&order.status==='delivered'&&safeHttpUrl(order.delivery_link));
         const downloadUrl=purchasedOrder?safeHttpUrl(purchasedOrder.delivery_link):'';
-        return `<article class="product" data-product-id="${escapeHtml(product.id)}" data-card-tone="${productCardTones[index%productCardTones.length]}">${imageUrl?`<div class="product-image-wrap"><img class="product-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.hidden=true"></div>`:'<div class="product-image-wrap">Product photo</div>'}<span class="premium badge-premium">PREMIUM</span><h3 class="title-premium">${escapeHtml(product.name)}</h3><p class="desc-premium">${escapeHtml(product.description)}</p><div class="product-foot"><div class="price">₹${money(product.price)}<small>${unit}</small></div><button class="buy" type="button" data-buy="${escapeHtml(product.id)}" ${inStock?'':'disabled'}>${inStock?'Buy Now':'Out of stock'}</button></div>${downloadUrl?`<a class="product-download" href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(product.name)}</a>`:''}</article>`;
+        return `<article class="product" data-product-id="${escapeHtml(product.id)}" data-card-tone="${productCardTones[index%productCardTones.length]}">${imageUrl?`<div class="product-image-wrap"><img class="product-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.hidden=true"></div>`:'<div class="product-image-wrap">Product photo</div>'}<span class="premium badge-premium">PREMIUM</span><h3 class="title-premium">${escapeHtml(product.name)}</h3><p class="desc-premium">${escapeHtml(product.description)}</p><div class="product-foot"><div class="price">₹${money(product.price)}<small>${unit}</small></div><button class="buy" type="button" data-buy="${escapeHtml(product.id)}" ${inStock&&checkoutAvailable?'':'disabled'}>${!inStock?'Out of stock':checkoutAvailable?'Buy Now':'Payment unavailable'}</button></div>${downloadUrl?`<a class="product-download" href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(product.name)}</a>`:''}</article>`;
       }).join('') : '<div class="empty">No products in this category yet. Please check back soon.</div>';
       revealPage($('product-grid'));
     }
@@ -1262,6 +1264,8 @@
       if(vpsSectionObserver){vpsSectionObserver.disconnect();vpsSectionObserver=null}
       const selectedCategory=normalizeCategory(state.selected);
       const isVps=selectedCategory==='vps'||selectedCategory==='windows-vps';
+      const checkoutAvailable=availableCheckoutMethods().length>0;
+      if(!checkoutAvailable)console.error('No checkout payment methods are configured; Buy Now is disabled.');
       const allProducts=state.products.filter(product=>normalizeCategory(product.category)===selectedCategory);
       const normalizedOs=product=>String(product.os_type||'Linux').toLowerCase()==='windows'?'Windows':'Linux';
       const query=state.vpsSearch.trim().toLowerCase();
@@ -1304,7 +1308,7 @@
           const prefix=String(product.price_prefix||'From').trim();
           const purchasedOrder=state.myOrders?.find(order=>String(order.product_id)===String(product.id)&&order.status==='delivered'&&safeHttpUrl(order.delivery_link));
           const downloadUrl=purchasedOrder?safeHttpUrl(purchasedOrder.delivery_link):'';
-          return `<article class="vps-plan" data-product-id="${escapeHtml(product.id)}"><span>${rowIcon}</span><span class="vps-os-logo">${osLogo}</span><div class="vps-plan-copy"><h3 class="vps-plan-title ${inStock?'':'sold-out'}">${escapeHtml(product.name)}${product.badge?`<span class="vps-plan-badge">${escapeHtml(product.badge)}</span>`:''}</h3>${info?`<div class="vps-plan-ip">${info}</div>`:''}<span class="vps-stock ${inStock?'':'out'}">${inStock?'Available':'Out of stock'}</span></div><div class="vps-plan-actions"><span class="vps-price">${escapeHtml(prefix)} ₹${money(product.price)}</span><button class="vps-cart" type="button" data-buy="${escapeHtml(product.id)}" ${inStock?'':'disabled'} aria-label="Add ${escapeHtml(product.name)} to cart" title="Add to cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.4L22 8H6"/><circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/></svg></button><button class="vps-buy" type="button" data-buy="${escapeHtml(product.id)}" ${inStock?'':'disabled'}>${inStock?'Buy Now':'Sold out'}</button></div><details class="vps-details"><summary>Plan details</summary>${details?`<div>${escapeHtml(details)}</div>`:'<div>Contact us for more plan details.</div>'}${downloadUrl?`<a class="product-download" href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(product.name)}</a>`:''}</details></article>`;
+          return `<article class="vps-plan" data-product-id="${escapeHtml(product.id)}"><span>${rowIcon}</span><span class="vps-os-logo">${osLogo}</span><div class="vps-plan-copy"><h3 class="vps-plan-title ${inStock?'':'sold-out'}">${escapeHtml(product.name)}${product.badge?`<span class="vps-plan-badge">${escapeHtml(product.badge)}</span>`:''}</h3>${info?`<div class="vps-plan-ip">${info}</div>`:''}<span class="vps-stock ${inStock?'':'out'}">${inStock?'Available':'Out of stock'}</span></div><div class="vps-plan-actions"><span class="vps-price">${escapeHtml(prefix)} ₹${money(product.price)}</span><button class="vps-cart" type="button" data-buy="${escapeHtml(product.id)}" ${inStock&&checkoutAvailable?'':'disabled'} aria-label="Add ${escapeHtml(product.name)} to cart" title="Add to cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.4L22 8H6"/><circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/></svg></button><button class="vps-buy" type="button" data-buy="${escapeHtml(product.id)}" ${inStock&&checkoutAvailable?'':'disabled'}>${!inStock?'Sold out':checkoutAvailable?'Buy Now':'Payment unavailable'}</button></div><details class="vps-details"><summary>Plan details</summary>${details?`<div>${escapeHtml(details)}</div>`:'<div>Contact us for more plan details.</div>'}${downloadUrl?`<a class="product-download" href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(product.name)}</a>`:''}</details></article>`;
         }).join('');
         return `<section class="vps-plan-section" id="${sectionId}" data-vps-section><h3 class="vps-section-heading">${escapeHtml(group.section)} Plans${group.os?` - ${escapeHtml(group.os)}`:''} <span>(${group.products.length})</span></h3><div class="vps-plan-list">${rows}</div></section>`;
       }).join(''):`<div class="empty vps-empty">No ${escapeHtml(categories.find(item=>item.id===selectedCategory)?.title||'')} plans match these filters. Please check back soon.</div>`;
@@ -2086,6 +2090,7 @@
       $('profile-menu')?.classList.add('hidden');
       if(intent==='orders')sessionStorage.setItem('wallet_pending_track_order','true');
       setAuthMode(mode);
+      if(intent==='product')$('auth-subtitle').textContent='Sign in to continue to checkout. Your selected product will be ready after sign-in.';
       $('auth-page').classList.remove('hidden');
       $('auth-page').setAttribute('aria-hidden','false');
       document.body.style.overflow='hidden';
@@ -2096,7 +2101,10 @@
     function closeAuthPage(clearPending=true){
       $('auth-page').classList.add('hidden');
       $('auth-page').setAttribute('aria-hidden','true');
-      if(clearPending)sessionStorage.removeItem('wallet_pending_track_order');
+      if(clearPending){
+        sessionStorage.removeItem('wallet_pending_track_order');
+        sessionStorage.removeItem('wallet_pending_product');
+      }
       document.body.style.overflow=state.ordersPanelOpen?'hidden':'';
       state.authMode='signin';
     }
@@ -2611,11 +2619,19 @@
       if(state.authReadyPromise)await state.authReadyPromise;
       console.log('[buy-debug] session state', {initialized:state.authInitialized,authenticated:Boolean(state.user)});
       const product=state.products.find(item=>String(item.id)===String(productId));
-      if(!product||!product.in_stock)return;
+      if(!product||!product.in_stock){
+        console.error('Cannot open checkout: product is missing or out of stock.',{productId});
+        showNotice('This product is no longer available.');
+        return;
+      }
       if(!state.user){
         sessionStorage.setItem('wallet_pending_product',String(product.id));
-        console.log('[buy-debug] redirect reason:', 'No authenticated session after the initial Supabase session check.');
-        await signInWithGoogle();
+        openAuthPage('signin','product');
+        return;
+      }
+      if(!availableCheckoutMethods().length){
+        console.error('Cannot open checkout: no payment methods are configured.');
+        showNotice('Payment is currently unavailable. Please contact the store.');
         return;
       }
       try{await refreshWalletBalance()}catch(error){showNotice(`Could not load wallet balance: ${error.message}`);return}
