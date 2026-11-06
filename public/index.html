@@ -2617,7 +2617,7 @@
       }else if(method==='upi_qr'){
         const qrImageUrl=safeHttpUrl(state.settings.upi_qr_image_url);
         $('product-payment-qr').innerHTML=qrImageUrl
-          ?`<img src="${escapeHtml(qrImageUrl)}" alt="Configured UPI payment QR" style="display:block;width:min(220px,100%);height:auto;max-height:240px;object-fit:contain">`
+          ?`<img src="${escapeHtml(qrImageUrl)}" alt="Configured UPI payment QR" style="display:block;height:auto;max-height:160px;object-fit:contain">`
           :'Payment QR is unavailable. Try Pay with UPI ID / UPI App.';
       }
     }
