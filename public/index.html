@@ -1512,17 +1512,6 @@
       localStorage.setItem('roshan-brand-used-coupons',JSON.stringify([...used]));
     }
 
-    function getSuggestedCheckoutCoupon(){
-      const used=getUsedCouponCodes();
-      let savedCoupons=[];
-      try{
-        const saved=JSON.parse(localStorage.getItem('roshan-brand-coupons')||'[]');
-        if(Array.isArray(saved))savedCoupons=saved;
-      }catch(error){console.warn('Could not read saved coupons for checkout:',error)}
-      const candidates=[state.spinCoupon,...savedCoupons,...state.myCoupons];
-      return candidates.find(coupon=>coupon?.code&&isCouponCodeFormatValid(coupon.code)&&!used.has(String(coupon.code).toUpperCase())&&resolveCoupon(coupon.code))?.code||'';
-    }
-
     function calculateDiscountedPrice(productPrice, coupon){
       const price = Number(productPrice) || 0;
       if(!coupon || coupon.type === 'tryAgain') return price;
@@ -2671,6 +2660,7 @@
           p_expected_price:pricing.finalPrice,
           p_original_price:pricing.originalPrice,
           p_discount_percent:checkout.coupon?Number(checkout.coupon.value)||0:0,
+          p_max_discount_amount:checkout.coupon?Number(checkout.coupon.maxDiscountAmount)||0:0,
           p_coupon_code:checkout.coupon?.code||null,
           p_payment_method:checkout.method
         });
@@ -2744,11 +2734,22 @@
         if(state.checkout.coupon){
           const discount=Number(state.checkout.coupon.value)||0;
           state.checkout.couponMessage=state.checkout.method==='wallet'
-            ?`Coupon saved: ${discount}% off for QR / UPI payments.`
+            ?`Coupon applied: ${discount}% off for QR / UPI payments only.`
             :`Coupon applied: ${discount}% off`;
         }
         renderCheckout();
       }));
+      $('checkout-coupon').addEventListener('input',event=>{
+        checkout.couponInput=event.currentTarget.value;
+        const hadAppliedCoupon=Boolean(checkout.coupon);
+        const hadMessage=Boolean(checkout.couponMessage);
+        checkout.coupon=null;checkout.couponMessage='';checkout.couponMessageType='';
+        if(!hadAppliedCoupon&&!hadMessage)return;
+        renderCheckout();
+        const input=$('checkout-coupon');
+        input?.focus();
+        input?.setSelectionRange(input.value.length,input.value.length);
+      });
       $('apply-checkout-coupon').addEventListener('click',()=>{
         const code=$('checkout-coupon').value.trim().toUpperCase();
         checkout.couponInput=code;checkout.coupon=null;checkout.couponMessage='';checkout.couponMessageType='';
@@ -2759,12 +2760,8 @@
             checkout.couponMessage='Invalid coupon';checkout.couponMessageType='error';
           }else{
             checkout.coupon=coupon;
-            const methods=availableCheckoutMethods();
-            if(checkout.method==='wallet'){
-              checkout.method=methods.includes('upi_qr')?'upi_qr':methods.includes('upi_app')?'upi_app':checkout.method;
-            }
             checkout.couponMessage=checkout.method==='wallet'
-              ?`Coupon saved: ${Number(coupon.value)||0}% off for QR / UPI payments.`
+              ?`Coupon applied: ${Number(coupon.value)||0}% off for QR / UPI payments only.`
               :`Coupon applied: ${Number(coupon.value)||0}% off`;
             checkout.couponMessageType='success';
           }
@@ -2827,17 +2824,13 @@
       }
       try{await refreshWalletBalance()}catch(error){showNotice(`Could not load wallet balance: ${error.message}`);return}
       const methods=availableCheckoutMethods();
-      const suggestedCoupon=getSuggestedCheckoutCoupon();
-      const coupon=suggestedCoupon?resolveCoupon(suggestedCoupon):null;
-      const upiMethod=methods.includes('upi_qr')?'upi_qr':methods.includes('upi_app')?'upi_app':'';
-      const applyCoupon=Boolean(coupon&&upiMethod);
       state.checkout={
         product,
-        method:applyCoupon?upiMethod:methods[0]||'',
-        coupon:applyCoupon?coupon:null,
-        couponInput:suggestedCoupon,
-        couponMessage:applyCoupon?`Coupon applied: ${Number(coupon.value)||0}% off`:coupon?'Coupon applies to QR / UPI payments.':'',
-        couponMessageType:applyCoupon?'success':'',
+        method:methods[0]||'',
+        coupon:null,
+        couponInput:'',
+        couponMessage:'',
+        couponMessageType:'',
         utr:'',
         paymentError:''
       };
@@ -2866,7 +2859,7 @@
               product.id,state.checkout.method,Number(data.price),
               Number(data.original_price??product.price),data.coupon_code||''
             ].join('|');
-            state.checkout.coupon=data.coupon_code?resolveCoupon(data.coupon_code):null;
+            state.checkout.coupon=null;
             state.checkout.utr='';
           }else{
             try{localStorage.removeItem(storageKey)}
@@ -2944,7 +2937,6 @@
           renderCheckout();return;
         }
         if(checkout.coupon)markCouponUsed(checkout.coupon.code);
-        if(checkout.coupon&&state.spinCoupon?.code===checkout.coupon.code){state.spinCoupon=null;renderCouponBanner()}
         sessionStorage.removeItem('active_upi_product');
         try{localStorage.removeItem(`pending-payment:${state.user.id}:${checkout.product.id}`)}
         catch(storageError){console.warn('Could not clear the submitted payment order from local storage:',storageError)}
