@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#060b17">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" sizes="192x192">
+  <title>You are offline | Roshan Brand</title>
+  <style>
+    :root{color-scheme:dark;font-family:Inter,Arial,sans-serif;background:#060b17;color:#f4f6fc}
+    *{box-sizing:border-box}
+    body{min-height:100vh;margin:0;display:grid;place-items:center;padding:24px}
+    main{width:min(100%,440px);padding:32px;border:1px solid #1a2340;border-radius:20px;background:#0a1226;text-align:center}
+    h1{margin:0 0 12px;color:#f5c04a;font-size:26px}
+    p{margin:0;color:#aab5cb;line-height:1.7}
+    button{min-height:44px;margin-top:22px;padding:0 18px;border:0;border-radius:10px;background:#f5c04a;color:#191200;font:700 14px Arial,sans-serif;cursor:pointer}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>You are offline</h1>
+    <p>Please reconnect to the internet to view products, orders, sign in, or make a payment.</p>
+    <button type="button" onclick="location.reload()">Try again</button>
+  </main>
+</body>
+</html>

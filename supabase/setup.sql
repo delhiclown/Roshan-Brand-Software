@@ -27,6 +27,25 @@ alter table public.products add column if not exists badge text;
 alter table public.products add column if not exists stock_status text default 'available';
 alter table public.products add column if not exists price_prefix text default 'From';
 alter table public.products add column if not exists details text;
+alter table public.products add column if not exists selling_price numeric(12, 2);
+alter table public.products add column if not exists original_price numeric(12, 2);
+alter table public.products add column if not exists rating numeric(3, 2) not null default 0;
+alter table public.products add column if not exists review_count integer not null default 0;
+alter table public.products add column if not exists sold_count integer not null default 0;
+alter table public.products add column if not exists show_stats boolean not null default false;
+update public.products set selling_price = price where selling_price is null;
+alter table public.products alter column selling_price set default 0;
+alter table public.products alter column selling_price set not null;
+alter table public.products drop constraint if exists products_selling_price_nonnegative;
+alter table public.products add constraint products_selling_price_nonnegative check (selling_price >= 0);
+alter table public.products drop constraint if exists products_original_price_positive;
+alter table public.products add constraint products_original_price_positive check (original_price is null or original_price > 0);
+alter table public.products drop constraint if exists products_rating_range;
+alter table public.products add constraint products_rating_range check (rating >= 0 and rating <= 5);
+alter table public.products drop constraint if exists products_review_count_nonnegative;
+alter table public.products add constraint products_review_count_nonnegative check (review_count >= 0);
+alter table public.products drop constraint if exists products_sold_count_nonnegative;
+alter table public.products add constraint products_sold_count_nonnegative check (sold_count >= 0);
 update public.products
 set stock_status = 'out_of_stock'
 where stock_status = 'available' and in_stock = false;
@@ -1543,7 +1562,7 @@ $$;
 
 revoke all on function public.purchase_product(bigint, numeric) from public, anon;
 revoke all on function public.create_topup_request(numeric, text) from public, anon;
-revoke all on function public.create_upi_product_order(bigint, numeric, numeric, numeric, text, text, text) from public, anon;
+revoke all on function public.create_upi_product_order(bigint, numeric, numeric, numeric, text, text, text) from public, anon, authenticated;
 revoke all on function public.admin_review_topup(bigint, boolean) from public, anon;
 revoke all on function public.admin_refund_order(bigint) from public, anon;
 revoke all on function public.admin_adjust_wallet(uuid, text, numeric, text) from public, anon;
@@ -1577,7 +1596,6 @@ revoke all on public.offer_claims, public.offer_claim_screenshot_hashes,
   public.offer_audit_events, public.offer_notification_settings from public, anon, authenticated;
 grant execute on function public.purchase_product(bigint, numeric) to authenticated;
 grant execute on function public.create_topup_request(numeric, text) to authenticated;
-grant execute on function public.create_upi_product_order(bigint, numeric, numeric, numeric, text, text, text) to authenticated;
 grant execute on function public.admin_review_topup(bigint, boolean) to authenticated;
 grant execute on function public.admin_refund_order(bigint) to authenticated;
 grant execute on function public.admin_adjust_wallet(uuid, text, numeric, text) to authenticated;
@@ -1630,17 +1648,18 @@ insert into public.settings (id, site_title)
 values (true, 'Roshan Brand')
 on conflict (id) do nothing;
 
-insert into public.products (category, name, description, price, unit, in_stock, sort_order, pinned)
+insert into public.products (category, name, description, price, selling_price, unit, in_stock, sort_order, pinned)
 values
-  ('software', 'STAR_TS', 'Fast and reliable booking workflow', 1499, null, true, 1, false),
-  ('software', 'EVORA ORBIT', 'Premium automation software', 1599, null, true, 2, false),
-  ('software', 'PROMAX', 'High speed performance', 1499, null, true, 3, false),
-  ('software', 'PROX EXTENSION', 'Powerful browser extension', 1499, null, true, 4, false),
-  ('software', 'RANGER', 'Advanced and stable', 1499, null, true, 5, false),
-  ('software', 'BINGO', 'Smooth and simple to use', 1499, null, true, 6, false)
+  ('software', 'STAR_TS', 'Fast and reliable booking workflow', 1499, 1499, null, true, 1, false),
+  ('software', 'EVORA ORBIT', 'Premium automation software', 1599, 1599, null, true, 2, false),
+  ('software', 'PROMAX', 'High speed performance', 1499, 1499, null, true, 3, false),
+  ('software', 'PROX EXTENSION', 'Powerful browser extension', 1499, 1499, null, true, 4, false),
+  ('software', 'RANGER', 'Advanced and stable', 1499, 1499, null, true, 5, false),
+  ('software', 'BINGO', 'Smooth and simple to use', 1499, 1499, null, true, 6, false)
 on conflict (category, name) do update
 set description = excluded.description,
     price = excluded.price,
+    selling_price = excluded.selling_price,
     in_stock = true,
     sort_order = excluded.sort_order;
 

@@ -1,0 +1,6 @@
+.pwa-install-controls{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:0 auto 15px}
+.pwa-install-button{min-height:42px;padding:0 16px;border:1px solid rgba(245,192,74,.55);border-radius:999px;background:linear-gradient(135deg,#f5c04a,#e0a82a);color:#191200;font:700 12px/1 Inter,Arial,sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(245,192,74,.15)}
+.pwa-install-button:hover{filter:brightness(1.08)}
+.pwa-install-button:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.pwa-ios-help{margin:0;color:var(--muted,#98a3bd);font-size:12px;line-height:1.6}
+.pwa-install-button[hidden],.pwa-ios-help[hidden]{display:none!important}

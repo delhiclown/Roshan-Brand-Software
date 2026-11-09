@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#14213d"/>
+      <stop offset="1" stop-color="#060b17"/>
+    </linearGradient>
+    <linearGradient id="metal" x1=".15" y1="0" x2=".8" y2="1">
+      <stop stop-color="#f8fbff"/>
+      <stop offset=".18" stop-color="#9bb2d8"/>
+      <stop offset=".43" stop-color="#dceaff"/>
+      <stop offset=".67" stop-color="#536b9c"/>
+      <stop offset=".86" stop-color="#263b68"/>
+      <stop offset="1" stop-color="#a9c2e8"/>
+    </linearGradient>
+    <linearGradient id="letter" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fff"/>
+      <stop offset=".48" stop-color="#e7f2ff"/>
+      <stop offset="1" stop-color="#91addb"/>
+    </linearGradient>
+    <filter id="shadow" x="-.3" y="-.3" width="1.6" height="1.7">
+      <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#000" flood-opacity=".5"/>
+    </filter>
+  </defs>
+  <rect width="192" height="192" rx="42" fill="url(#background)"/>
+  <circle cx="96" cy="96" r="70" fill="url(#metal)" stroke="#e7f2ff" stroke-width="3" filter="url(#shadow)"/>
+  <circle cx="96" cy="96" r="64" fill="none" stroke="#263b68" stroke-opacity=".6" stroke-width="2"/>
+  <path d="M43 69c13-23 39-39 67-39-22 5-38 17-49 37z" fill="#fff" opacity=".22"/>
+  <text x="96" y="126" text-anchor="middle" fill="url(#letter)" stroke="#526b98" stroke-width="2" paint-order="stroke" font-family="Arial, Helvetica, sans-serif" font-size="94" font-weight="900">R</text>
+</svg>

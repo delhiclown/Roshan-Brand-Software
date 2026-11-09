@@ -5,7 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#060b17">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Roshan Brand">
   <title>Store Admin</title>
+  <link rel="icon" href="/favicon.ico" sizes="32x32" type="image/x-icon">
+  <link rel="icon" href="/favicon-192.png" sizes="192x192" type="image/png">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" sizes="192x192">
+  <link rel="stylesheet" href="/pwa.css">
+  <script src="/pwa.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
@@ -253,7 +261,14 @@
               <div class="field" id="description-field"><label for="description">Description</label><textarea id="description" maxlength="500"></textarea></div>
               <div class="field" id="product-image-field"><label for="product-image">Product photo</label><input id="product-image" type="file" accept="image/jpeg,image/png,image/webp,image/gif"><label class="check"><input id="remove-image" type="checkbox"> Remove current photo</label><img id="image-preview" class="hidden" alt="Product photo preview" style="width:100%;max-height:180px;object-fit:contain;border:1px solid var(--line);border-radius:10px;background:#080f20"><input id="image-url" type="hidden"></div>
               <div class="field" id="download-link-field"><label for="download-url">Software download link</label><input id="download-url" type="url" maxlength="2048" placeholder="https://..."><small class="sub" style="display:block;margin:5px 0 0">Shown to a customer only after their purchase is complete.</small></div>
-              <div class="row"><div class="field"><label for="price">Price (₹)</label><input id="price" type="number" min="0" step="0.01" required></div><div class="field"><label for="unit">Optional unit</label><input id="unit" placeholder="month, IP, GB" maxlength="30"></div></div>
+              <div class="row"><div class="field"><label for="price">Selling price (₹)</label><input id="price" type="number" min="0.01" step="0.01" required></div><div class="field"><label for="original-price">Original price / MRP (₹, optional)</label><input id="original-price" type="number" min="0.01" step="0.01" placeholder="e.g. 2500"></div></div>
+              <div class="field"><label for="unit">Optional unit</label><input id="unit" placeholder="month, IP, GB" maxlength="30"></div>
+              <div class="row">
+                <div class="field"><label for="product-rating">Rating (0–5)</label><input id="product-rating" type="number" min="0" max="5" step="any" value="0" required></div>
+                <div class="field"><label for="review-count">Total reviews</label><input id="review-count" type="number" min="0" step="1" value="0" required></div>
+              </div>
+              <div class="field"><label for="sold-count">Sold count</label><input id="sold-count" type="number" min="0" step="1" value="0" required></div>
+              <label class="check"><input id="show-stats" type="checkbox" checked> Show rating / reviews / sold</label>
               <div id="plan-fields" class="hidden">
                 <div class="row">
                   <div class="field"><label for="plan-section">Plan section</label><select id="plan-section"><option>Advance</option><option>New Launch</option><option>Flex</option><option>Premium</option><option>Custom</option><option value="__custom__">Type a new section…</option></select></div>
@@ -281,7 +296,7 @@
               <label class="check" id="legacy-stock-field"><input id="in-stock" type="checkbox" checked> In stock</label>
               <button class="btn gold" type="submit" id="save-product">Add product</button>
               <button class="btn ghost hidden" type="button" id="cancel-edit">Cancel edit</button>
-              <div class="error" id="product-error"></div>
+              <div class="error" id="product-error" aria-live="polite"></div>
             </form>
           </section>
           <section class="panel" data-card-tone="vps"><div class="bar" style="margin-bottom:15px"><div><h2 class="title-premium" id="list-title">Products</h2><p class="sub desc-premium" style="margin:3px 0 0">Use arrows to reorder; pinned products stay at the top.</p></div><button id="refresh" class="btn ghost">Refresh</button></div><div class="product-list" id="product-list"></div></section>
@@ -848,13 +863,13 @@
     function resetForm(){
       state.editing=null;state.editingDownloadUrl=null;state.downloadLinkLoaded=true;
       if(productPreviewUrl){URL.revokeObjectURL(productPreviewUrl);productPreviewUrl=null}
-      $('product-form').reset();$('in-stock').checked=true;$('plan-section').value='Advance';$('custom-section').value='';$('os-type').value='Linux';$('ip-series').value='';$('data-size').value='';$('specs').value='';$('ip-count').value='';$('validity').value='';$('product-badge').value='';$('stock-status').value='available';$('price-prefix').value='From';$('product-details').value='';$('image-url').value='';$('image-preview').removeAttribute('src');$('image-preview').classList.add('hidden');$('form-title').textContent='Add product';$('save-product').textContent='Add product';$('cancel-edit').classList.add('hidden');$('product-form-panel').classList.remove('editing-product');setError('product-error');syncPlanFields();
+      $('product-form').reset();$('in-stock').checked=true;$('show-stats').checked=true;$('product-rating').value='0';$('review-count').value='0';$('sold-count').value='0';$('plan-section').value='Advance';$('custom-section').value='';$('os-type').value='Linux';$('ip-series').value='';$('data-size').value='';$('specs').value='';$('ip-count').value='';$('validity').value='';$('product-badge').value='';$('stock-status').value='available';$('price-prefix').value='From';$('product-details').value='';$('image-url').value='';$('image-preview').removeAttribute('src');$('image-preview').classList.add('hidden');$('form-title').textContent='Add product';$('save-product').textContent='Add product';$('cancel-edit').classList.add('hidden');$('product-form-panel').classList.remove('editing-product');setError('product-error');syncPlanFields();
     }
     async function editProduct(id){
       const product=state.products.find(item=>String(item.id)===String(id));if(!product){setError('product-error','Could not find this product. Refresh the list and try again.');return}
       state.editing=product.id;state.editingDownloadUrl=null;state.downloadLinkLoaded=isPlanCategory(state.category);
       if(productPreviewUrl){URL.revokeObjectURL(productPreviewUrl);productPreviewUrl=null}
-      $('product-name').value=product.name;$('description').value=product.description||'';$('price').value=product.price;$('unit').value=product.unit||'';$('in-stock').checked=productIsAvailable(product);$('image-url').value=product.image_url||'';$('remove-image').checked=false;
+      $('product-name').value=product.name;$('description').value=product.description||'';$('price').value=product.selling_price??product.price;$('original-price').value=product.original_price??'';$('product-rating').value=product.rating??0;$('review-count').value=product.review_count??0;$('sold-count').value=product.sold_count??0;$('show-stats').checked=product.show_stats===true;$('unit').value=product.unit||'';$('in-stock').checked=productIsAvailable(product);$('image-url').value=product.image_url||'';$('remove-image').checked=false;
       const savedSection=product.plan_section||'Advance';
       const presetSections=['Advance','New Launch','Flex','Custom'];
       $('plan-section').value=presetSections.includes(savedSection)?savedSection:'__custom__';
@@ -888,7 +903,22 @@
       if(isEditing&&!state.downloadLinkLoaded){setError('product-error',"Could not load this product's download link. Try again before saving.");return}
       const downloadUrl=isPlanCategory(state.category)?'':$('download-url').value.trim();
       if(downloadUrl){try{const url=new URL(downloadUrl);if(!['http:','https:'].includes(url.protocol))throw new Error();}catch{setError('product-error','Enter a valid HTTP or HTTPS download link.');return}}
-      const product={name:$('product-name').value.trim(),description:isPlanCategory(state.category)?(existing?.description||''):$('description').value.trim(),price:Number($('price').value),unit:$('unit').value.trim()||null,in_stock:isPlanCategory(state.category)?$('stock-status').value==='available':$('in-stock').checked,image_url:isPlanCategory(state.category)?(existing?.image_url||null):$('image-url').value||null};
+      const sellingPriceInput=$('price').value.trim();
+      const sellingPrice=Number(sellingPriceInput);
+      const originalPriceInput=$('original-price').value.trim();
+      const originalPrice=originalPriceInput===''?null:Number(originalPriceInput);
+      const ratingInput=$('product-rating').value.trim();
+      const rating=Number(ratingInput);
+      const reviewCountInput=$('review-count').value.trim();
+      const reviewCount=Number(reviewCountInput);
+      const soldCountInput=$('sold-count').value.trim();
+      const soldCount=Number(soldCountInput);
+      if(!sellingPriceInput||!Number.isFinite(sellingPrice)||sellingPrice<=0){setError('product-error','Selling price must be a positive number.');return}
+      if(originalPriceInput!==''&&(!Number.isFinite(originalPrice)||originalPrice<=0)){setError('product-error','Original price must be a positive number or left blank.');return}
+      if(!ratingInput||!Number.isFinite(rating)||rating<0||rating>5){setError('product-error','Rating must be a number from 0 to 5.');return}
+      if(!reviewCountInput||!Number.isInteger(reviewCount)||reviewCount<0){setError('product-error','Total reviews must be a whole number (0 or more).');return}
+      if(!soldCountInput||!Number.isInteger(soldCount)||soldCount<0){setError('product-error','Sold count must be a whole number (0 or more).');return}
+      const product={name:$('product-name').value.trim(),description:isPlanCategory(state.category)?(existing?.description||''):$('description').value.trim(),price:sellingPrice,selling_price:sellingPrice,original_price:originalPrice,rating,review_count:reviewCount,sold_count:soldCount,show_stats:$('show-stats').checked,unit:$('unit').value.trim()||null,in_stock:isPlanCategory(state.category)?$('stock-status').value==='available':$('in-stock').checked,image_url:isPlanCategory(state.category)?(existing?.image_url||null):$('image-url').value||null};
       if(isPlanCategory(state.category)){
         const selectedSection=$('plan-section').value;
         const planSection=selectedSection==='__custom__'||selectedSection==='Custom'
@@ -907,7 +937,7 @@
         product.price_prefix=$('price-prefix').value.trim()||'From';
         product.details=$('product-details').value.trim()||null;
       }
-      if(!product.name||!Number.isFinite(product.price)||product.price<0){setError('product-error','Enter a product name and a valid non-negative price.');return}
+      if(!product.name){setError('product-error','Enter a product name.');return}
       const file=isPlanCategory(state.category)?null:$('product-image').files[0];
       $('save-product').disabled=true;
       try{
@@ -915,7 +945,8 @@
         if($('remove-image').checked)product.image_url=null;
         let productId;
         if(isEditing){
-          const changedFields=Object.fromEntries(Object.entries(product).filter(([key,value])=>key==='price'?Number(value)!==Number(existing[key]):value!==existing[key]));
+          const numericFields=new Set(['price','selling_price','original_price','rating','review_count','sold_count']);
+          const changedFields=Object.fromEntries(Object.entries(product).filter(([key,value])=>numericFields.has(key)?(value===null?existing[key]!==null&&existing[key]!==undefined:Number(value)!==Number(existing[key]??0)):value!==existing[key]));
           if(Object.keys(changedFields).length){
             const result=await state.client.from('products').update(changedFields).eq('id',state.editing).select('*').single();
             if(result.error)throw result.error;
@@ -1080,7 +1111,7 @@
     }
     function renderOrders(orders){
       state.orders=orders;
-      $('order-filters').innerHTML=['all','pending_payment','pending_verification','pending','delivered','rejected'].map(filter=>`<button class="order-filter ${state.orderFilter===filter?'active':''}" type="button" data-order-filter="${filter}">${filter==='pending_verification'?'Verification':filter==='pending_payment'?'Pending payment':filter[0].toUpperCase()+filter.slice(1)}</button>`).join('');
+      $('order-filters').innerHTML=['all','pending_payment','pending_verification','late_payment','pending','delivered','rejected'].map(filter=>`<button class="order-filter ${state.orderFilter===filter?'active':''}" type="button" data-order-filter="${filter}">${filter==='pending_verification'?'Verification':filter==='pending_payment'?'Pending payment':filter==='late_payment'?'Late Payments':filter[0].toUpperCase()+filter.slice(1)}</button>`).join('');
       $('order-filters').querySelectorAll('[data-order-filter]').forEach(button=>button.addEventListener('click',()=>{
         state.orderFilter=button.dataset.orderFilter;
         renderOrders(state.orders);
@@ -1088,22 +1119,22 @@
       const query=$('order-search').value.trim().toLowerCase();
       const filtered=orders.filter(order=>{
         const status=order.status==='completed'?'pending':order.status;
-        const matchesStatus=state.orderFilter==='all'||status===state.orderFilter;
-        const text=[order.id,order.user_email,order.product_name,order.product_type].join(' ').toLowerCase();
+        const matchesStatus=state.orderFilter==='all'||(state.orderFilter==='late_payment'?order.late_payment===true:status===state.orderFilter);
+        const text=[order.id,order.user_email,order.product_name,order.product_type,order.utr].join(' ').toLowerCase();
         return matchesStatus&&text.includes(query);
       });
       $('finance-list').innerHTML=filtered.length?filtered.map(order=>{
         const status=order.status==='completed'?'pending':order.status;
         const badge=['pending','pending_payment','pending_verification','delivered','rejected','refunded','expired'].includes(status)?status:'pending';
-        const statusLabel=status==='pending_verification'?'Pending verification':status==='pending_payment'?'Pending Payment':status[0].toUpperCase()+status.slice(1);
+        const statusLabel=order.late_payment?'Late Payment - Pending Review':status==='pending_verification'?'UTR Submitted - Verification Pending':status==='pending_payment'?'Pending Payment':status[0].toUpperCase()+status.slice(1);
         const method=order.payment_method==='upi_qr'?'Scan QR (UPI)':order.payment_method==='upi_app'?'UPI app':'Wallet';
         const coupon=order.coupon_code?`<small>Coupon ${escapeHtml(order.coupon_code)} · ${escapeHtml(order.discount_percent)}% off · Original ₹${money(order.original_price)} → Final ₹${money(order.price)}</small>`:'';
-        const paymentDetails=order.utr?`<small>UTR ${escapeHtml(order.utr)} · Payment ${escapeHtml(order.payment_status||'pending')}</small>`:'';
+        const paymentDetails=order.utr?`<small>UTR ${escapeHtml(order.utr)} · Payment ${escapeHtml(order.payment_status||'pending')} · UTR submitted ${escapeHtml(formatDate(order.utr_submitted_at||order.created_at))}</small>`:'';
         const actions=status==='pending_verification'
           ? `<button type="button" class="btn gold" data-approve-payment="${order.id}">Approve</button><button type="button" class="btn danger" data-reject-payment="${order.id}">Reject</button>`
           : status==='pending_payment'?'<span class="pill">Waiting for customer payment</span>'
           : status==='refunded'?'<span class="pill">Refunded</span>':status==='rejected'&&order.payment_method!=='wallet'?'<span class="pill">Rejected</span>':`<button type="button" class="btn danger" data-refund="${order.id}">Refund</button>`;
-        return `<article class="order-row ${status}"><button type="button" class="order-open" data-open-order="${order.id}"><span class="order-cell"><strong>#${order.id}</strong><small>${formatDate(order.created_at)}${order.offer_id?` · Quantity ${Number(order.quantity)||1}${order.is_offer_free?' · Free offer item':''}`:''}</small></span><span class="order-cell"><strong>${escapeHtml(order.product_name)}</strong><small>${escapeHtml(order.product_type||'Product')} · ${escapeHtml(order.user_email||'')}</small>${paymentDetails}${coupon}</span><span class="order-cell"><strong class="amount">₹${money(order.price)}</strong><small>${method}</small>${order.status==='pending_payment'&&order.expires_at?`<small>Expires ${formatDate(order.expires_at)}</small>`:''}${order.payment_status==='pending'&&order.status!=='pending_payment'?`<small>Original amount ₹${money(order.original_price||order.price)}</small>`:''}</span><span class="status-badge ${badge}">${escapeHtml(statusLabel)}</span></button><div class="order-row-actions">${actions}</div></article>`;
+        return `<article class="order-row ${status}"><button type="button" class="order-open" data-open-order="${order.id}"><span class="order-cell"><strong>#${order.id}</strong><small>Order time ${formatDate(order.created_at)}${order.offer_id?` · Quantity ${Number(order.quantity)||1}${order.is_offer_free?' · Free offer item':''}`:''}</small></span><span class="order-cell"><strong>${escapeHtml(order.product_name)}</strong><small>${escapeHtml(order.product_type||'Product')} · ${escapeHtml(order.user_email||'')}</small>${paymentDetails}${coupon}</span><span class="order-cell"><strong class="amount">₹${money(order.price)}</strong><small>${method}</small>${order.payment_expires_at?`<small>Payment deadline ${formatDate(order.payment_expires_at)}</small>`:''}${order.payment_status==='pending'&&order.status!=='pending_payment'?`<small>Original amount ₹${money(order.original_price||order.price)}</small>`:''}</span><span class="status-badge ${badge}">${escapeHtml(statusLabel)}</span></button><div class="order-row-actions">${actions}</div></article>`;
       }).join(''):'<div class="empty">No orders match this filter.</div>';
       $('finance-list').querySelectorAll('[data-open-order]').forEach(button=>button.addEventListener('click',()=>openOrderEditor(button.dataset.openOrder)));
       $('finance-list').querySelectorAll('[data-refund]').forEach(button=>button.addEventListener('click',()=>refundOrder(button.dataset.refund)));
@@ -1123,7 +1154,10 @@
         ['Customer',order.user_email||'—'],['Payment method',order.payment_method==='upi_qr'?'Scan QR (UPI)':order.payment_method==='upi_app'?'UPI app':'Wallet'],
         ['UTR',order.utr||'Not applicable · wallet purchase'],['Product',order.product_name],['Product type',order.product_type||'—'],
         ['Original amount',`₹${money(order.original_price??order.price)}`],['Discount',order.coupon_code?`${order.discount_percent}% · ${order.coupon_code}`:'None'],
-        ['Final amount',`₹${money(order.price)}`],['Quantity',order.quantity||1],['Payment status',order.payment_status||'paid'],['Placed',indianDate(order.created_at)],['Status',status],
+        ['Final amount',`₹${money(order.price)}`],['Quantity',order.quantity||1],['Payment status',order.payment_status||'paid'],['Placed',indianDate(order.created_at)],
+        ...(order.payment_expires_at?[['Payment expires',indianDate(order.payment_expires_at)]]:[]),
+        ...(order.utr_submitted_at?[['UTR submitted',indianDate(order.utr_submitted_at)]]:[]),
+        ...(order.late_payment?[['Late payment','Pending manual review']]:[]),['Status',status],
         ...(order.reject_reason?[['Rejection reason',order.reject_reason]]:[])
       ];
       $('order-details').innerHTML=detailRows.map(([label,value])=>`<div class="order-detail"><small>${label}</small><strong>${escapeHtml(value)}</strong></div>`).join('');
@@ -1183,6 +1217,9 @@
       await renderFinance('orders');
     }
     async function approveProductPayment(id){
+      const order=state.orders.find(item=>String(item.id)===String(id));
+      if(!order)return;
+      if(!await confirmAdminAction('Approve payment',`Confirm ₹${money(order.price)} received for order #${order.id} from ${order.user_email||'this customer'}?`,'Approve payment',false))return;
       const {data,error}=await state.client.rpc('admin_approve_product_order',{p_order_id:Number(id)});
       if(error||!data?.ok){notify(error?.message||data?.message||'Could not approve this payment.');return}
       notify(data.delivered?'Payment approved and product download released.':'Payment approved. Add delivery details to complete this order.');

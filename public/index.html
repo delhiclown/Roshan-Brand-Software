@@ -4,8 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#060b17">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Roshan Brand">
   <meta name="description" content="Discover premium software, VPS, and proxy products from Roshan Brand.">
   <title>Roshan Brand | Digital Products</title>
+  <link rel="icon" href="/favicon.ico" sizes="32x32" type="image/x-icon">
+  <link rel="icon" href="/favicon-192.png" sizes="192x192" type="image/png">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" sizes="192x192">
+  <link rel="stylesheet" href="/pwa.css">
+  <script src="/pwa.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
@@ -296,6 +304,13 @@
     .product p{font-size:12px;color:var(--muted);line-height:1.65;margin:0 0 22px}
     .product-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto}
     .price{color:var(--gold);font-weight:700;font-size:18px;white-space:nowrap}
+    .product-pricing{display:grid;gap:4px;justify-items:start}
+    .product-price-meta{display:flex;align-items:center;flex-wrap:wrap;gap:7px;color:var(--muted);font-size:11px}
+    .product-price-meta s{color:#8791a6}
+    .product-save-badge{padding:3px 7px;border-radius:999px;background:rgba(32,201,121,.15);color:#65e8a4;font-size:10px;font-weight:800}
+    .product-stats{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:0 0 13px;color:var(--muted);font-size:11px}
+    .rating-stars{display:inline-flex;letter-spacing:1px;color:#59657a}
+    .rating-star{background:linear-gradient(90deg,#f5c451 var(--star-fill),#59657a var(--star-fill));background-clip:text;-webkit-background-clip:text;color:transparent}
     .price small{font-weight:500;font-size:11px;color:var(--muted)}
     .buy{border:0;border-radius:10px;padding:10px 14px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#171101;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;transition:filter .2s,transform .2s}
     .buy:hover{filter:brightness(1.08);transform:translateY(-1px)}
@@ -329,6 +344,8 @@
     .vps-stock.out{border-color:rgba(255,89,105,.3);color:#ff8790;background:rgba(255,89,105,.08)}
     .vps-plan-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}
     .vps-price{color:#8af0b7;font-size:13px;font-weight:800;white-space:nowrap}
+    .vps-plan-actions .product-pricing{justify-items:end;margin-right:auto}
+    .vps-plan-actions .product-price-meta{justify-content:flex-end}
     .vps-cart{width:38px;height:38px;display:grid;place-items:center;border:1px solid rgba(32,201,121,.27);border-radius:11px;background:rgba(32,201,121,.08);color:#7be6ac;cursor:pointer}
     .vps-cart svg{width:18px;height:18px}
     .vps-buy{min-width:102px;padding:10px 12px;border:0;border-radius:10px;background:linear-gradient(135deg,#36d987,#16ae67);color:#04160d;font-size:10px;font-weight:900;letter-spacing:.04em;cursor:pointer}
@@ -383,6 +400,11 @@
     .checkout-tab.active{border-color:var(--gold);background:linear-gradient(145deg,#242039,#171a24);color:var(--gold);box-shadow:0 0 18px rgba(245,192,74,.12)}
     .checkout-panel{padding:14px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,#101a30,#080f20)}
     .checkout-panel h3{margin:0 0 8px;font-size:14px}
+    .payment-countdown{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;margin:0 0 10px;border:1px solid rgba(245,192,74,.28);border-radius:10px;background:rgba(245,192,74,.07);font-size:12px}
+    .payment-countdown time{color:var(--gold);font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
+    .payment-countdown.urgent,.payment-countdown.expired{border-color:rgba(255,89,105,.45);background:rgba(255,89,105,.09);color:#ffb5bb}
+    .payment-countdown.urgent time,.payment-countdown.expired time{color:#ff7f8a}
+    .payment-grace-note{margin:0 0 10px;color:var(--muted);font-size:11px;line-height:1.55}
     .checkout-panel .wallet-balance{margin:0 0 12px}
     .checkout-note{margin:8px 0 0;color:var(--muted);font-size:11px;line-height:1.55}
     .checkout-panel .qr-box{width:min(180px,100%);min-height:180px;padding:8px;margin:10px auto}
@@ -1096,7 +1118,7 @@
     </section>
     <div class="notice hidden" id="notice" role="status" aria-live="polite"><span id="notice-logo" class="rb-logo-slot hidden" data-logo-size="rb-logo-loader" aria-hidden="true"></span><span id="notice-message"></span><button class="back hidden" id="retry-products" type="button" style="margin:10px auto 0">Retry</button></div>
   </main>
-  <footer><div class="wrap"><span class="footer-brand"><span id="footer-brand-logo" class="rb-logo-slot" data-logo-size="rb-logo-footer" aria-hidden="true"></span><span>© <span id="year"></span> <span id="footer-title" class="footer-brand-name">Roshan Brand</span>. All rights reserved.</span></span></div></footer>
+  <footer><div class="wrap"><div class="pwa-install-controls"><button class="pwa-install-button" id="pwa-install-button" type="button" hidden>Install App</button><p class="pwa-ios-help" id="pwa-ios-help" hidden>On iPhone or iPad: Share &gt; Add to Home Screen</p></div><span class="footer-brand"><span id="footer-brand-logo" class="rb-logo-slot" data-logo-size="rb-logo-footer" aria-hidden="true"></span><span>© <span id="year"></span> <span id="footer-title" class="footer-brand-name">Roshan Brand</span>. All rights reserved.</span></span></div></footer>
   <div class="floating" id="floating-links"></div>
   <div class="cursor-glow" id="cursor-glow" aria-hidden="true"></div>
   <div class="modal" id="wallet-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -1266,9 +1288,31 @@
         const imageUrl=safeHttpUrl(product.image_url);
         const purchasedOrder=state.myOrders?.find(order=>String(order.product_id)===String(product.id)&&order.status==='delivered'&&safeHttpUrl(order.delivery_link));
         const downloadUrl=purchasedOrder?safeHttpUrl(purchasedOrder.delivery_link):'';
-        return `<article class="product" data-product-id="${escapeHtml(product.id)}" data-card-tone="${productCardTones[index%productCardTones.length]}">${imageUrl?`<div class="product-image-wrap"><img class="product-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.hidden=true"></div>`:'<div class="product-image-wrap">Product photo</div>'}<span class="premium badge-premium">PREMIUM</span><h3 class="title-premium">${escapeHtml(product.name)}</h3><p class="desc-premium">${escapeHtml(product.description)}</p><div class="product-foot"><div class="price">₹${money(product.price)}<small>${unit}</small></div><button class="buy" type="button" data-buy="${escapeHtml(product.id)}" ${inStock&&checkoutAvailable?'':'disabled'}>${!inStock?'Out of stock':checkoutAvailable?'Buy Now':'Payment unavailable'}</button></div>${downloadUrl?`<a class="product-download" href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(product.name)}</a>`:''}</article>`;
+        return `<article class="product" data-product-id="${escapeHtml(product.id)}" data-card-tone="${productCardTones[index%productCardTones.length]}">${imageUrl?`<div class="product-image-wrap"><img class="product-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" onerror="this.hidden=true"></div>`:'<div class="product-image-wrap">Product photo</div>'}<span class="premium badge-premium">PREMIUM</span><h3 class="title-premium">${escapeHtml(product.name)}</h3><p class="desc-premium">${escapeHtml(product.description)}</p>${productStatsMarkup(product)}<div class="product-foot">${productPricingMarkup(product,unit)}<button class="buy" type="button" data-buy="${escapeHtml(product.id)}" ${inStock&&checkoutAvailable?'':'disabled'}>${!inStock?'Out of stock':checkoutAvailable?'Buy Now':'Payment unavailable'}</button></div>${downloadUrl?`<a class="product-download" href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(product.name)}</a>`:''}</article>`;
       }).join('') : '<div class="empty">No products in this category yet. Please check back soon.</div>';
       revealPage($('product-grid'));
+    }
+
+    function productMoney(value){
+      return new Intl.NumberFormat('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(value)||0);
+    }
+    function productPricingMarkup(product,unit='',prefix=''){
+      const sellingPrice=Number(product.selling_price??product.price)||0;
+      const originalPrice=product.original_price===null||product.original_price===undefined||product.original_price===''?null:Number(product.original_price);
+      const hasDiscount=Number.isFinite(originalPrice)&&originalPrice>sellingPrice;
+      const discount=hasDiscount?Math.round((originalPrice-sellingPrice)/originalPrice*100):0;
+      return `<div class="product-pricing"><div class="${prefix?'vps-price':'price'}">${prefix?`${escapeHtml(prefix)} `:''}₹${productMoney(sellingPrice)}<small>${unit}</small></div>${hasDiscount?`<div class="product-price-meta"><s>₹${productMoney(originalPrice)}</s><span class="product-save-badge">Save ${discount}%</span></div>`:''}</div>`;
+    }
+    function productStatsMarkup(product){
+      if(product.show_stats===false)return '';
+      const rating=Math.min(5,Math.max(0,Number(product.rating)||0));
+      const reviewCount=Math.max(0,Number(product.review_count)||0);
+      const soldCount=Math.max(0,Number(product.sold_count)||0);
+      const stars=Array.from({length:5},(_,index)=>{
+        const fill=Math.min(100,Math.max(0,(rating-index)*100));
+        return `<span class="rating-star" style="--star-fill:${fill}%" aria-hidden="true">★</span>`;
+      }).join('');
+      return `<div class="product-stats"><span class="rating-stars" aria-label="${rating.toFixed(1)} out of 5">${stars}</span><span>${rating.toFixed(1)} (${reviewCount} reviews) · ${soldCount}+ sold</span></div>`;
     }
 
     function renderVpsProducts(){
@@ -1319,7 +1363,7 @@
           const prefix=String(product.price_prefix||'From').trim();
           const purchasedOrder=state.myOrders?.find(order=>String(order.product_id)===String(product.id)&&order.status==='delivered'&&safeHttpUrl(order.delivery_link));
           const downloadUrl=purchasedOrder?safeHttpUrl(purchasedOrder.delivery_link):'';
-          return `<article class="vps-plan" data-product-id="${escapeHtml(product.id)}"><span>${rowIcon}</span><span class="vps-os-logo">${osLogo}</span><div class="vps-plan-copy"><h3 class="vps-plan-title ${inStock?'':'sold-out'}">${escapeHtml(product.name)}${product.badge?`<span class="vps-plan-badge">${escapeHtml(product.badge)}</span>`:''}</h3>${info?`<div class="vps-plan-ip">${info}</div>`:''}<span class="vps-stock ${inStock?'':'out'}">${inStock?'Available':'Out of stock'}</span></div><div class="vps-plan-actions"><span class="vps-price">${escapeHtml(prefix)} ₹${money(product.price)}</span><button class="vps-cart" type="button" data-buy="${escapeHtml(product.id)}" ${inStock&&checkoutAvailable?'':'disabled'} aria-label="Add ${escapeHtml(product.name)} to cart" title="Add to cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.4L22 8H6"/><circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/></svg></button><button class="vps-buy" type="button" data-buy="${escapeHtml(product.id)}" ${inStock&&checkoutAvailable?'':'disabled'}>${!inStock?'Sold out':checkoutAvailable?'Buy Now':'Payment unavailable'}</button></div><details class="vps-details"><summary>Plan details</summary>${details?`<div>${escapeHtml(details)}</div>`:'<div>Contact us for more plan details.</div>'}${downloadUrl?`<a class="product-download" href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(product.name)}</a>`:''}</details></article>`;
+          return `<article class="vps-plan" data-product-id="${escapeHtml(product.id)}"><span>${rowIcon}</span><span class="vps-os-logo">${osLogo}</span><div class="vps-plan-copy"><h3 class="vps-plan-title ${inStock?'':'sold-out'}">${escapeHtml(product.name)}${product.badge?`<span class="vps-plan-badge">${escapeHtml(product.badge)}</span>`:''}</h3>${info?`<div class="vps-plan-ip">${info}</div>`:''}${productStatsMarkup(product)}<span class="vps-stock ${inStock?'':'out'}">${inStock?'Available':'Out of stock'}</span></div><div class="vps-plan-actions">${productPricingMarkup(product,'',prefix)}<button class="vps-cart" type="button" data-buy="${escapeHtml(product.id)}" ${inStock&&checkoutAvailable?'':'disabled'} aria-label="Add ${escapeHtml(product.name)} to cart" title="Add to cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.4L22 8H6"/><circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/></svg></button><button class="vps-buy" type="button" data-buy="${escapeHtml(product.id)}" ${inStock&&checkoutAvailable?'':'disabled'}>${!inStock?'Sold out':checkoutAvailable?'Buy Now':'Payment unavailable'}</button></div><details class="vps-details"><summary>Plan details</summary>${details?`<div>${escapeHtml(details)}</div>`:'<div>Contact us for more plan details.</div>'}${downloadUrl?`<a class="product-download" href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(product.name)}</a>`:''}</details></article>`;
         }).join('');
         return `<section class="vps-plan-section" id="${sectionId}" data-vps-section><h3 class="vps-section-heading">${escapeHtml(group.section)} Plans${group.os?` - ${escapeHtml(group.os)}`:''} <span>(${group.products.length})</span></h3><div class="vps-plan-list">${rows}</div></section>`;
       }).join(''):`<div class="empty vps-empty">No ${escapeHtml(categories.find(item=>item.id===selectedCategory)?.title||'')} plans match these filters. Please check back soon.</div>`;
@@ -1664,11 +1708,12 @@
 
     function orderStatus(order){
       const status=typeof order==='string'?order:order.status;
+      if(order&&typeof order==='object'&&order.late_payment)return {label:'Late Payment - Pending Review',className:'processing'};
       if(order&&typeof order==='object'&&order.status==='pending_payment')return {label:'Pending Payment',className:'payment-due'};
       if(order&&typeof order==='object'&&order.status==='expired')return {label:'Expired',className:'rejected'};
       if(order&&typeof order==='object'&&order.is_offer_free)return {label:'Free',className:order.status==='delivered'?'delivered':'processing'};
       if(order&&typeof order==='object'&&order.payment_method!=='wallet'){
-        if(order.payment_status==='pending')return {label:'Pending verification',className:'processing'};
+        if(order.payment_status==='pending')return {label:'UTR Submitted - Verification Pending',className:'processing'};
         if(order.payment_status==='paid')return {label:status==='delivered'?'Approved · Delivered':'Approved',className:status==='delivered'?'delivered':'processing'};
       }
       if(status==='pending_verification')return {label:'Pending verification',className:'processing'};
@@ -1976,7 +2021,7 @@
         const orderInfo=`<p>Order #${escapeHtml(order.id)} · ${escapeHtml(order.product_type||'Product')} · Quantity ${Number(order.quantity)||1}${order.is_offer_free?' · Free offer item':''}</p>`;
         const delivery=delivered
           ? `${orderInfo}${order.delivery_note?`<p>${escapeHtml(order.delivery_note)}</p>`:''}${order.delivery_text?`<pre>${escapeHtml(order.delivery_text)}</pre>`:''}${link?`<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(order.product_name)}</a>`:''}<button class="orders-copy" type="button" data-copy-order="${escapeHtml(order.id)}">Copy</button>`
-          : `${orderInfo}<p>${order.status==='pending_payment'?'Payment is due. Open this order to scan the exact-amount QR code.':order.status==='pending_verification'?'Payment submitted. Waiting for admin verification.':status.label==='Processing'?'Your order is being processed.':`This order was ${status.label.toLowerCase()}.`}</p>${order.payment_method&&order.payment_method!=='wallet'?`<p>Payment: ${escapeHtml(order.payment_method==='upi_qr'?'Scan QR (UPI)':'UPI app')} · ₹${money(order.price)}</p>`:''}${order.coupon_code?`<p>Coupon ${escapeHtml(order.coupon_code)} · ${escapeHtml(order.discount_percent)}% off · Original ₹${money(order.original_price)} · Final ₹${money(order.price)}</p>`:''}${order.reject_reason?`<p>Reason: ${escapeHtml(order.reject_reason)}</p>`:''}${order.status==='pending_payment'?`<button class="orders-pay-button" type="button" data-pay-offer-order="${escapeHtml(order.id)}">Pay now</button><button class="orders-delete-button" type="button" data-delete-offer-order="${escapeHtml(order.id)}">Delete unpaid order</button>`:''}`;
+          : `${orderInfo}<p>${order.late_payment?'Aapka payment verify ho raha hai. Agar paisa kat gaya hai to chinta na karein, order approve hote hi mil jayega.':order.status==='pending_payment'?'Payment is due. Resume checkout to continue.':order.status==='expired'?'Payment time expired. If you already paid, submit your UTR for manual review.':order.status==='pending_verification'?'UTR submitted. Waiting for admin verification.':status.label==='Processing'?'Your order is being processed.':`This order was ${status.label.toLowerCase()}.`}</p>${order.payment_method&&order.payment_method!=='wallet'?`<p>Payment: ${escapeHtml(order.payment_method==='upi_qr'?'Scan QR (UPI)':'UPI app')} · ₹${money(order.price)}</p>`:''}${order.coupon_code?`<p>Coupon ${escapeHtml(order.coupon_code)} · ${escapeHtml(order.discount_percent)}% off · Original ₹${money(order.original_price)} · Final ₹${money(order.price)}</p>`:''}${order.reject_reason?`<p>Reason: ${escapeHtml(order.reject_reason)}</p>`:''}${['pending_payment','expired'].includes(order.status)&&order.payment_method!=='wallet'&&!order.offer_claim_id?`<button class="orders-pay-button" type="button" data-resume-payment="${escapeHtml(order.id)}">Submit UTR / Resume Payment</button>`:''}${order.status==='pending_payment'&&order.offer_claim_id?`<button class="orders-pay-button" type="button" data-pay-offer-order="${escapeHtml(order.id)}">Pay now</button><button class="orders-delete-button" type="button" data-delete-offer-order="${escapeHtml(order.id)}">Delete unpaid order</button>`:''}`;
         const itemName=order.is_offer_free?`Free · ${order.product_name}`:order.product_name;
         return `<article class="orders-item"><button class="orders-item-trigger" type="button" data-orders-item="${escapeHtml(order.id)}" aria-expanded="false"><span class="orders-item-main"><strong>${escapeHtml(itemName)}</strong><small>${Number(order.quantity)||1} item(s) · ₹${money(order.price)} · ${formatDate(order.created_at)}</small></span><span class="orders-status ${status.className}">${status.label}</span></button><div class="orders-item-detail hidden" data-orders-detail="${escapeHtml(order.id)}">${delivery}</div></article>`;
       }).join('')}</div>` : '';
@@ -2013,6 +2058,14 @@
       }));
       content.querySelectorAll('[data-pay-offer-order]').forEach(button=>button.addEventListener('click',()=>showOfferOrderPayment(button.dataset.payOfferOrder)));
       content.querySelectorAll('[data-delete-offer-order]').forEach(button=>button.addEventListener('click',()=>deleteOfferOrder(button.dataset.deleteOfferOrder)));
+      content.querySelectorAll('[data-resume-payment]').forEach(button=>button.addEventListener('click',()=>{
+        const order=orders.find(item=>String(item.id)===button.dataset.resumePayment);
+        if(!order)return;
+        try{localStorage.setItem(`pending-payment:${state.user.id}:${order.product_id}`,String(order.id))}
+        catch(error){console.warn('Could not persist the payment order for resume:',error)}
+        closeOrdersPanel();
+        buyProduct(order.product_id);
+      }));
       content.querySelectorAll('[data-resubmit-offer-claim]').forEach(button=>button.addEventListener('click',()=>{
         const claim=claims.find(item=>item.id===button.dataset.resubmitOfferClaim);
         if(claim)openOfferClaim(claim.offer_id,claim);
@@ -2311,6 +2364,11 @@
         sessionStorage.removeItem('wallet_pending_product');
         setTimeout(()=>buyProduct(pendingId),0);
       }
+      const activePaymentProduct=sessionStorage.getItem('active_upi_product');
+      if(state.user&&activePaymentProduct&&!pendingId&&state.authMode!=='reset'){
+        sessionStorage.removeItem('active_upi_product');
+        setTimeout(()=>buyProduct(activePaymentProduct),0);
+      }
       const pendingOrders=sessionStorage.getItem('wallet_pending_track_order');
       if(state.user&&pendingOrders&&state.authMode!=='reset'){
         sessionStorage.removeItem('wallet_pending_track_order');
@@ -2341,7 +2399,7 @@
     }
 
     function openModal(){ $('wallet-modal').classList.add('open');document.body.style.overflow='hidden'; }
-    function closeModal(){ $('wallet-modal').classList.remove('open');$('wallet-dialog').classList.remove('checkout-dialog');document.body.style.overflow='';state.checkout=null; }
+    function closeModal(){ $('wallet-modal').classList.remove('open');$('wallet-dialog').classList.remove('checkout-dialog');document.body.style.overflow='';state.checkout=null;sessionStorage.removeItem('active_upi_product'); }
     function transactionLabel(type){return ({topup:'Wallet top-up',purchase:'Purchase',refund:'Refund',admin_credit:'Balance added',admin_debit:'Balance deducted'})[type]||type}
     function formatDate(value){return new Date(value).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'})}
     async function copyCustomerValue(value,label){
@@ -2542,6 +2600,106 @@
         ? {originalPrice:Number(checkout.product.price),discountAmount:0,finalPrice:Number(checkout.product.price)}
         : getDiscountBreakdown(checkout.product.price,checkout.coupon);
     }
+    function checkoutPaymentSignature(checkout){
+      const pricing=checkoutPrice();
+      return [checkout.product.id,checkout.method,pricing.finalPrice,pricing.originalPrice,checkout.coupon?.code||''].join('|');
+    }
+
+    function formatPaymentCountdown(milliseconds){
+      const seconds=Math.max(0,Math.ceil(milliseconds/1000));
+      return `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
+    }
+    function checkoutServerNow(checkout){
+      if(Number.isFinite(checkout.serverTimeAnchorMs)&&Number.isFinite(checkout.monotonicTimeAnchorMs)&&window.performance?.now){
+        return checkout.serverTimeAnchorMs+(performance.now()-checkout.monotonicTimeAnchorMs);
+      }
+      return Date.now()+(checkout.serverTimeOffsetMs||0);
+    }
+    function paymentTimerMarkup(checkout){
+      const order=checkout.paymentOrder;
+      if(!order)return '<div class="payment-countdown" role="status"><span>Preparing secure payment order…</span></div>';
+      const expiry=Date.parse(order.payment_expires_at);
+      const serverNow=checkoutServerNow(checkout);
+      const remaining=expiry-serverNow;
+      if(remaining<=0){
+        const graceMinutes=Number(checkout.graceMinutes??5);
+        const graceRemaining=expiry+graceMinutes*60*1000-serverNow;
+        return `<div class="payment-countdown expired" data-payment-timer data-payment-expiry="${escapeHtml(order.payment_expires_at)}" data-server-offset="${Number(checkout.serverTimeOffsetMs)||0}" data-grace-minutes="${graceMinutes}" role="status"><strong>Payment time expired.</strong><time>00:00</time></div><p class="payment-grace-note" data-payment-grace-note>${graceRemaining>0?`Grace period: ${formatPaymentCountdown(graceRemaining)} remaining. `:''}Already paid? Submit your UTR for manual review. Late UTRs can still be submitted for support.</p><button class="back" type="button" data-new-payment>New Order / Try Again</button>`;
+      }
+      const message='Time left to pay — order fails automatically after 10 minutes if UTR is not submitted';
+      return `<div class="payment-countdown ${remaining<120000?'urgent':''}" data-payment-timer data-payment-expiry="${escapeHtml(order.payment_expires_at)}" data-server-offset="${Number(checkout.serverTimeOffsetMs)||0}" data-grace-minutes="${Number(checkout.graceMinutes??5)}" role="timer"><span>${message}</span><time>${formatPaymentCountdown(remaining)}</time></div>`;
+    }
+    function updateCheckoutPaymentTimer(){
+      const timer=document.querySelector('[data-payment-timer]');
+      const checkout=state.checkout;
+      if(!timer||!checkout?.paymentOrder)return;
+      const expiry=Date.parse(timer.dataset.paymentExpiry);
+      const serverNow=checkoutServerNow(checkout);
+      const remaining=expiry-serverNow;
+      if(remaining<=0&&!checkout.paymentTimerExpired){
+        checkout.paymentTimerExpired=true;
+        renderCheckout();
+        return;
+      }
+      const time=timer.querySelector('time');
+      if(time)time.textContent=formatPaymentCountdown(remaining);
+      timer.classList.toggle('urgent',remaining>0&&remaining<120000);
+      if(remaining<=0){
+        timer.classList.add('expired');
+        const note=timer.parentElement.querySelector('[data-payment-grace-note]');
+        if(note){
+          const graceMinutes=Number(timer.dataset.graceMinutes||5);
+          const graceRemaining=expiry+graceMinutes*60*1000-serverNow;
+          note.textContent=`${graceRemaining>0?`Grace period: ${formatPaymentCountdown(graceRemaining)} remaining. `:''}Already paid? Submit your UTR for manual review. Late UTRs can still be submitted for support.`;
+        }
+      }
+    }
+    async function ensureCheckoutPaymentOrder(){
+      const checkout=state.checkout;
+      if(!checkout||checkout.method==='wallet'||checkout.preparingPayment||(checkout.paymentError&&!checkout.paymentOrder))return;
+      if(checkout.paymentOrder?.status==='expired')return;
+      const pricing=checkoutPrice();
+      const signature=checkoutPaymentSignature(checkout);
+      if(checkout.paymentOrder&&checkout.paymentOrderSignature===signature)return;
+      checkout.preparingPayment=true;
+      checkout.paymentError='';
+      renderCheckout();
+      try{
+        const {data,error}=await state.client.rpc('prepare_product_payment',{
+          p_order_id:checkout.paymentOrder?.status==='pending_payment'?checkout.paymentOrder.order_id:null,
+          p_product_id:checkout.product.id,
+          p_expected_price:pricing.finalPrice,
+          p_original_price:pricing.originalPrice,
+          p_discount_percent:checkout.coupon?Number(checkout.coupon.value)||0:0,
+          p_coupon_code:checkout.coupon?.code||null,
+          p_payment_method:checkout.method
+        });
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not start payment.');
+        if(state.checkout!==checkout)return;
+        checkout.paymentOrder={
+          order_id:data.order_id,
+          product_id:data.product_id,
+          price:data.price,
+          payment_method:data.payment_method,
+          status:data.status,
+          payment_expires_at:data.payment_expires_at
+        };
+        checkout.serverTimeAnchorMs=Date.parse(data.server_now);
+        checkout.monotonicTimeAnchorMs=performance.now();
+        checkout.serverTimeOffsetMs=checkout.serverTimeAnchorMs-Date.now();
+        checkout.graceMinutes=Number(data.grace_minutes??5);
+        checkout.paymentOrderSignature=signature;
+        checkout.paymentTimerExpired=false;
+        try{localStorage.setItem(`pending-payment:${state.user.id}:${checkout.product.id}`,String(data.order_id))}
+        catch(error){console.warn('Could not persist the pending payment order in local storage:',error)}
+      }catch(error){
+        if(state.checkout===checkout)checkout.paymentError=error.message||'Could not start payment.';
+      }finally{
+        checkout.preparingPayment=false;
+        if(state.checkout===checkout)renderCheckout();
+      }
+    }
 
     function renderCheckout(){
       const checkout=state.checkout;
@@ -2555,18 +2713,23 @@
       const method=checkout.method;
       const qrParams=new URLSearchParams({pa:upiId,pn:payee,am:pricing.finalPrice.toFixed(2),cu:'INR',tn:`${state.settings.site_title||'Roshan Brand'} ${product.name}`});
       const qrMarkup='<div class="qr-box" id="product-payment-qr" aria-label="UPI payment QR code"></div>';
+      const paymentOrder=checkout.paymentOrder;
+      const desiredPaymentSignature=checkoutPaymentSignature(checkout);
+      const paymentOrderReady=Boolean(paymentOrder&&!checkout.preparingPayment&&(method==='wallet'||checkout.paymentOrderSignature===desiredPaymentSignature));
+      const paymentOrderExpired=Boolean(paymentOrder&&(paymentOrder.status==='expired'||Date.parse(paymentOrder.payment_expires_at)<=checkoutServerNow(checkout)));
+      const utrForm=paymentOrderReady?`<div class="checkout-utr-step"><strong>${paymentOrderExpired?'Already paid? Submit UTR':'After payment'}</strong><p class="checkout-note">${paymentOrderExpired?'Your payment details will be sent for manual review. Late payments are not automatically rejected.':'Enter the 12-digit UTR / transaction ID to submit your order for verification.'}</p><label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID</label><input class="checkout-utr" id="checkout-utr" type="text" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error" aria-live="polite">${escapeHtml(checkout.paymentError||'')}</div><button class="modal-primary checkout-submit" id="checkout-submit-payment" type="button">Submit UTR for review</button></div>`:'';
       let paymentPanel='';
       if(method==='wallet'){
         const canPay=state.balance>=pricing.finalPrice;
-        paymentPanel=`<section class="checkout-panel"><h3>Pay from Wallet</h3><div class="wallet-balance"><small>Available wallet balance</small><strong>₹${money(state.balance)}</strong></div><p class="checkout-note">Coupons apply to QR / UPI payments only.</p>${canPay?`<button class="modal-primary checkout-submit" id="checkout-wallet-pay" type="button">Pay with Wallet · ₹${money(pricing.finalPrice)}</button>`:`<div class="modal-error">Insufficient balance. Add money to your wallet to continue.</div><button class="modal-primary checkout-submit" id="checkout-add-money" type="button">Add money to wallet</button>`}</section>`;
+        paymentPanel=`<section class="checkout-panel"><h3>Pay from Wallet</h3><div class="wallet-balance"><small>Available wallet balance</small><strong>₹${money(state.balance)}</strong></div><p class="checkout-note">Coupons apply to QR / UPI payments only.</p>${canPay?`<button class="modal-primary checkout-submit" id="checkout-wallet-pay" type="button">Pay with Wallet · ₹${money(pricing.finalPrice)}</button>`:`<div class="modal-error">Insufficient balance. Add money to your wallet to continue.</div><button class="modal-primary checkout-submit" id="checkout-add-money" type="button">Add money to wallet</button>`}${checkout.paymentOrder?`<p class="checkout-note">UPI order #${escapeHtml(checkout.paymentOrder.order_id)} amount: ₹${money(checkout.paymentOrder.price)}. UTR submitted here will apply to this UPI order.</p>${utrForm}`:''}</section>`;
       }else if(method==='upi_qr'){
-        paymentPanel=`<section class="checkout-panel"><h3>Scan QR (UPI)</h3><p class="checkout-note">Scan with a UPI app and pay exactly ₹${money(pricing.finalPrice)}.</p>${qrMarkup}<div class="checkout-utr-step"><strong>After payment</strong><p class="checkout-note">Enter the 12-digit UTR / transaction ID to place your order. Payment stays pending until verified.</p><label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID</label><input class="checkout-utr" id="checkout-utr" type="text" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error" aria-live="polite">${escapeHtml(checkout.paymentError||'')}</div></div><button class="modal-primary checkout-submit checkout-upi-submit" id="checkout-submit-payment" type="button">Submit UTR &amp; Place Order</button></section>`;
+        paymentPanel=`<section class="checkout-panel"><h3>Scan QR (UPI)</h3>${!paymentOrderReady?'<p class="checkout-note">Preparing payment details…</p>':paymentOrderExpired?'<p class="checkout-note">Payment QR is no longer available for this order.</p>':`<p class="checkout-note">Scan with a UPI app and pay exactly ₹${money(pricing.finalPrice)}.</p>${qrMarkup}`}${utrForm}${checkout.paymentError?`<div class="modal-error">${escapeHtml(checkout.paymentError)}</div>${paymentOrderReady?'<button class="back" type="button" data-retry-payment>Retry</button>':''}`:''}</section>`;
       }else if(method==='upi_app'){
         const deepLinks=[
           ['Google Pay','gpay://upi/pay','<span class="checkout-app-logo gpay"><span>G</span>Pay</span>'],
           ['Paytm','paytmmp://pay','<span class="checkout-app-logo paytm">Paytm</span>']
         ].map(([label,scheme,logo])=>`<a href="${scheme}?${qrParams.toString()}" target="_blank" rel="noopener" aria-label="${label}">${logo}</a>`).join('');
-        paymentPanel=`<section class="checkout-panel"><h3>Pay with UPI ID / UPI App</h3><div class="checkout-upi-id"><strong>${escapeHtml(upiId||'UPI ID not configured')}</strong><button class="btn ghost" id="copy-checkout-upi" type="button" ${upiId?'':'disabled'}>Copy UPI ID</button></div><div class="checkout-app-links">${deepLinks}</div><p class="checkout-note">Pay exactly ₹${money(pricing.finalPrice)} using your UPI app.</p><div class="checkout-utr-step"><strong>After payment</strong><p class="checkout-note">Enter the 12-digit UTR / transaction ID to place your order. Payment stays pending until verified.</p><label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID</label><input class="checkout-utr" id="checkout-utr" type="text" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error" aria-live="polite">${escapeHtml(checkout.paymentError||'')}</div></div><button class="modal-primary checkout-submit checkout-upi-submit" id="checkout-submit-payment" type="button">Submit UTR &amp; Place Order</button></section>`;
+        paymentPanel=`<section class="checkout-panel"><h3>Pay with UPI ID / UPI App</h3>${!paymentOrderReady?'<p class="checkout-note">Preparing payment details…</p>':paymentOrderExpired?'<p class="checkout-note">UPI payment details are hidden after this order expires.</p>':`<div class="checkout-upi-id"><strong>${escapeHtml(upiId||'UPI ID not configured')}</strong><button class="btn ghost" id="copy-checkout-upi" type="button" ${upiId?'':'disabled'}>Copy UPI ID</button></div><div class="checkout-app-links">${deepLinks}</div><p class="checkout-note">Pay exactly ₹${money(pricing.finalPrice)} using your UPI app.</p>`}${utrForm}${checkout.paymentError?`<div class="modal-error">${escapeHtml(checkout.paymentError)}</div>${paymentOrderReady?'<button class="back" type="button" data-retry-payment>Retry</button>':''}`:''}</section>`;
       }else{
         paymentPanel='<section class="checkout-panel"><p class="modal-error">No payment methods are currently available. Please contact the store.</p></section>';
       }
@@ -2574,7 +2737,8 @@
       $('wallet-dialog').classList.add('checkout-dialog');
       const methodLabels={wallet:'Pay from Wallet',upi_qr:'Scan QR (UPI)',upi_app:'UPI ID / App'};
       const tabs=methods.length?`<div class="checkout-tabs" role="tablist" aria-label="Payment method">${methods.map(item=>`<button type="button" class="checkout-tab ${method===item?'active':''}" data-checkout-method="${item}" role="tab" aria-selected="${method===item}">${methodLabels[item]}</button>`).join('')}</div>`:'';
-      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(product.name)}</strong><div class="checkout-amounts"><span>${pricing.discountAmount?`Original ₹${money(pricing.originalPrice)} · Discount −₹${money(pricing.discountAmount)}`:'Amount due'}</span><strong>₹${money(pricing.finalPrice)}</strong></div></div><div class="checkout-coupon"><label for="checkout-coupon">Have a coupon code?</label><input id="checkout-coupon" autocomplete="off" placeholder="Enter coupon code, e.g. RB20-ABC123" value="${escapeHtml(checkout.couponInput||'')}"><button class="modal-primary" id="apply-checkout-coupon" type="button">Apply</button><div class="checkout-coupon-message ${checkout.couponMessageType||''}" id="checkout-coupon-message">${escapeHtml(checkout.couponMessage||'')}</div></div>${tabs}${paymentPanel}`;
+      const timer=method!=='wallet'||paymentOrder?`<div class="checkout-timer-wrap">${paymentTimerMarkup(checkout)}</div>`:'';
+      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(product.name)}</strong><div class="checkout-amounts"><span>${pricing.discountAmount?`Original ₹${money(pricing.originalPrice)} · Discount −₹${money(pricing.discountAmount)}`:'Amount due'}</span><strong>₹${money(pricing.finalPrice)}</strong></div></div><div class="checkout-coupon"><label for="checkout-coupon">Have a coupon code?</label><input id="checkout-coupon" autocomplete="off" placeholder="Enter coupon code, e.g. RB20-ABC123" value="${escapeHtml(checkout.couponInput||'')}"><button class="modal-primary" id="apply-checkout-coupon" type="button">Apply</button><div class="checkout-coupon-message ${checkout.couponMessageType||''}" id="checkout-coupon-message">${escapeHtml(checkout.couponMessage||'')}</div></div>${tabs}${timer}${paymentPanel}`;
       $('modal-body').querySelectorAll('[data-checkout-method]').forEach(button=>button.addEventListener('click',()=>{
         state.checkout.method=button.dataset.checkoutMethod;state.checkout.paymentError='';
         if(state.checkout.coupon){
@@ -2614,6 +2778,15 @@
       $('checkout-wallet-pay')?.addEventListener('click',purchaseWithWallet);
       $('checkout-add-money')?.addEventListener('click',openWalletTopup);
       $('checkout-submit-payment')?.addEventListener('click',submitUpiProductPayment);
+      $('modal-body').querySelector('[data-new-payment]')?.addEventListener('click',()=>{
+        if(checkout.paymentOrder?.payment_method)checkout.method=checkout.paymentOrder.payment_method;
+        checkout.paymentOrder=null;checkout.paymentOrderSignature=null;checkout.paymentTimerExpired=false;checkout.utr='';checkout.paymentError='';
+        renderCheckout();
+      });
+      $('modal-body').querySelector('[data-retry-payment]')?.addEventListener('click',()=>{
+        checkout.paymentError='';
+        renderCheckout();
+      });
       $('copy-checkout-upi')?.addEventListener('click',async event=>{
         try{
           if(!navigator.clipboard)throw new Error('Clipboard unavailable');
@@ -2623,13 +2796,14 @@
         }catch(error){showNotice('Could not copy the UPI ID. Please copy it manually.')}
       });
       if(method==='upi_qr'&&window.QRCode){
-        new QRCode($('product-payment-qr'),{text:`upi://pay?${qrParams.toString()}`,width:160,height:160,colorDark:'#060b17',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
-      }else if(method==='upi_qr'){
+        if($('product-payment-qr'))new QRCode($('product-payment-qr'),{text:`upi://pay?${qrParams.toString()}`,width:160,height:160,colorDark:'#060b17',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+      }else if(method==='upi_qr'&&$('product-payment-qr')){
         const qrImageUrl=safeHttpUrl(state.settings.upi_qr_image_url);
         $('product-payment-qr').innerHTML=qrImageUrl
           ?`<img src="${escapeHtml(qrImageUrl)}" alt="Configured UPI payment QR" style="display:block;height:auto;max-height:160px;object-fit:contain">`
           :'Payment QR is unavailable. Try Pay with UPI ID / UPI App.';
       }
+      if(method!=='wallet')ensureCheckoutPaymentOrder();
     }
 
     async function buyProduct(productId){
@@ -2667,6 +2841,46 @@
         utr:'',
         paymentError:''
       };
+      const storageKey=`pending-payment:${state.user.id}:${product.id}`;
+      let pendingOrderId=null;
+      try{pendingOrderId=localStorage.getItem(storageKey)}
+      catch(error){console.warn('Could not read the pending payment order from local storage:',error)}
+      if(pendingOrderId){
+        try{
+          const {data,error}=await state.client.rpc('get_my_pending_product_payment',{
+            p_order_id:Number(pendingOrderId),p_product_id:product.id
+          });
+          if(error)throw error;
+          if(data?.ok){
+            state.checkout.paymentOrder={
+              order_id:data.order_id,product_id:data.product_id,price:data.price,
+              payment_method:data.payment_method,status:data.status,
+              payment_expires_at:data.payment_expires_at
+            };
+            state.checkout.method=data.payment_method;
+            state.checkout.serverTimeAnchorMs=Date.parse(data.server_now);
+            state.checkout.monotonicTimeAnchorMs=performance.now();
+            state.checkout.serverTimeOffsetMs=state.checkout.serverTimeAnchorMs-Date.now();
+            state.checkout.graceMinutes=Number(data.grace_minutes??5);
+            state.checkout.paymentOrderSignature=[
+              product.id,state.checkout.method,Number(data.price),
+              Number(data.original_price??product.price),data.coupon_code||''
+            ].join('|');
+            state.checkout.coupon=data.coupon_code?resolveCoupon(data.coupon_code):null;
+            state.checkout.utr='';
+          }else{
+            try{localStorage.removeItem(storageKey)}
+            catch(storageError){console.warn('Could not clear the stale pending payment order:',storageError)}
+          }
+        }catch(error){
+          console.error('Could not resume pending payment:',error);
+          state.checkout.paymentError='Could not resume the saved payment. Please try again.';
+        }
+      }
+      if(state.checkout.method!=='wallet'||state.checkout.paymentOrder){
+        try{sessionStorage.setItem('active_upi_product',String(product.id))}
+        catch(error){console.warn('Could not persist the active payment checkout:',error)}
+      }
       openModal();renderCheckout();
     }
 
@@ -2706,6 +2920,10 @@
       if(!/^\d{12}$/.test(utr)){
         checkout.paymentError='Enter a valid 12-digit UTR / Transaction ID.';renderCheckout();return;
       }
+      if(!checkout.paymentOrder||checkout.preparingPayment){
+        checkout.paymentError='Payment order is still being prepared. Please wait and try again.';
+        renderCheckout();return;
+      }
       if(checkout.coupon&&getUsedCouponCodes().has(String(checkout.coupon.code).toUpperCase())){
         checkout.coupon=null;checkout.couponMessage='Invalid coupon';checkout.couponMessageType='error';renderCheckout();return;
       }
@@ -2714,13 +2932,8 @@
       checkout.submittingPayment=true;
       if(submit){submit.disabled=true;submit.textContent='Submitting order…'}
       try{
-        const {data,error}=await state.client.rpc('create_upi_product_order',{
-          p_product_id:checkout.product.id,
-          p_expected_price:pricing.finalPrice,
-          p_original_price:pricing.originalPrice,
-          p_discount_percent:checkout.coupon?Number(checkout.coupon.value)||0:0,
-          p_coupon_code:checkout.coupon?.code||null,
-          p_payment_method:checkout.method,
+        const {data,error}=await state.client.rpc('submit_product_payment_utr',{
+          p_order_id:checkout.paymentOrder.order_id,
           p_utr:utr
         });
         if(error)throw error;
@@ -2732,9 +2945,12 @@
         }
         if(checkout.coupon)markCouponUsed(checkout.coupon.code);
         if(checkout.coupon&&state.spinCoupon?.code===checkout.coupon.code){state.spinCoupon=null;renderCouponBanner()}
+        sessionStorage.removeItem('active_upi_product');
+        try{localStorage.removeItem(`pending-payment:${state.user.id}:${checkout.product.id}`)}
+        catch(storageError){console.warn('Could not clear the submitted payment order from local storage:',storageError)}
         await refreshMyOrders();
         $('modal-title').textContent='Payment submitted';
-        $('modal-body').innerHTML=`<div class="wallet-balance"><strong style="font-size:18px">Payment submitted. Waiting for admin verification.</strong><small style="margin-top:9px">${escapeHtml(data.product_name)} · ₹${money(data.price)}</small><small>Order #${escapeHtml(data.order_id)} · UTR ${escapeHtml(utr)}</small>${data.coupon_code?`<small>Coupon ${escapeHtml(data.coupon_code)} · ${escapeHtml(data.discount_percent)}% off · Original ₹${money(data.original_price)} · Paid ₹${money(data.price)}</small>`:''}</div><button class="modal-primary" id="upi-order-view" type="button">View My Orders</button><button class="back" id="upi-order-done" type="button" style="margin-left:7px">Done</button>`;
+        $('modal-body').innerHTML=`<div class="wallet-balance"><strong style="font-size:18px">${data.late_payment?'Late Payment - Pending Review':'UTR Submitted - Verification Pending'}</strong><small style="margin-top:9px">Aapka payment verify ho raha hai. Agar paisa kat gaya hai to chinta na karein, order approve hote hi mil jayega.</small><small>${escapeHtml(checkout.product.name)} · ₹${money(checkout.paymentOrder.price)}</small><small>Order #${escapeHtml(data.order_id)} · UTR ${escapeHtml(utr)}</small></div><button class="modal-primary" id="upi-order-view" type="button">View My Orders</button><button class="back" id="upi-order-done" type="button" style="margin-left:7px">Done</button>`;
         $('upi-order-view').addEventListener('click',()=>openWallet('orders'));$('upi-order-done').addEventListener('click',closeModal);
       }catch(error){checkout.submittingPayment=false;checkout.paymentError=error.message||'Could not submit this payment.';renderCheckout()}
     }
@@ -2742,13 +2958,14 @@
     async function refreshStore(){
       setProductsLoading(!state.products.length);
       const [products,settings] = await Promise.all([
-        state.client.from('products').select('id,category,name,description,image_url,price,unit,in_stock,sort_order,pinned,plan_section,os_type,ip_series,data_size,specs,ip_count,validity,badge,stock_status,price_prefix,details')
+        state.client.from('products').select('id,category,name,description,image_url,price,selling_price,original_price,rating,review_count,sold_count,show_stats,unit,in_stock,sort_order,pinned,plan_section,os_type,ip_series,data_size,specs,ip_count,validity,badge,stock_status,price_prefix,details')
           .order('sort_order',{ascending:true}).order('created_at',{ascending:true}),
         state.client.from('settings').select('site_title,whatsapp_number,telegram_link,upi_id,upi_payee_name,upi_qr_image_url,enable_wallet_payments,enable_upi_qr,enable_upi_app').eq('id',true).maybeSingle()
       ]);
       if(products.error){showProductsError(products.error);return}
       state.products = (products.data || []).map(product=>({
         ...product,
+        selling_price:product.selling_price??product.price,
         category:normalizeCategory(product.category),
         in_stock:product.stock_status?product.stock_status==='available':product.in_stock !== false
       }));
@@ -2853,6 +3070,7 @@
     setTheme(document.documentElement.dataset.theme);
     renderBrandLogos();
     window.setInterval(updateOfferCountdowns,1000);
+    window.setInterval(updateCheckoutPaymentTimer,1000);
     initPointerEffects();
     revealPage();
     $('year').textContent = new Date().getFullYear();

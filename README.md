@@ -22,9 +22,38 @@ Responsive storefront with Google customer sign-in, wallet and UPI product check
 
 Products and store settings are public-read. Customers can only read their own wallet, transactions, top-up requests, and orders. Wallet balances cannot be changed through table writes: purchases, top-up approvals, refunds, and admin adjustments run through transactional, row-locking Supabase RPC functions. Wallet product purchases remain full-price and immediate. QR/UPI product payments create orders pending manual admin verification; coupons apply only to those payment methods. UTRs must be 12 digits and cannot be reused across product payments or wallet top-ups. Admins can approve or reject pending UPI product orders.
 
+Product selling price, optional MRP, rating, review count, sold count, and stats visibility are editable in the admin product form. The selling price is saved to both `selling_price` and the existing checkout `price` field. For an existing database, run [`supabase/product-pricing-stats-migration.sql`](./supabase/product-pricing-stats-migration.sql) in the Supabase SQL Editor; it backfills `selling_price` from `price` and leaves product prices unchanged. Fresh installs also get these columns from `supabase/setup.sql`.
+
+For UPI product-payment countdowns and late UTR review, run [`supabase/product-payment-expiry-migration.sql`](./supabase/product-payment-expiry-migration.sql) in the Supabase SQL Editor after `setup.sql`. It creates payment orders before the customer pays, enforces UTR validation/uniqueness and expiry server-side, and schedules expiration every minute when `pg_cron` is available. The singleton `public.payment_timer_config` row defaults to a 10-minute payment window and a 5-minute grace period; configure it in the SQL Editor. If `pg_cron` is unavailable, schedule `public.expire_pending_product_payments()` to run every minute. Wallet payments remain immediate.
+
 ## Deploy to Vercel
 
 Import this GitHub repository as a Vercel project with the repository root as the project root and no build command. Add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as Vercel environment variables for the environments you use; never add a service-role key. Vercel serves the storefront and admin page from `public/` and exposes the public configuration endpoint at `/api/config`. Add your deployed store URL to Supabase's allowed redirect URLs and configure the Google OAuth redirect URLs as described above.
+
+## Favicon
+
+The storefront and admin page load the shared favicon assets from the site root. Keep `favicon.ico`, `favicon-192.png`, `apple-touch-icon.png`, and `site.webmanifest` in `public/`; the static server exposes them at `/favicon.ico`, `/favicon-192.png`, `/apple-touch-icon.png`, and `/site.webmanifest`. `favicon.svg` is the editable vector source for the generated image files. After deploying a favicon change, open the direct icon URLs to confirm they load, then hard-refresh the site or clear Chrome's cached images and files if the old icon remains.
+
+## Progressive Web App (PWA)
+
+The storefront can be installed from supported browsers over HTTPS (localhost is also supported for development). `public/manifest.json` defines the app name, standalone display, dark navy colors, and 192x192/512x512 icons. The root-scoped `public/service-worker.js` caches same-origin static assets and the offline page only; page navigations, `/api/` requests, and admin/login/checkout/order/payment paths are always network-only. The install control appears when Chrome offers an install prompt. On iPhone/iPad, use **Share → Add to Home Screen**.
+
+The app icons in `public/icons/` are derived from `public/favicon.svg`. To regenerate them from the existing logo PNG, install Pillow with `python -m pip install Pillow`, then run this from the project root:
+
+```python
+from pathlib import Path
+from PIL import Image
+
+source = Image.open("public/favicon-192.png").convert("RGBA")
+icons = Path("public/icons")
+icons.mkdir(parents=True, exist_ok=True)
+source.save(icons / "icon-192.png", format="PNG", optimize=True)
+source.resize((512, 512), Image.Resampling.LANCZOS).save(
+    icons / "icon-512.png", format="PNG", optimize=True
+)
+```
+
+Keep the logo artwork inside the central 80% safe area for maskable use. Verify `/manifest.json`, `/icons/icon-192.png`, `/icons/icon-512.png`, `/service-worker.js`, and `/offline.html` after deployment. In Chrome DevTools, check **Application → Manifest** and **Application → Service Workers**, then use Lighthouse's installability/PWA checks. Install prompts are browser-controlled and may not appear when the app is already installed or its install criteria are not met.
 
 Admins can review top-ups and pending UPI product payments, refund orders once, and add or deduct customer balances with an audit note. In each product editor, admins can upload a JPG, PNG, WebP, or GIF photo (up to 5 MB) and set that product's HTTP/HTTPS download link. Product photos are public; download links are kept in an admin-only table and are delivered when a wallet purchase succeeds or a UPI payment is approved. Products without a download link continue to use manual order delivery.
 
