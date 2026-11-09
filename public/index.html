@@ -2598,6 +2598,26 @@
       const seconds=Math.max(0,Math.ceil(milliseconds/1000));
       return `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
     }
+    function parseServerTimestamp(value){
+      const timestamp=String(value||'').trim();
+      if(!timestamp)return NaN;
+      const withIsoSeparator=timestamp.includes('T')?timestamp:timestamp.replace(/\s+/,'T');
+      const withMilliseconds=withIsoSeparator.replace(/(\.\d{3})\d+(?=(?:Z|[+-]\d{2}(?::?\d{2})?)?$)/i,'$1');
+      const normalized=withMilliseconds.replace(/([+-]\d{2})$/,'$1:00');
+      const hasTimezone=/(?:Z|[+-]\d{2}(?::?\d{2})?)$/i.test(normalized);
+      return Date.parse(hasTimezone?normalized:`${normalized}Z`);
+    }
+    function anchorCheckoutServerTime(checkout,serverTime,orderId){
+      if(String(checkout.serverTimeOrderId||'')===String(orderId)
+          &&Number.isFinite(checkout.serverTimeAnchorMs)
+          &&Number.isFinite(checkout.monotonicTimeAnchorMs))return;
+      const serverTimeMs=parseServerTimestamp(serverTime);
+      if(!Number.isFinite(serverTimeMs))throw new Error('The server returned an invalid payment timestamp.');
+      checkout.serverTimeAnchorMs=serverTimeMs;
+      checkout.monotonicTimeAnchorMs=performance.now();
+      checkout.serverTimeOffsetMs=serverTimeMs-Date.now();
+      checkout.serverTimeOrderId=String(orderId);
+    }
     function checkoutServerNow(checkout){
       if(Number.isFinite(checkout.serverTimeAnchorMs)&&Number.isFinite(checkout.monotonicTimeAnchorMs)&&window.performance?.now){
         return checkout.serverTimeAnchorMs+(performance.now()-checkout.monotonicTimeAnchorMs);
@@ -2607,10 +2627,10 @@
     function paymentTimerMarkup(checkout){
       const order=checkout.paymentOrder;
       if(!order)return '<div class="payment-countdown" role="status"><span>Preparing secure payment order…</span></div>';
-      const expiry=Date.parse(order.payment_expires_at);
+      const expiry=parseServerTimestamp(order.payment_expires_at);
       const serverNow=checkoutServerNow(checkout);
       const remaining=expiry-serverNow;
-      if(remaining<=0){
+      if(!Number.isFinite(expiry)||remaining<=0||order.status==='expired'){
         const graceMinutes=Number(checkout.graceMinutes??5);
         const graceRemaining=expiry+graceMinutes*60*1000-serverNow;
         return `<div class="payment-countdown expired" data-payment-timer data-payment-expiry="${escapeHtml(order.payment_expires_at)}" data-server-offset="${Number(checkout.serverTimeOffsetMs)||0}" data-grace-minutes="${graceMinutes}" role="status"><strong>Payment time expired.</strong><time>00:00</time></div><p class="payment-grace-note" data-payment-grace-note>${graceRemaining>0?`Grace period: ${formatPaymentCountdown(graceRemaining)} remaining. `:''}Already paid? Submit your UTR for manual review. Late UTRs can still be submitted for support.</p><button class="back" type="button" data-new-payment>New Order / Try Again</button>`;
@@ -2622,10 +2642,10 @@
       const timer=document.querySelector('[data-payment-timer]');
       const checkout=state.checkout;
       if(!timer||!checkout?.paymentOrder)return;
-      const expiry=Date.parse(timer.dataset.paymentExpiry);
+      const expiry=parseServerTimestamp(timer.dataset.paymentExpiry);
       const serverNow=checkoutServerNow(checkout);
       const remaining=expiry-serverNow;
-      if(remaining<=0&&!checkout.paymentTimerExpired){
+      if((!Number.isFinite(expiry)||remaining<=0)&&!checkout.paymentTimerExpired){
         checkout.paymentTimerExpired=true;
         renderCheckout();
         return;
@@ -2646,7 +2666,8 @@
     async function ensureCheckoutPaymentOrder(){
       const checkout=state.checkout;
       if(!checkout||checkout.method==='wallet'||checkout.preparingPayment||(checkout.paymentError&&!checkout.paymentOrder))return;
-      if(checkout.paymentOrder?.status==='expired')return;
+      const existingExpiry=checkout.paymentOrder?parseServerTimestamp(checkout.paymentOrder.payment_expires_at):NaN;
+      if(checkout.paymentOrder&&(checkout.paymentOrder.status==='expired'||!Number.isFinite(existingExpiry)||existingExpiry<=checkoutServerNow(checkout)))return;
       const pricing=checkoutPrice();
       const signature=checkoutPaymentSignature(checkout);
       if(checkout.paymentOrder&&checkout.paymentOrderSignature===signature)return;
@@ -2655,7 +2676,8 @@
       renderCheckout();
       try{
         const {data,error}=await state.client.rpc('prepare_product_payment',{
-          p_order_id:checkout.paymentOrder?.status==='pending_payment'?checkout.paymentOrder.order_id:null,
+          p_order_id:checkout.paymentOrder?.status==='pending_payment'&&existingExpiry>checkoutServerNow(checkout)
+            ?checkout.paymentOrder.order_id:null,
           p_product_id:checkout.product.id,
           p_expected_price:pricing.finalPrice,
           p_original_price:pricing.originalPrice,
@@ -2667,6 +2689,8 @@
         if(error)throw error;
         if(!data?.ok)throw new Error(data?.message||'Could not start payment.');
         if(state.checkout!==checkout)return;
+        if(!Number.isFinite(parseServerTimestamp(data.payment_expires_at)))throw new Error('The server returned an invalid payment expiry time.');
+        anchorCheckoutServerTime(checkout,data.server_now,data.order_id);
         checkout.paymentOrder={
           order_id:data.order_id,
           product_id:data.product_id,
@@ -2675,9 +2699,6 @@
           status:data.status,
           payment_expires_at:data.payment_expires_at
         };
-        checkout.serverTimeAnchorMs=Date.parse(data.server_now);
-        checkout.monotonicTimeAnchorMs=performance.now();
-        checkout.serverTimeOffsetMs=checkout.serverTimeAnchorMs-Date.now();
         checkout.graceMinutes=Number(data.grace_minutes??5);
         checkout.paymentOrderSignature=signature;
         checkout.paymentTimerExpired=false;
@@ -2706,7 +2727,8 @@
       const paymentOrder=checkout.paymentOrder;
       const desiredPaymentSignature=checkoutPaymentSignature(checkout);
       const paymentOrderReady=Boolean(paymentOrder&&!checkout.preparingPayment&&(method==='wallet'||checkout.paymentOrderSignature===desiredPaymentSignature));
-      const paymentOrderExpired=Boolean(paymentOrder&&(paymentOrder.status==='expired'||Date.parse(paymentOrder.payment_expires_at)<=checkoutServerNow(checkout)));
+      const paymentOrderExpiry=paymentOrder?parseServerTimestamp(paymentOrder.payment_expires_at):NaN;
+      const paymentOrderExpired=Boolean(paymentOrder&&(paymentOrder.status==='expired'||!Number.isFinite(paymentOrderExpiry)||paymentOrderExpiry<=checkoutServerNow(checkout)));
       const utrForm=paymentOrderReady?`<div class="checkout-utr-step"><strong>${paymentOrderExpired?'Already paid? Submit UTR':'After payment'}</strong><p class="checkout-note">${paymentOrderExpired?'Your payment details will be sent for manual review. Late payments are not automatically rejected.':'Enter the 12-digit UTR / transaction ID to submit your order for verification.'}</p><label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID</label><input class="checkout-utr" id="checkout-utr" type="text" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error" aria-live="polite">${escapeHtml(checkout.paymentError||'')}</div><button class="modal-primary checkout-submit" id="checkout-submit-payment" type="button">Submit UTR for review</button></div>`:'';
       let paymentPanel='';
       if(method==='wallet'){
@@ -2778,6 +2800,8 @@
       $('modal-body').querySelector('[data-new-payment]')?.addEventListener('click',()=>{
         if(checkout.paymentOrder?.payment_method)checkout.method=checkout.paymentOrder.payment_method;
         checkout.paymentOrder=null;checkout.paymentOrderSignature=null;checkout.paymentTimerExpired=false;checkout.utr='';checkout.paymentError='';
+        try{localStorage.removeItem(`pending-payment:${state.user.id}:${checkout.product.id}`)}
+        catch(error){console.warn('Could not clear the expired payment order from local storage:',error)}
         renderCheckout();
       });
       $('modal-body').querySelector('[data-retry-payment]')?.addEventListener('click',()=>{
@@ -2845,22 +2869,26 @@
           });
           if(error)throw error;
           if(data?.ok){
-            state.checkout.paymentOrder={
-              order_id:data.order_id,product_id:data.product_id,price:data.price,
-              payment_method:data.payment_method,status:data.status,
-              payment_expires_at:data.payment_expires_at
-            };
-            state.checkout.method=data.payment_method;
-            state.checkout.serverTimeAnchorMs=Date.parse(data.server_now);
-            state.checkout.monotonicTimeAnchorMs=performance.now();
-            state.checkout.serverTimeOffsetMs=state.checkout.serverTimeAnchorMs-Date.now();
-            state.checkout.graceMinutes=Number(data.grace_minutes??5);
-            state.checkout.paymentOrderSignature=[
-              product.id,state.checkout.method,Number(data.price),
-              Number(data.original_price??product.price),data.coupon_code||''
-            ].join('|');
-            state.checkout.coupon=null;
-            state.checkout.utr='';
+            anchorCheckoutServerTime(state.checkout,data.server_now,data.order_id);
+            const expiresAt=parseServerTimestamp(data.payment_expires_at);
+            if(data.status==='pending_payment'&&Number.isFinite(expiresAt)&&expiresAt>checkoutServerNow(state.checkout)){
+              state.checkout.paymentOrder={
+                order_id:data.order_id,product_id:data.product_id,price:data.price,
+                payment_method:data.payment_method,status:data.status,
+                payment_expires_at:data.payment_expires_at
+              };
+              state.checkout.method=data.payment_method;
+              state.checkout.graceMinutes=Number(data.grace_minutes??5);
+              state.checkout.paymentOrderSignature=[
+                product.id,state.checkout.method,Number(data.price),
+                Number(data.original_price??product.price),data.coupon_code||''
+              ].join('|');
+              state.checkout.coupon=null;
+              state.checkout.utr='';
+            }else{
+              try{localStorage.removeItem(storageKey)}
+              catch(storageError){console.warn('Could not clear the expired pending payment order:',storageError)}
+            }
           }else{
             try{localStorage.removeItem(storageKey)}
             catch(storageError){console.warn('Could not clear the stale pending payment order:',storageError)}

@@ -142,9 +142,9 @@ begin
   select * into v_order from public.orders
     where id = p_order_id and user_id = auth.uid() and product_id = p_product_id
       and payment_method in ('upi_qr', 'upi_app')
-      and status in ('pending_payment', 'expired')
+      and status = 'pending_payment'
       and utr is null and offer_claim_id is null
-      and payment_expires_at is not null;
+      and payment_expires_at > clock_timestamp();
   if not found then return jsonb_build_object('ok', false, 'message', 'No resumable payment order was found.'); end if;
   return jsonb_build_object(
     'ok', true, 'order_id', v_order.id, 'product_id', v_order.product_id,

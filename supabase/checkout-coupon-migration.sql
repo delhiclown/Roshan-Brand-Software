@@ -88,7 +88,7 @@ begin
       where id = p_order_id and user_id = v_user_id
         and product_id = p_product_id and status = 'pending_payment'
         and utr is null and offer_claim_id is null
-        and payment_expires_at is not null
+        and payment_expires_at > clock_timestamp()
       for update;
     if not found then
       return jsonb_build_object('ok', false, 'message', 'This payment order can no longer be changed.');
@@ -113,6 +113,35 @@ begin
     'payment_expires_at', v_order.payment_expires_at,
     'server_now', clock_timestamp(), 'timeout_minutes', v_timeout,
     'grace_minutes', v_grace
+  );
+end;
+$$;
+
+create or replace function public.get_my_pending_product_payment(p_order_id bigint, p_product_id bigint)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_order public.orders%rowtype;
+begin
+  if auth.uid() is null then raise exception 'Sign in required'; end if;
+  select * into v_order from public.orders
+    where id = p_order_id and user_id = auth.uid() and product_id = p_product_id
+      and payment_method in ('upi_qr', 'upi_app')
+      and status = 'pending_payment'
+      and utr is null and offer_claim_id is null
+      and payment_expires_at > clock_timestamp();
+  if not found then return jsonb_build_object('ok', false, 'message', 'No active payment order was found.'); end if;
+  return jsonb_build_object(
+    'ok', true, 'order_id', v_order.id, 'product_id', v_order.product_id,
+    'price', v_order.price, 'payment_method', v_order.payment_method,
+    'status', v_order.status, 'payment_expires_at', v_order.payment_expires_at,
+    'server_now', clock_timestamp(),
+    'grace_minutes', (select payment_grace_minutes from public.payment_timer_config where id = true),
+    'coupon_code', v_order.coupon_code, 'discount_percent', v_order.discount_percent,
+    'original_price', v_order.original_price
   );
 end;
 $$;

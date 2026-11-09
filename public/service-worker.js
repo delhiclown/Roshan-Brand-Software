@@ -1,6 +1,6 @@
-const CACHE_NAME = 'roshan-static-v1';
+const CACHE_NAME = 'roshan-static-v2';
 const OFFLINE_URL = '/offline.html';
-const STATIC_FILE_PATTERN = /\.(?:css|js|mjs|png|jpe?g|gif|webp|svg|ico|woff2?|json)$/i;
+const STATIC_FILE_PATTERN = /\.(?:css|png|jpe?g|gif|webp|svg|ico|woff2?|json)$/i;
 const NETWORK_ONLY_PATH_PATTERN = /^\/(?:api(?:\/|$)|admin(?:\.html)?(?:\/|$)|login(?:\/|$)|auth(?:\/|$)|checkout(?:\/|$)|orders?(?:\/|$)|payment(?:\/|$))/i;
 
 self.addEventListener('install', event => {
@@ -40,7 +40,8 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (NETWORK_ONLY_PATH_PATTERN.test(url.pathname) || !STATIC_FILE_PATTERN.test(url.pathname)) return;
+  if (request.destination === 'script' || request.destination === 'document'
+      || NETWORK_ONLY_PATH_PATTERN.test(url.pathname) || !STATIC_FILE_PATTERN.test(url.pathname)) return;
 
   event.respondWith(
     fetch(request).then(response => {
