@@ -2368,8 +2368,15 @@
       if(!state.user)return;
       const {data,error}=await state.client.from('wallets').select('balance').eq('user_id',state.user.id).maybeSingle();
       if(error)throw error;
+      const previousBalance=state.balance;
       state.balance=Number(data?.balance||0);
       renderHeader();
+      if(state.checkout&&previousBalance!==state.balance){
+        const methods=availableCheckoutMethods();
+        state.checkout.method=checkoutDefaultMethod(methods,state.balance,Number(state.checkout.product.price),isCheckoutMobile());
+        state.checkout.paymentError='';
+        renderCheckout();
+      }
     }
 
     function openModal(){ $('wallet-modal').classList.add('open');document.body.style.overflow='hidden'; }
@@ -2566,6 +2573,14 @@
         ...(settings.enable_upi_app===true&&upiConfigured?['upi_app']:[])
       ];
     }
+    function isCheckoutMobile(){
+      return window.innerWidth<=768||/Android|iPhone|iPad/i.test(navigator.userAgent);
+    }
+    function checkoutDefaultMethod(methods,balance,amount,isMobile){
+      if(methods.includes('wallet')&&balance>=amount)return 'wallet';
+      const preferred=isMobile?'upi_app':'upi_qr';
+      return methods.includes(preferred)?preferred:methods.find(method=>method!=='wallet')||'';
+    }
 
     function checkoutPrice(){
       const checkout=state.checkout;
@@ -2709,7 +2724,7 @@
       const upiId=String(state.settings.upi_id||'').trim();
       const payee=String(state.settings.upi_payee_name||'').trim();
       const methods=availableCheckoutMethods();
-      if(!methods.includes(checkout.method))checkout.method=methods[0]||'';
+      if(!methods.includes(checkout.method))checkout.method=checkoutDefaultMethod(methods,state.balance,Number(product.price),isCheckoutMobile());
       const method=checkout.method;
       const pricing=checkoutPrice();
       const qrParams=new URLSearchParams({pa:upiId,pn:payee,am:pricing.finalPrice.toFixed(2),cu:'INR',tn:`${state.settings.site_title||'Roshan Brand'} ${product.name}`});
@@ -2808,7 +2823,7 @@
       $('checkout-add-money')?.addEventListener('click',openWalletTopup);
       $('checkout-submit-payment')?.addEventListener('click',submitUpiProductPayment);
       $('modal-body').querySelector('[data-new-payment]')?.addEventListener('click',()=>{
-        if(checkout.paymentOrder?.payment_method)checkout.method=checkout.paymentOrder.payment_method;
+        checkout.method=checkoutDefaultMethod(methods,state.balance,Number(product.price),isCheckoutMobile());
         checkout.paymentOrder=null;checkout.paymentOrderSignature=null;checkout.paymentTimerExpired=false;checkout.utr='';checkout.paymentError='';
         try{localStorage.removeItem(`pending-payment:${state.user.id}:${checkout.product.id}`)}
         catch(error){console.warn('Could not clear the expired payment order from local storage:',error)}
@@ -2860,7 +2875,7 @@
       const methods=availableCheckoutMethods();
       state.checkout={
         product,
-        method:methods[0]||'',
+        method:checkoutDefaultMethod(methods,state.balance,Number(product.price),isCheckoutMobile()),
         coupon:null,
         couponInput:'',
         couponMessage:'',
@@ -2887,7 +2902,6 @@
                 payment_method:data.payment_method,status:data.status,
                 payment_expires_at:data.payment_expires_at
               };
-              state.checkout.method=data.payment_method;
               state.checkout.graceMinutes=Number(data.grace_minutes??5);
               state.checkout.coupon=null;
               state.checkout.paymentOrderSignature=null;
