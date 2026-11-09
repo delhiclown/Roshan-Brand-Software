@@ -1955,8 +1955,12 @@
       }
     }
 
+    function isCustomerVisibleOrder(order){
+      return order.payment_status==='paid'||['pending_verification','completed','delivered'].includes(order.status);
+    }
+
     function renderOrdersTrigger(){
-      const hasProcessingOrder=Boolean(state.myOrders?.some(order=>['pending_payment','pending','pending_verification','completed'].includes(order.status)));
+      const hasProcessingOrder=Boolean(state.myOrders?.some(order=>isCustomerVisibleOrder(order)&&['pending','pending_verification','completed'].includes(order.status)));
       return `<button class="orders-trigger" data-card-tone="lime" id="orders-trigger" type="button" aria-label="My Orders" title="My Orders" aria-expanded="${state.ordersPanelOpen}"><span class="orders-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>${hasProcessingOrder?'<span class="orders-dot" aria-label="Processing orders"></span>':''}</span><span class="orders-trigger-label">My Orders</span></button>`;
     }
 
@@ -1977,7 +1981,7 @@
         $('orders-retry').addEventListener('click',()=>refreshMyOrders());
         return;
       }
-      const orders=(state.myOrders||[]).slice(0,5);
+      const orders=(state.myOrders||[]).filter(isCustomerVisibleOrder).slice(0,5);
       const coupons=(state.myCoupons||[]).slice(0,5);
       const ordersMarkup=orders.length ? `<div class="orders-list">${orders.map(order=>{
         const status=orderStatus(order);
