@@ -390,8 +390,8 @@
   </div>
   <script>
     const categories=[{id:'software',title:'Software'},{id:'vps',title:'Linux VPS'},{id:'proxy',title:'Linux Proxy'},{id:'residential',title:'Residential Proxies'}];
-    const DEFAULT_SPIN_PRIZES=[{code:'SAVE20',label:'20%',type:'percent',value:20,color:'#dc3434',maxDiscountAmount:500,weight:15},{code:'SAVE50',label:'50%',type:'percent',value:50,color:'#1a4ea8',maxDiscountAmount:500,weight:10},{code:'SAVE100',label:'100%',type:'percent',value:100,color:'#f4d77a',maxDiscountAmount:500,weight:4},{code:'BONUS100',label:'100%',type:'percent',value:100,color:'#dc3434',maxDiscountAmount:500,weight:1},{code:'TRY_AGAIN',label:'TRY AGAIN',type:'tryAgain',value:0,color:'#4a4a4a',maxDiscountAmount:0,weight:45},{code:'SAVE10',label:'10%',type:'percent',value:10,color:'#1a4ea8',maxDiscountAmount:500,weight:25}];
-    const state={client:null,category:'software',products:[],editing:null,editingDownloadUrl:null,downloadLinkLoaded:true,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null,paymentQrImageUrl:'',offers:[],offerProducts:[],offerReports:[]};
+    const DEFAULT_SPIN_PRIZES=[{code:'SAVE20',label:'20%',type:'percent',value:20,color:'#e11d48',maxDiscountAmount:500,weight:15},{code:'SAVE50',label:'50%',type:'percent',value:50,color:'#2f3fb8',maxDiscountAmount:500,weight:10},{code:'SAVE100',label:'100%',type:'percent',value:100,color:'#f5c04a',maxDiscountAmount:500,weight:4},{code:'BONUS100',label:'100%',type:'percent',value:100,color:'#e11d48',maxDiscountAmount:500,weight:1},{code:'TRY_AGAIN',label:'TRY AGAIN',type:'tryAgain',value:0,color:'#2a2f3a',maxDiscountAmount:0,weight:45},{code:'SAVE10',label:'10%',type:'percent',value:10,color:'#2f3fb8',maxDiscountAmount:500,weight:25}];
+    const state={client:null,category:'software',products:[],editing:null,editingDownloadUrl:null,downloadLinkLoaded:true,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null,paymentQrImageUrl:'',offers:[],offerProducts:[],offerReports:[],spinPrizes:DEFAULT_SPIN_PRIZES,coupons:[]};
     let productPreviewUrl=null;
     let paymentQrPreviewUrl=null;
     const $=id=>document.getElementById(id);
@@ -433,21 +433,6 @@
       }
     }
     let toastTimer;
-    function getSpinPrizeCatalog(){
-      try {
-        const stored=JSON.parse(localStorage.getItem('roshan-spin-prizes-admin')||'null');
-        if(Array.isArray(stored)&&stored.length){
-          return stored.map(item=>{
-            const type=item.type==='tryAgain'?'tryAgain':'percent';
-            const value=type==='tryAgain'?0:Math.min(Math.max(Number(item.value)||0,0),100);
-            return {code:String(item.code||'SAVE10').toUpperCase(),label:type==='tryAgain'?String(item.label||'TRY AGAIN'):`${value}%`,type,value,color:item.color||'#1a4ea8',maxDiscountAmount:Number(item.maxDiscountAmount)||0,weight:Number(item.weight)||0};
-          });
-        }
-      } catch (error) {
-        console.warn('Could not read stored spin prizes:', error);
-      }
-      return DEFAULT_SPIN_PRIZES;
-    }
     function notify(message){$('toast').textContent=message;$('toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),2600)}
     function setError(id,message=''){$(id).textContent=message}
     const isVpsCategory=category=>category==='vps'||category==='windows-vps';
@@ -516,7 +501,7 @@
     let isPasswordRecovery=new URLSearchParams(location.hash.slice(1)).get('type')==='recovery';
     if(isPasswordRecovery)showPasswordReset();
     function renderTabs(){
-      $('tabs').innerHTML=categories.map(category=>`<button type="button" data-category="${category.id}" class="${state.activeView===category.id?'active':''}">${category.title}</button>`).join('')+'<button type="button" data-spin="true" class="'+(state.activeView==='spin'?'active':'')+'">Spin &amp; Win</button><button type="button" data-offers="true" class="'+(state.activeView==='offers'?'active':'')+'">Offers</button><button type="button" data-finance="topups" class="'+(state.activeView==='topups'?'active':'')+'">Top-up Requests</button><button type="button" data-finance="orders" class="'+(state.activeView==='orders'?'active':'')+'">Orders</button><button type="button" data-finance="users" class="'+(state.activeView==='users'?'active':'')+'">Users</button><button type="button" data-settings="true" class="'+(state.activeView==='settings'?'active':'')+'">Settings</button>';
+      $('tabs').innerHTML=categories.map(category=>`<button type="button" data-category="${category.id}" class="${state.activeView===category.id?'active':''}">${category.title}</button>`).join('')+'<button type="button" data-spin="true" class="'+(state.activeView==='spin'?'active':'')+'">Spin &amp; Win</button><button type="button" data-offers="true" class="'+(state.activeView==='offers'?'active':'')+'">Offers</button><button type="button" data-finance="topups" class="'+(state.activeView==='topups'?'active':'')+'">Top-up Requests</button><button type="button" data-finance="orders" class="'+(state.activeView==='orders'?'active':'')+'">Orders</button><button type="button" data-finance="coupons" class="'+(state.activeView==='coupons'?'active':'')+'">Coupons</button><button type="button" data-finance="users" class="'+(state.activeView==='users'?'active':'')+'">Users</button><button type="button" data-settings="true" class="'+(state.activeView==='settings'?'active':'')+'">Settings</button>';
       $('tabs').querySelectorAll('[data-category]').forEach(button=>button.addEventListener('click',()=>selectCategory(button.dataset.category)));
       $('tabs').querySelectorAll('[data-finance]').forEach(button=>button.addEventListener('click',()=>showFinance(button.dataset.finance)));
       $('tabs').querySelector('[data-spin]').addEventListener('click',showSpinWin);
@@ -536,7 +521,11 @@
     }
     function showSpinWin(){
       state.activeView='spin';$('products-panel').classList.add('hidden');$('spin-panel').classList.remove('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('page-title').textContent='Spin & Win';
-      renderTabs();renderSpinPrizeEditor();
+      renderTabs();$('spin-prize-list').innerHTML='<div class="empty">Loading spin settings…</div>';
+      loadSpinPrizeConfig().then(renderSpinPrizeEditor).catch(error=>{
+        console.error('Could not load spin settings:',error);
+        $('spin-prize-list').innerHTML=`<div class="empty">Could not load spin settings: ${escapeHtml(error.message)}</div>`;
+      });
     }
     function showOffers(){
       state.activeView='offers';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.remove('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('page-title').textContent='Offers';
@@ -545,7 +534,7 @@
     }
     async function showFinance(tab){
       state.activeView=tab;$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.remove('hidden');
-      const titles={topups:['Top-up Requests','Review customer UPI payments before crediting wallets.'],orders:['Orders','Deliver customer purchases manually or issue a wallet refund.'],users:['Users','Manage customer wallet balances with an audit note.']};
+      const titles={topups:['Top-up Requests','Review customer UPI payments before crediting wallets.'],orders:['Orders','Deliver customer purchases manually or issue a wallet refund.'],coupons:['Coupons','Read-only database records for spin rewards and coupon use.'],users:['Users','Manage customer wallet balances with an audit note.']};
       $('page-title').textContent=titles[tab][0];$('finance-title').textContent=titles[tab][0];$('finance-description').textContent=titles[tab][1];renderTabs();await renderFinance(tab);
     }
     function offerDateTimeInput(value){
@@ -794,8 +783,32 @@
       $('product-list').querySelectorAll('[data-stock]').forEach(button=>button.addEventListener('click',()=>setProductStock(button.dataset.stock,button.dataset.nextStock)));
       revealAdmin($('product-list'));
     }
+    async function loadSpinPrizeConfig(){
+      const {data,error}=await state.client.rpc('public_spin_prizes');
+      if(error)throw error;
+      if(!Array.isArray(data)||!data.length)throw new Error('The server returned no prize settings.');
+      state.spinPrizes=data;
+      try{
+        const legacy=localStorage.getItem('roshan-spin-prizes-admin');
+        if(legacy&&localStorage.getItem('roshan-spin-prizes-imported')!=='true'){
+          const parsed=JSON.parse(legacy);
+          if(Array.isArray(parsed)&&parsed.length){
+            const imported=await state.client.rpc('admin_save_spin_prizes',{p_prizes:parsed});
+            if(imported.error)throw imported.error;
+            if(!imported.data?.ok)throw new Error(imported.data?.message||'The server rejected the saved prize settings.');
+            state.spinPrizes=imported.data.prizes;
+            localStorage.removeItem('roshan-spin-prizes-admin');
+            localStorage.setItem('roshan-spin-prizes-imported','true');
+          }
+        }
+      }catch(importError){
+        console.error('Could not import legacy local spin settings:',importError);
+        notify(`The old local spin settings could not be imported: ${importError.message}`);
+      }
+      return state.spinPrizes;
+    }
     function renderSpinPrizeEditor(){
-      const rewards=getSpinPrizeCatalog();
+      const rewards=state.spinPrizes;
       const totalWeight=rewards.reduce((sum,reward)=>sum+(Number(reward.weight)||0),0) || 1;
       $('spin-prize-list').innerHTML = rewards.map((reward,index)=>{
         const chance=((Number(reward.weight)||0)/totalWeight*100).toFixed(1);
@@ -821,16 +834,15 @@
       $('spin-prize-list').querySelectorAll('[data-save-spin]').forEach(button=>button.addEventListener('click',()=>saveSpinPrize(button.dataset.saveSpin)));
       $('spin-prize-list').querySelectorAll('[data-spin-field]').forEach(input=>input.addEventListener('input',()=>{
         const index=Number(input.dataset.spinIndex);
-        const rewards=getSpinPrizeCatalog();
-        const current=rewards[index];
+        const current=state.spinPrizes[index];
         if(!current)return;
         const field=input.dataset.spinField;
         const newValue = field === 'code' || field === 'label' || field === 'color' ? input.value : Number(input.value) || 0;
         current[field]=newValue;
       }));
     }
-    function saveSpinPrize(index){
-      const rewards=getSpinPrizeCatalog();
+    async function saveSpinPrize(index){
+      const rewards=state.spinPrizes;
       const current=rewards[index];
       if(!current)return;
       const fields=$('spin-prize-list').querySelectorAll(`[data-spin-index="${CSS.escape(String(index))}"]`);
@@ -851,14 +863,31 @@
       }
       updated.weight = Math.max(0, Number(updated.weight) || 0);
       rewards[index]=updated;
-      localStorage.setItem('roshan-spin-prizes-admin', JSON.stringify(rewards));
-      notify('Spin prize settings saved.');
-      renderSpinPrizeEditor();
+      const button=$('spin-prize-list').querySelector(`[data-save-spin="${CSS.escape(String(index))}"]`);
+      if(button)button.disabled=true;
+      try{
+        const {data,error}=await state.client.rpc('admin_save_spin_prizes',{p_prizes:rewards});
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not save spin prize settings.');
+        state.spinPrizes=data.prizes;
+        notify('Spin prize settings saved.');
+        renderSpinPrizeEditor();
+      }catch(error){
+        notify(`Could not save spin prize settings: ${error.message}`);
+        if(button)button.disabled=false;
+      }
     }
-    function resetSpinPrizes(){
-      localStorage.removeItem('roshan-spin-prizes-admin');
-      notify('Spin wheel defaults restored.');
-      renderSpinPrizeEditor();
+    async function resetSpinPrizes(){
+      try{
+        const {data,error}=await state.client.rpc('admin_save_spin_prizes',{p_prizes:DEFAULT_SPIN_PRIZES});
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not restore spin wheel defaults.');
+        state.spinPrizes=data.prizes;
+        notify('Spin wheel defaults restored.');
+        renderSpinPrizeEditor();
+      }catch(error){
+        notify(`Could not restore spin wheel defaults: ${error.message}`);
+      }
     }
     function resetForm(){
       state.editing=null;state.editingDownloadUrl=null;state.downloadLinkLoaded=true;
@@ -1096,13 +1125,22 @@
     async function renderFinance(tab){
       $('finance-list').innerHTML='<div class="empty">Loading…</div>';
       $('order-tools').classList.toggle('hidden',tab!=='orders');
-      const functions={topups:'admin_list_topups',orders:'admin_list_orders',users:'admin_list_users'};
+      const functions={topups:'admin_list_topups',orders:'admin_list_orders',coupons:'admin_list_coupons',users:'admin_list_users'};
       const {data,error}=await state.client.rpc(functions[tab]);
       if(error){$('finance-list').innerHTML=`<div class="empty">${escapeHtml(error.message)}</div>`;return}
       if(tab==='topups')renderTopups(data||[]);
       if(tab==='orders')renderOrders(data||[]);
+      if(tab==='coupons')renderCoupons(data||[]);
       if(tab==='users')renderUsers(data||[]);
       revealAdmin($('finance-list'));
+    }
+    function renderCoupons(coupons){
+      state.coupons=coupons;
+      $('finance-list').innerHTML=coupons.length?coupons.map(coupon=>`<article class="finance-row">
+        <div><strong>${escapeHtml(coupon.code)} · ${Number(coupon.discount_percent)||0}% off</strong>
+          <small>${escapeHtml(coupon.user_email||'Customer')} · ${escapeHtml(coupon.source||'spin')} · Created ${formatDate(coupon.created_at)}</small>
+          <small>Status: ${escapeHtml(coupon.status)} · Expires ${formatDate(coupon.expires_at)}${coupon.used_order_id?` · Order #${escapeHtml(coupon.used_order_id)}`:''}</small>
+        </div><span class="pill">${escapeHtml(coupon.status)}</span></article>`).join(''):'<div class="empty">No database coupons yet.</div>';
     }
     function renderTopups(requests){
       $('finance-list').innerHTML=requests.length?requests.map(request=>`<article class="finance-row"><div><strong>${escapeHtml(request.user_email)}</strong><small>UTR: ${escapeHtml(request.utr)} · ${formatDate(request.created_at)} · Request #${request.id}</small><div class="amount">₹${money(request.amount)}</div></div><div class="finance-controls"><button class="btn gold" data-approve="${request.id}">Approve</button><button class="btn danger" data-reject="${request.id}">Reject</button></div></article>`).join(''):'<div class="empty">No pending top-up requests.</div>';

@@ -494,6 +494,7 @@
     .coupon-banner{margin-top:18px;border:1px dashed rgba(94,145,255,.6);background:rgba(19,31,52,.7);border-radius:14px;padding:15px 18px;color:#e8f1ff;font-size:14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
     .coupon-banner strong{color:var(--gold)}
     .coupon-banner .reward-value{font-weight:700;color:#ffffff}
+    .spin-legacy-coupon-note{margin:12px 0 0;color:#ffb5bb;font-size:12px}
     .coupon-code-group{display:inline-flex;align-items:center;gap:7px}.coupon-banner .reward-code{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:8px;background:#0b1429;border:1px solid var(--line);color:var(--gold);font-weight:800;letter-spacing:.08em;font-size:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.coupon-copy{padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#0b1429;color:var(--gold);font-size:11px;font-weight:700;cursor:pointer}.coupon-copy:hover{border-color:var(--gold)}
     @media(max-width:760px){.spin-panel{min-height:0;padding:24px 16px}.spin-controls{flex-direction:column;gap:14px}.spin-copy{max-width:480px;text-align:center}.spin-copy li{justify-content:center}.spin-button{width:min(280px,100%);min-width:0}.coupon-banner{flex-direction:column;align-items:flex-start}.}
     @media(max-width:639.98px){.spin-wheel-wrap{--label-radius:-71px;width:220px;height:220px}.spin-wheel-label{font-size:11px!important}.spin-bulb{width:6px;height:6px;transform:rotate(var(--bulb-angle)) translateY(-102px)}.spin-wheel-center{width:16.5%;height:16.5%;padding:2px}.spin-pointer{width:28px;height:24px;top:-1px}}
@@ -1115,6 +1116,7 @@
         </div>
       </div>
       <div class="coupon-banner hidden" id="coupon-banner" aria-live="polite"></div>
+      <p class="spin-legacy-coupon-note hidden" id="legacy-coupon-notice" role="status">Old coupons are no longer valid. Please spin again.</p>
     </section>
     <div class="notice hidden" id="notice" role="status" aria-live="polite"><span id="notice-logo" class="rb-logo-slot hidden" data-logo-size="rb-logo-loader" aria-hidden="true"></span><span id="notice-message"></span><button class="back hidden" id="retry-products" type="button" style="margin:10px auto 0">Retry</button></div>
   </main>
@@ -1131,7 +1133,7 @@
       {id:'proxy', title:'Linux Proxy', icon:'⌘', description:'Linux proxy solutions for flexible, dependable access.'},
       {id:'residential', title:'Residential Proxies', icon:'◎', description:'Residential IP options for your data and browsing needs.'}
     ];
-    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, myCoupons:[], isSpinning:false, checkout:null, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, authMode:'signin', offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
+    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, authMode:'signin', offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
     const $ = id => document.getElementById(id);
     const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     const money = value => new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(Number(value)||0);
@@ -1443,73 +1445,39 @@
     ];
 
     function getSpinPrizeCatalog(){
-      try {
-        const saved = JSON.parse(localStorage.getItem('roshan-spin-prizes-admin') || 'null');
-        if(Array.isArray(saved) && saved.length){
-          return saved.map(item => {
-            const type = item.type === 'tryAgain' ? 'tryAgain' : 'percent';
-            const value = type === 'tryAgain' ? 0 : Math.min(Math.max(Number(item.value) || 0, 0), 100);
-            return {
-              code: String(item.code || 'SAVE10').toUpperCase(),
-              label: type === 'tryAgain' ? String(item.label || 'TRY AGAIN') : `${value}%`,
-              type,
-              value,
-              color: item.color || '#1a4ea8',
-              maxDiscountAmount: Number(item.maxDiscountAmount) || 0,
-              weight: Number(item.weight) || 0
-            };
-          });
-        }
-      } catch (error) {
-        console.warn('Could not read stored spin prize config:', error);
-      }
-      return DEFAULT_SPIN_PRIZES;
+      return Array.isArray(state.spinPrizes)&&state.spinPrizes.length?state.spinPrizes:DEFAULT_SPIN_PRIZES;
     }
 
-    function pickWeightedPrize(rewards){
-      const totalWeight = rewards.reduce((sum, reward) => sum + Math.max(Number(reward.weight) || 0, 0), 0);
-      if(!totalWeight) return rewards[Math.floor(Math.random() * rewards.length)];
-      let selected = Math.random() * totalWeight;
-      for(const reward of rewards){
-        const weight = Math.max(Number(reward.weight) || 0, 0);
-        if(selected <= weight) return reward;
-        selected -= weight;
-      }
-      return rewards[rewards.length - 1];
+    function normalizeSpinPrizeCatalog(prizes){
+      if(!Array.isArray(prizes)||!prizes.length)return DEFAULT_SPIN_PRIZES;
+      return prizes.map(item=>{
+        const type=item.type==='tryAgain'?'tryAgain':'percent';
+        const value=type==='tryAgain'?0:Math.min(Math.max(Number(item.value)||0,0),100);
+        return {
+          code:String(item.code||'SAVE10').toUpperCase(),
+          label:type==='tryAgain'?String(item.label||'TRY AGAIN'):`${value}%`,
+          type,value,color:item.color||'#1a4ea8',
+          maxDiscountAmount:Number(item.maxDiscountAmount)||0,
+          weight:Number(item.weight)||0
+        };
+      });
     }
 
-    function resolveCoupon(code){
-      const normalized = String(code||'').trim().toUpperCase();
-      if(!normalized)return null;
-      let coupons=[];
-      try{coupons=JSON.parse(localStorage.getItem('roshan-brand-coupons')||'[]')}catch(error){console.warn('Could not read saved coupons:',error)}
-      const coupon = Array.isArray(coupons) ? coupons.find(item =>
-        String(item.code||'').trim().toUpperCase() === normalized &&
-        (!item.expiresAt || new Date(item.expiresAt).getTime() > Date.now())
-      ) : null;
-      return coupon ? {
-        ...coupon,
-        type: coupon.type === 'tryAgain' ? 'tryAgain' : 'percent',
-        value: Number(coupon.value) || 0,
-        maxDiscountAmount: Number(coupon.maxDiscountAmount) || 0
-      } : null;
-    }
-
-    function isCouponCodeFormatValid(code){
-      return /^RB(?:100|[1-9][0-9]?)-[A-HJ-NP-Z2-9]{8}$/i.test(String(code||'').trim());
-    }
-
-    function getUsedCouponCodes(){
+    function clearLegacyCoupons(){
+      const legacyKeys=['roshan-brand-coupons','roshan-brand-used-coupons','roshan-brand-coupon-history'];
       try{
-        const codes=JSON.parse(localStorage.getItem('roshan-brand-used-coupons')||'[]');
-        return new Set(Array.isArray(codes)?codes.map(code=>String(code).toUpperCase()):[]);
-      }catch(error){console.warn('Could not read used coupons:',error);return new Set()}
-    }
-
-    function markCouponUsed(code){
-      const used=getUsedCouponCodes();
-      used.add(String(code).toUpperCase());
-      localStorage.setItem('roshan-brand-used-coupons',JSON.stringify([...used]));
+        const hadLegacyCoupons=legacyKeys.some(key=>localStorage.getItem(key)!==null);
+        legacyKeys.forEach(key=>localStorage.removeItem(key));
+        if(hadLegacyCoupons&&localStorage.getItem('roshan-legacy-coupon-notice-shown')!=='true'){
+          localStorage.setItem('roshan-legacy-coupon-notice-shown','true');
+          const notice=$('legacy-coupon-notice');
+          if(notice)notice.classList.remove('hidden');
+        }
+      }catch(error){
+        console.error('Could not remove legacy browser coupons:',error);
+        const notice=$('legacy-coupon-notice');
+        if(notice)notice.classList.remove('hidden');
+      }
     }
 
     function calculateDiscountedPrice(productPrice, coupon){
@@ -1567,88 +1535,97 @@
       $('copy-spin-coupon')?.addEventListener('click',()=>copyCustomerValue(state.spinCoupon.code,'Coupon code'));
     }
 
-    function createUniqueCouponCode(value, coupons){
-      const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      const prefix = `RB${Math.round(Number(value)||0)}`;
-      const history = JSON.parse(localStorage.getItem('roshan-brand-coupon-history') || '[]');
-      const usedCodes = new Set([
-        ...(Array.isArray(coupons) ? coupons.map(coupon=>String(coupon.code||'').toUpperCase()) : []),
-        ...(Array.isArray(history) ? history.map(code=>String(code).toUpperCase()) : [])
-      ]);
-      let code;
-      do {
-        let suffix = '';
-        if(window.crypto?.getRandomValues){
-          const bytes = new Uint8Array(8);
-          window.crypto.getRandomValues(bytes);
-          suffix = Array.from(bytes,byte=>alphabet[byte % alphabet.length]).join('');
-        }else{
-          suffix = Math.random().toString(36).slice(2,10).toUpperCase().padEnd(8,'X');
-        }
-        code = `${prefix}-${suffix}`;
-      } while(usedCodes.has(code));
-      return code;
-    }
-
-    function addCouponToWallet(coupon){
-      const existing = JSON.parse(localStorage.getItem('roshan-brand-coupons') || '[]');
-      existing.unshift({
-        code: coupon.code,
-        label: coupon.label,
-        value: Number(coupon.value) || 0,
-        type: coupon.type === 'tryAgain' ? 'tryAgain' : 'percent',
-        maxDiscountAmount: Number(coupon.maxDiscountAmount) || 0,
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString(),
-        createdAt: new Date().toISOString()
-      });
-      localStorage.setItem('roshan-brand-coupons', JSON.stringify(existing.slice(0, 10)));
-      const history = JSON.parse(localStorage.getItem('roshan-brand-coupon-history') || '[]');
-      if(!history.includes(coupon.code)){
-        history.push(coupon.code);
-        localStorage.setItem('roshan-brand-coupon-history', JSON.stringify(history));
+    async function refreshMyCoupons(){
+      if(!state.client||!state.user){state.myCoupons=[];return}
+      const {data,error}=await state.client.from('coupons')
+        .select('id,code,discount_percent,max_discount_amount,status,created_at,expires_at,used_at,used_order_id')
+        .eq('user_id',state.user.id).order('created_at',{ascending:false}).limit(50);
+      if(error)throw error;
+      state.myCoupons=(data||[]).map(coupon=>({
+        ...coupon,
+        label:`${Number(coupon.discount_percent)||0}%`,
+        value:Number(coupon.discount_percent)||0,
+        maxDiscountAmount:Number(coupon.max_discount_amount)||0,
+        expiresAt:coupon.expires_at
+      }));
+      if(!state.spinCoupon){
+        state.spinCoupon=state.myCoupons.find(coupon=>coupon.status==='unused'&&Date.parse(coupon.expires_at)>Date.now())||null;
       }
-      state.myCoupons = JSON.parse(localStorage.getItem('roshan-brand-coupons') || '[]');
+      renderCouponBanner();
+      if(state.ordersPanelOpen)renderOrdersPanel();
     }
 
-    function spinCoupon(){
-      const rewards = getSpinPrizeCatalog();
+    async function refreshSpinPrizeCatalog(){
+      const {data,error}=await state.client.rpc('public_spin_prizes');
+      if(error)throw error;
+      state.spinPrizes=normalizeSpinPrizeCatalog(data);
+      renderWheelLabels();
+    }
+
+    async function spinCoupon(){
       const wheel = $('spin-wheel');
       const spinButton = $('spin-button');
       if(!wheel || state.isSpinning) return;
+      if(!state.user){
+        openAuthPage('signin');
+        showNotice('Sign in to spin and save your coupon.');
+        return;
+      }
+      const spinningUserId=state.user.id;
       state.isSpinning = true;
-      wheel.closest('.spin-wheel-wrap')?.classList.add('spinning');
       if(spinButton) spinButton.disabled = true;
-      const reward = pickWeightedPrize(rewards);
-      const slice = 360 / rewards.length;
-      const selectedIndex = rewards.indexOf(reward);
-      const finalAngle = 360 * 6 + (360 - (selectedIndex * slice + slice / 2));
-      const wheelWrap=wheel.closest('.spin-wheel-wrap');
-      wheelWrap?.classList.remove('spin-finished');
-      wheel.style.transform = `rotate(${finalAngle}deg)`;
-      setTimeout(() => {
-        if(reward.type === 'tryAgain'){
-          state.spinCoupon = null;
-          renderCouponBanner();
-          showNotice('No prize this time — try again.');
-        } else {
-          const rewardCoupon = {
-            ...reward,
-            type: 'percent',
-            label: `${Math.min(Math.max(Number(reward.value)||0,0),100)}%`,
-            code: createUniqueCouponCode(reward.value,JSON.parse(localStorage.getItem('roshan-brand-coupons') || '[]')),
-            maxDiscountAmount: Number(reward.maxDiscountAmount) || 0
-          };
-          state.spinCoupon = rewardCoupon;
-          addCouponToWallet(rewardCoupon);
-          renderCouponBanner();
-          showNotice(`Coupon unlocked: ${rewardCoupon.label} OFF — ${rewardCoupon.code}. Use it on your next software purchase.`);
-        }
-        state.isSpinning = false;
-        wheelWrap?.classList.remove('spinning');
-        wheelWrap?.classList.add('spin-finished');
-        setTimeout(()=>wheelWrap?.classList.remove('spin-finished'),500);
-        if(spinButton) spinButton.disabled = false;
-      }, 4500);
+      try{
+        const {data,error}=await state.client.rpc('spin_wheel');
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not spin the wheel.');
+        if(state.user?.id!==spinningUserId)throw new Error('Your sign-in changed before the spin could finish.');
+        state.spinPrizes=normalizeSpinPrizeCatalog(data.prizes);
+        renderWheelLabels();
+        const reward=state.spinPrizes.find(item=>item.code===data.prize?.code);
+        if(!reward)throw new Error('The server returned a prize that is not on the wheel.');
+        const slice=360/state.spinPrizes.length;
+        const selectedIndex=state.spinPrizes.indexOf(reward);
+        const finalAngle=360*6+(360-(selectedIndex*slice+slice/2));
+        const wheelWrap=wheel.closest('.spin-wheel-wrap');
+        wheelWrap?.classList.remove('spin-finished');
+        wheelWrap?.classList.add('spinning');
+        wheel.style.transform=`rotate(${finalAngle}deg)`;
+        setTimeout(async()=>{
+          try{
+            if(state.user?.id!==spinningUserId)return;
+            if(reward.type==='tryAgain'){
+              state.spinCoupon=null;
+              showNotice('No prize this time — try again tomorrow.');
+            }else{
+              state.spinCoupon={
+                ...reward,
+                code:data.coupon_code,
+                value:Number(data.discount_percent),
+                expiresAt:data.expires_at
+              };
+              renderCouponBanner();
+              await refreshMyCoupons();
+              showNotice(`Coupon unlocked: ${reward.label} — ${data.coupon_code}. Use it on a purchase.`);
+            }
+            renderCouponBanner();
+            wheelWrap?.classList.remove('spinning');
+            wheelWrap?.classList.add('spin-finished');
+            setTimeout(()=>wheelWrap?.classList.remove('spin-finished'),500);
+          }catch(error){
+            console.error('Could not refresh the account coupon list:',error);
+            showNotice('Your spin result was saved, but the coupon list could not be refreshed.');
+          }finally{
+            wheelWrap?.classList.remove('spinning');
+            state.isSpinning=false;
+            if(spinButton)spinButton.disabled=false;
+          }
+        },4500);
+      }catch(error){
+        state.isSpinning=false;
+        if(spinButton)spinButton.disabled=false;
+        console.error('Could not complete the server-selected spin:',error);
+        showNotice(error.message||'Could not spin the wheel. Please try again.');
+      }
     }
 
     function renderSettings(){
@@ -2000,7 +1977,6 @@
         $('orders-retry').addEventListener('click',()=>refreshMyOrders());
         return;
       }
-      state.myCoupons = JSON.parse(localStorage.getItem('roshan-brand-coupons') || '[]');
       const orders=(state.myOrders||[]).slice(0,5);
       const coupons=(state.myCoupons||[]).slice(0,5);
       const ordersMarkup=orders.length ? `<div class="orders-list">${orders.map(order=>{
@@ -2022,7 +1998,8 @@
       }).join('')}</div>`:'';
       const couponsMarkup=coupons.length ? `<div class="orders-list" style="margin-top:18px"><div style="padding:8px 0 4px;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.04em">MY COUPONS</div>${coupons.map(coupon=>{
         const expiry=coupon.expiresAt ? formatDate(coupon.expiresAt) : 'No expiry';
-        return `<article class="orders-item"><div class="orders-item-trigger" style="cursor:default;border-bottom:0"><span class="orders-item-main"><strong>${escapeHtml(coupon.label || 'Coupon')} OFF</strong><small>${escapeHtml(coupon.code)} · Expires ${escapeHtml(expiry)}</small></span><button class="orders-copy" type="button" data-copy-coupon="${escapeHtml(coupon.code)}">Copy</button></div></article>`;
+        const status=String(coupon.status||'unused');
+        return `<article class="orders-item"><div class="orders-item-trigger" style="cursor:default;border-bottom:0"><span class="orders-item-main"><strong>${escapeHtml(coupon.label || 'Coupon')} OFF · ${escapeHtml(status)}</strong><small>${escapeHtml(coupon.code)} · Expires ${escapeHtml(expiry)}${coupon.used_order_id?` · Order #${escapeHtml(coupon.used_order_id)}`:''}</small></span>${status==='unused'?`<button class="orders-copy" type="button" data-copy-coupon="${escapeHtml(coupon.code)}">Copy</button>`:''}</div></article>`;
       }).join('')}</div>` : '';
       if(!orders.length && !coupons.length && !claims.length){
         content.innerHTML='<div class="orders-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><p>No orders yet</p><button id="orders-browse" type="button">Browse products</button></div>';
@@ -2332,17 +2309,21 @@
       if(state.user){
         state.myOrders=null;
         state.myOrdersError=null;
+        state.spinCoupon=null;
         await refreshWalletBalance();
         state.walletChannel=state.client.channel(`wallet-balance-${state.user.id}`)
           .on('postgres_changes',{event:'*',schema:'public',table:'wallets',filter:`user_id=eq.${state.user.id}`},()=>refreshWalletBalance().catch(error=>showNotice(error.message)))
           .subscribe();
         await refreshMyOrders();
+        await refreshMyCoupons();
         state.ordersChannel=state.client.channel(`customer-orders-${state.user.id}`)
           .on('postgres_changes',{event:'*',schema:'public',table:'orders',filter:`user_id=eq.${state.user.id}`},()=>refreshMyOrders())
           .subscribe();
       }else{
         state.balance=0;
         state.myOrders=[];
+        state.myCoupons=[];
+        state.spinCoupon=null;
         state.myOfferClaims=[];
         state.myOrdersError=null;
         closeOrdersPanel();
@@ -2585,7 +2566,7 @@
     function checkoutPrice(){
       const checkout=state.checkout;
       if(!checkout)return {originalPrice:0,discountAmount:0,finalPrice:0};
-      return checkout.method==='wallet'||!checkout.coupon
+      return !['upi_qr','upi_app'].includes(checkout.method)||!checkout.coupon
         ? {originalPrice:Number(checkout.product.price),discountAmount:0,finalPrice:Number(checkout.product.price)}
         : getDiscountBreakdown(checkout.product.price,checkout.coupon);
     }
@@ -2679,15 +2660,20 @@
           p_order_id:checkout.paymentOrder?.status==='pending_payment'&&existingExpiry>checkoutServerNow(checkout)
             ?checkout.paymentOrder.order_id:null,
           p_product_id:checkout.product.id,
-          p_expected_price:pricing.finalPrice,
-          p_original_price:pricing.originalPrice,
-          p_discount_percent:checkout.coupon?Number(checkout.coupon.value)||0:0,
-          p_max_discount_amount:checkout.coupon?Number(checkout.coupon.maxDiscountAmount)||0:0,
           p_coupon_code:checkout.coupon?.code||null,
           p_payment_method:checkout.method
         });
         if(error)throw error;
-        if(!data?.ok)throw new Error(data?.message||'Could not start payment.');
+        if(!data?.ok){
+          const message=data?.message||'Could not start payment.';
+          if(checkout.coupon&&/coupon/i.test(message)){
+            checkout.coupon=null;
+            checkout.couponMessage=message;
+            checkout.couponMessageType='error';
+            checkout.paymentError='';
+          }else throw new Error(message);
+        }
+        if(!data?.ok)return;
         if(state.checkout!==checkout)return;
         if(!Number.isFinite(parseServerTimestamp(data.payment_expires_at)))throw new Error('The server returned an invalid payment expiry time.');
         anchorCheckoutServerTime(checkout,data.server_now,data.order_id);
@@ -2716,12 +2702,12 @@
       const checkout=state.checkout;
       if(!checkout)return;
       const product=checkout.product;
-      const pricing=checkoutPrice();
       const upiId=String(state.settings.upi_id||'').trim();
       const payee=String(state.settings.upi_payee_name||'').trim();
       const methods=availableCheckoutMethods();
       if(!methods.includes(checkout.method))checkout.method=methods[0]||'';
       const method=checkout.method;
+      const pricing=checkoutPrice();
       const qrParams=new URLSearchParams({pa:upiId,pn:payee,am:pricing.finalPrice.toFixed(2),cu:'INR',tn:`${state.settings.site_title||'Roshan Brand'} ${product.name}`});
       const qrMarkup='<div class="qr-box" id="product-payment-qr" aria-label="UPI payment QR code"></div>';
       const paymentOrder=checkout.paymentOrder;
@@ -2732,8 +2718,8 @@
       const utrForm=paymentOrderReady?`<div class="checkout-utr-step"><strong>${paymentOrderExpired?'Already paid? Submit UTR':'After payment'}</strong><p class="checkout-note">${paymentOrderExpired?'Your payment details will be sent for manual review. Late payments are not automatically rejected.':'Enter the 12-digit UTR / transaction ID to submit your order for verification.'}</p><label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID</label><input class="checkout-utr" id="checkout-utr" type="text" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error" aria-live="polite">${escapeHtml(checkout.paymentError||'')}</div><button class="modal-primary checkout-submit" id="checkout-submit-payment" type="button">Submit UTR for review</button></div>`:'';
       let paymentPanel='';
       if(method==='wallet'){
-        const canPay=state.balance>=pricing.finalPrice;
-        paymentPanel=`<section class="checkout-panel"><h3>Pay from Wallet</h3><div class="wallet-balance"><small>Available wallet balance</small><strong>₹${money(state.balance)}</strong></div><p class="checkout-note">Coupons apply to QR / UPI payments only.</p>${canPay?`<button class="modal-primary checkout-submit" id="checkout-wallet-pay" type="button">Pay with Wallet · ₹${money(pricing.finalPrice)}</button>`:`<div class="modal-error">Insufficient balance. Add money to your wallet to continue.</div><button class="modal-primary checkout-submit" id="checkout-add-money" type="button">Add money to wallet</button>`}${checkout.paymentOrder?`<p class="checkout-note">UPI order #${escapeHtml(checkout.paymentOrder.order_id)} amount: ₹${money(checkout.paymentOrder.price)}. UTR submitted here will apply to this UPI order.</p>${utrForm}`:''}</section>`;
+        const canPay=state.balance>=pricing.originalPrice;
+        paymentPanel=`<section class="checkout-panel"><h3>Pay from Wallet</h3><p class="checkout-note">Coupons apply to QR / UPI payments only.</p><div class="wallet-balance"><small>Available wallet balance</small><strong>₹${money(state.balance)}</strong></div>${canPay?`<button class="modal-primary checkout-submit" id="checkout-wallet-pay" type="button">Pay with Wallet · ₹${money(pricing.originalPrice)}</button>`:`<div class="modal-error">Insufficient balance. Add money to your wallet to continue.</div><button class="modal-primary checkout-submit" id="checkout-add-money" type="button">Add money to wallet</button>`}${checkout.paymentOrder?`<p class="checkout-note">UPI order #${escapeHtml(checkout.paymentOrder.order_id)} amount: ₹${money(checkout.paymentOrder.price)}. UTR submitted here will apply to this UPI order.</p>${utrForm}`:''}</section>`;
       }else if(method==='upi_qr'){
         paymentPanel=`<section class="checkout-panel"><h3>Scan QR (UPI)</h3>${!paymentOrderReady?'<p class="checkout-note">Preparing payment details…</p>':paymentOrderExpired?'<p class="checkout-note">Payment QR is no longer available for this order.</p>':`<p class="checkout-note">Scan with a UPI app and pay exactly ₹${money(pricing.finalPrice)}.</p>${qrMarkup}`}${utrForm}${checkout.paymentError?`<div class="modal-error">${escapeHtml(checkout.paymentError)}</div>${paymentOrderReady?'<button class="back" type="button" data-retry-payment>Retry</button>':''}`:''}</section>`;
       }else if(method==='upi_app'){
@@ -2752,13 +2738,12 @@
       const timer=method!=='wallet'||paymentOrder?`<div class="checkout-timer-wrap">${paymentTimerMarkup(checkout)}</div>`:'';
       $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(product.name)}</strong><div class="checkout-amounts"><span>${pricing.discountAmount?`Original ₹${money(pricing.originalPrice)} · Discount −₹${money(pricing.discountAmount)}`:'Amount due'}</span><strong>₹${money(pricing.finalPrice)}</strong></div></div><div class="checkout-coupon"><label for="checkout-coupon">Have a coupon code?</label><input id="checkout-coupon" autocomplete="off" placeholder="Enter coupon code, e.g. RB20-ABC123" value="${escapeHtml(checkout.couponInput||'')}"><button class="modal-primary" id="apply-checkout-coupon" type="button">Apply</button><div class="checkout-coupon-message ${checkout.couponMessageType||''}" id="checkout-coupon-message">${escapeHtml(checkout.couponMessage||'')}</div></div>${tabs}${timer}${paymentPanel}`;
       $('modal-body').querySelectorAll('[data-checkout-method]').forEach(button=>button.addEventListener('click',()=>{
-        state.checkout.method=button.dataset.checkoutMethod;state.checkout.paymentError='';
-        if(state.checkout.coupon){
-          const discount=Number(state.checkout.coupon.value)||0;
-          state.checkout.couponMessage=state.checkout.method==='wallet'
-            ?`Coupon applied: ${discount}% off for QR / UPI payments only.`
-            :`Coupon applied: ${discount}% off`;
+        if(state.checkout.method!==button.dataset.checkoutMethod&&state.checkout.coupon){
+          state.checkout.coupon=null;
+          state.checkout.couponMessage='';
+          state.checkout.couponMessageType='';
         }
+        state.checkout.method=button.dataset.checkoutMethod;state.checkout.paymentError='';
         renderCheckout();
       }));
       $('checkout-coupon').addEventListener('input',event=>{
@@ -2772,20 +2757,41 @@
         input?.focus();
         input?.setSelectionRange(input.value.length,input.value.length);
       });
-      $('apply-checkout-coupon').addEventListener('click',()=>{
+      $('apply-checkout-coupon').addEventListener('click',async()=>{
         const code=$('checkout-coupon').value.trim().toUpperCase();
         checkout.couponInput=code;checkout.coupon=null;checkout.couponMessage='';checkout.couponMessageType='';
+        if(checkout.method==='wallet'){
+          checkout.couponMessage='Coupons apply to QR / UPI payments only.';
+          renderCheckout();
+          return;
+        }
         if(code){
-          const used=getUsedCouponCodes();
-          const coupon=isCouponCodeFormatValid(code)&&!used.has(code)?resolveCoupon(code):null;
-          if(!coupon||coupon.type==='tryAgain'){
-            checkout.couponMessage='Invalid coupon';checkout.couponMessageType='error';
-          }else{
-            checkout.coupon=coupon;
-            checkout.couponMessage=checkout.method==='wallet'
-              ?`Coupon applied: ${Number(coupon.value)||0}% off for QR / UPI payments only.`
-              :`Coupon applied: ${Number(coupon.value)||0}% off`;
-            checkout.couponMessageType='success';
+          const button=$('apply-checkout-coupon');
+          button.disabled=true;
+          try{
+            const {data,error}=await state.client.rpc('validate_coupon',{p_code:code});
+            if(error)throw error;
+            if(state.checkout!==checkout||$('checkout-coupon')?.value.trim().toUpperCase()!==code)return;
+            if(!data?.ok){
+              checkout.couponMessage='Invalid coupon';
+              checkout.couponMessageType='error';
+            }else{
+              checkout.coupon={
+                code:data.code,
+                value:Number(data.discount_percent),
+                maxDiscountAmount:Number(data.max_discount_amount)||0,
+                type:'percent',
+                expiresAt:data.expires_at
+              };
+              checkout.couponMessage=`Coupon applied: ${Number(data.discount_percent)}% off`;
+              checkout.couponMessageType='success';
+            }
+          }catch(error){
+            console.error('Could not validate checkout coupon:',error);
+            checkout.couponMessage='Coupon could not be verified. Please try again.';
+            checkout.couponMessageType='error';
+          }finally{
+            button.disabled=false;
           }
         }
         renderCheckout();
@@ -2879,11 +2885,8 @@
               };
               state.checkout.method=data.payment_method;
               state.checkout.graceMinutes=Number(data.grace_minutes??5);
-              state.checkout.paymentOrderSignature=[
-                product.id,state.checkout.method,Number(data.price),
-                Number(data.original_price??product.price),data.coupon_code||''
-              ].join('|');
               state.checkout.coupon=null;
+              state.checkout.paymentOrderSignature=null;
               state.checkout.utr='';
             }else{
               try{localStorage.removeItem(storageKey)}
@@ -2907,29 +2910,44 @@
 
     async function purchaseWithWallet(){
       const checkout=state.checkout;
-      if(!checkout)return;
+      if(!checkout||checkout.purchasing)return;
+      checkout.purchasing=true;
       const button=$('checkout-wallet-pay');
       if(button)button.disabled=true;
       const product=checkout.product;
       const price=Number(product.price);
-      const {data,error}=await state.client.rpc('purchase_product',{p_product_id:product.id,p_expected_price:price});
-      if(error){checkout.paymentError=`Purchase failed: ${error.message}`;renderCheckout();return}
+      let result;
+      try{
+        result=await state.client.rpc('purchase_product',{
+          p_product_id:product.id,p_expected_price:price
+        });
+      }catch(error){
+        checkout.purchasing=false;
+        checkout.paymentError=`Purchase failed: ${error.message}`;
+        renderCheckout();
+        return;
+      }
+      const {data,error}=result;
+      if(error){checkout.purchasing=false;checkout.paymentError=`Purchase failed: ${error.message}`;renderCheckout();return}
       if(!data?.ok){
         if(data?.reason==='price_changed'){
+          checkout.purchasing=false;
           await refreshStore();
           showNotice('The product price changed. Please review the updated price.');
           return;
         }
         if(data?.reason==='insufficient_balance'){
+          checkout.purchasing=false;
           state.balance=Number(data.balance||0);renderHeader();renderCheckout();return;
         }
+        checkout.purchasing=false;
         checkout.paymentError=data?.message||'Purchase could not be completed.';
         renderCheckout();return;
       }
-      state.balance=Number(data.balance);renderHeader();await refreshMyOrders();
+      state.balance=Number(data.balance);renderHeader();await refreshMyOrders();await refreshMyCoupons();
       $('modal-title').textContent='Purchase complete';
       const fulfillmentMessage=data.download_ready?'Your software download is ready below the product and in My Orders.':'Admin will deliver your order soon. Check My Orders for delivery details.';
-      $('modal-body').innerHTML=`<div class="wallet-balance"><strong style="font-size:19px">Purchase successful</strong><small style="margin-top:8px">${escapeHtml(data.product_name)}</small><small>Paid from wallet: ₹${money(price)}</small><small>Order #${escapeHtml(data.order_id)} · ${formatDate(data.created_at)}</small><small>${fulfillmentMessage}</small><small>Remaining balance ₹${money(data.balance)}</small></div><button class="modal-primary" id="purchase-orders">View My Orders</button><button class="back" id="purchase-done" style="margin-left:7px">Done</button>`;
+      $('modal-body').innerHTML=`<div class="wallet-balance"><strong style="font-size:19px">Purchase successful</strong><small style="margin-top:8px">${escapeHtml(data.product_name)}</small><small>Paid from wallet: ₹${money(data.price)}</small><small>Order #${escapeHtml(data.order_id)} · ${formatDate(data.created_at)}</small><small>${fulfillmentMessage}</small><small>Remaining balance ₹${money(data.balance)}</small></div><button class="modal-primary" id="purchase-orders">View My Orders</button><button class="back" id="purchase-done" style="margin-left:7px">Done</button>`;
       $('purchase-orders').addEventListener('click',()=>openWallet('orders'));$('purchase-done').addEventListener('click',closeModal);
     }
 
@@ -2945,10 +2963,6 @@
         checkout.paymentError='Payment order is still being prepared. Please wait and try again.';
         renderCheckout();return;
       }
-      if(checkout.coupon&&getUsedCouponCodes().has(String(checkout.coupon.code).toUpperCase())){
-        checkout.coupon=null;checkout.couponMessage='Invalid coupon';checkout.couponMessageType='error';renderCheckout();return;
-      }
-      const pricing=checkoutPrice();
       const submit=$('checkout-submit-payment');
       checkout.submittingPayment=true;
       if(submit){submit.disabled=true;submit.textContent='Submitting order…'}
@@ -2964,11 +2978,10 @@
           else checkout.paymentError=data?.message||'Could not submit this payment.';
           renderCheckout();return;
         }
-        if(checkout.coupon)markCouponUsed(checkout.coupon.code);
         sessionStorage.removeItem('active_upi_product');
         try{localStorage.removeItem(`pending-payment:${state.user.id}:${checkout.product.id}`)}
         catch(storageError){console.warn('Could not clear the submitted payment order from local storage:',storageError)}
-        await refreshMyOrders();
+        await refreshMyOrders();await refreshMyCoupons();
         $('modal-title').textContent='Payment submitted';
         $('modal-body').innerHTML=`<div class="wallet-balance"><strong style="font-size:18px">${data.late_payment?'Late Payment - Pending Review':'UTR Submitted - Verification Pending'}</strong><small style="margin-top:9px">Aapka payment verify ho raha hai. Agar paisa kat gaya hai to chinta na karein, order approve hote hi mil jayega.</small><small>${escapeHtml(checkout.product.name)} · ₹${money(checkout.paymentOrder.price)}</small><small>Order #${escapeHtml(data.order_id)} · UTR ${escapeHtml(utr)}</small></div><button class="modal-primary" id="upi-order-view" type="button">View My Orders</button><button class="back" id="upi-order-done" type="button" style="margin-left:7px">Done</button>`;
         $('upi-order-view').addEventListener('click',()=>openWallet('orders'));$('upi-order-done').addEventListener('click',closeModal);
@@ -2977,12 +2990,18 @@
 
     async function refreshStore(){
       setProductsLoading(!state.products.length);
-      const [products,settings] = await Promise.all([
+      const [products,settings,spinPrizes] = await Promise.all([
         state.client.from('products').select('id,category,name,description,image_url,price,selling_price,original_price,rating,review_count,sold_count,show_stats,unit,in_stock,sort_order,pinned,plan_section,os_type,ip_series,data_size,specs,ip_count,validity,badge,stock_status,price_prefix,details')
           .order('sort_order',{ascending:true}).order('created_at',{ascending:true}),
-        state.client.from('settings').select('site_title,whatsapp_number,telegram_link,upi_id,upi_payee_name,upi_qr_image_url,enable_wallet_payments,enable_upi_qr,enable_upi_app').eq('id',true).maybeSingle()
+        state.client.from('settings').select('site_title,whatsapp_number,telegram_link,upi_id,upi_payee_name,upi_qr_image_url,enable_wallet_payments,enable_upi_qr,enable_upi_app').eq('id',true).maybeSingle(),
+        state.client.rpc('public_spin_prizes')
       ]);
       if(products.error){showProductsError(products.error);return}
+      if(spinPrizes.error){
+        console.error('Could not load server spin-prize settings:',spinPrizes.error);
+      }else{
+        state.spinPrizes=normalizeSpinPrizeCatalog(spinPrizes.data);
+      }
       state.products = (products.data || []).map(product=>({
         ...product,
         selling_price:product.selling_price??product.price,
@@ -3094,6 +3113,7 @@
     initPointerEffects();
     revealPage();
     $('year').textContent = new Date().getFullYear();
+    clearLegacyCoupons();
     renderSettings();
     renderHeader();
     (async function init(){

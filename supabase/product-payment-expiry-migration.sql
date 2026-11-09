@@ -3,12 +3,22 @@ begin;
 alter table public.orders add column if not exists payment_expires_at timestamptz;
 alter table public.orders add column if not exists utr_submitted_at timestamptz;
 alter table public.orders add column if not exists late_payment boolean not null default false;
-alter table public.orders drop constraint if exists orders_status_check;
-alter table public.orders add constraint orders_status_check
-  check (status in ('pending_payment', 'pending', 'pending_verification', 'completed', 'delivered', 'rejected', 'refunded', 'expired'));
-update public.orders
-set utr_submitted_at = created_at
-where utr is not null and utr_submitted_at is null;
+do $$
+declare
+  v_status_constraint text;
+begin
+  select regexp_replace(pg_get_constraintdef(oid), '\s+', '', 'g')
+    into v_status_constraint
+    from pg_constraint
+    where conrelid = 'public.orders'::regclass and conname = 'orders_status_check';
+  if v_status_constraint is null then
+    alter table public.orders add constraint orders_status_check
+      check (status in ('pending_payment', 'pending', 'pending_verification', 'completed', 'delivered', 'rejected', 'refunded', 'expired'));
+  elsif v_status_constraint <> $expected$CHECK((status=ANY(ARRAY['pending_payment'::text,'pending'::text,'pending_verification'::text,'completed'::text,'delivered'::text,'rejected'::text,'refunded'::text,'expired'::text])))$expected$ then
+    raise exception 'orders_status_check has an unexpected definition; inspect it before applying this migration.';
+  end if;
+end
+$$;
 
 create table if not exists public.payment_timer_config (
   id boolean primary key default true check (id),
