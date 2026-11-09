@@ -1002,8 +1002,8 @@
       </button>
       <div class="auth-divider" id="auth-divider"><span>OR</span></div>
       <form id="auth-form" novalidate>
-        <div class="auth-field"><label for="auth-email">Email address</label><input id="auth-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required></div>
-        <div class="auth-field" id="auth-password-field"><label for="auth-password">Password</label><div class="auth-password-wrap"><input id="auth-password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required><button class="auth-password-toggle" id="auth-password-toggle" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+        <div class="auth-field"><label for="login-email">Email address</label><input id="login-email" name="email" type="email" autocomplete="username" placeholder="you@example.com" required></div>
+        <div class="auth-field" id="auth-password-field"><label for="login-password">Password</label><div class="auth-password-wrap"><input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required><button class="auth-password-toggle" id="auth-password-toggle" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
         <div class="auth-forgot-row" id="auth-forgot-row"><button class="auth-link" id="auth-forgot" type="button">Forgot password?</button></div>
         <button class="auth-submit" id="auth-submit" type="submit">Sign in</button>
         <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
@@ -1133,7 +1133,7 @@
       {id:'proxy', title:'Linux Proxy', icon:'⌘', description:'Linux proxy solutions for flexible, dependable access.'},
       {id:'residential', title:'Residential Proxies', icon:'◎', description:'Residential IP options for your data and browsing needs.'}
     ];
-    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, authMode:'signin', offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
+    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, pendingAuthRequest:null, authMode:'signin', offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
     const $ = id => document.getElementById(id);
     const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     const money = value => new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(Number(value)||0);
@@ -2100,25 +2100,30 @@
       $('auth-google').classList.toggle('hidden',forgot||reset);
       $('auth-divider').classList.toggle('hidden',forgot||reset);
       $('auth-password-field').classList.toggle('hidden',forgot);
-      $('auth-email').closest('.auth-field').classList.toggle('hidden',reset);
+      $('login-email').closest('.auth-field').classList.toggle('hidden',reset);
       $('auth-forgot-row').classList.toggle('hidden',signup||forgot||reset);
       $('auth-switch').classList.toggle('hidden',reset);
-      $('auth-email').required=!reset;
-      $('auth-password').required=!forgot;
-      $('auth-password').autocomplete=signup||reset?'new-password':'current-password';
-      $('auth-password').placeholder=reset?'Enter a new password':signup?'At least 6 characters':'Enter your password';
+      $('login-email').required=!reset;
+      $('login-password').required=!forgot;
+      $('login-password').autocomplete=signup||reset?'new-password':'current-password';
+      $('login-password').placeholder=reset?'Enter a new password':signup?'At least 6 characters':'Enter your password';
       $('auth-submit').textContent=reset?'Update password':forgot?'Send reset link':signup?'Create account':'Sign in';
       $('auth-switch').innerHTML=signup?'Already have an account? <button class="auth-link" id="auth-switch-link" type="button">Sign in</button>':forgot?'Remembered your password? <button class="auth-link" id="auth-switch-link" type="button">Sign in</button>':'Don&#39;t have an account? <button class="auth-link" id="auth-switch-link" type="button">Create one free</button>';
       $('auth-message').textContent='';
       $('auth-message').classList.remove('success');
-      $('auth-password').value='';
-      $('auth-password').type='password';
+      $('login-password').value='';
+      $('login-password').type='password';
       $('auth-password-toggle').setAttribute('aria-label','Show password');
       $('auth-password-toggle').setAttribute('aria-pressed','false');
       $('auth-switch-link')?.addEventListener('click',()=>setAuthMode(signup||forgot?'signin':'signup'));
     }
 
     function openAuthPage(mode='signin',intent=''){
+      if(!state.authInitialized){
+        state.pendingAuthRequest={mode,intent};
+        return;
+      }
+      if(state.user&&mode!=='reset')return;
       closeMobileMenu();
       closeOrdersPanel();
       $('profile-menu')?.classList.add('hidden');
@@ -2128,8 +2133,8 @@
       $('auth-page').classList.remove('hidden');
       $('auth-page').setAttribute('aria-hidden','false');
       document.body.style.overflow='hidden';
-      if(mode==='reset')$('auth-password').focus();
-      else $('auth-email').focus();
+      if(mode==='reset')$('login-password').focus();
+      else $('login-email').focus();
     }
 
     function closeAuthPage(clearPending=true){
@@ -2152,16 +2157,16 @@
       event.preventDefault();
       if(!state.client){setAuthMessage('Sign-in is unavailable until Supabase is configured.');return}
       const mode=state.authMode;
-      const email=$('auth-email').value.trim();
-      const password=$('auth-password').value;
-      if(mode!=='reset'&&(!email||!$('auth-email').checkValidity())){
+      const email=$('login-email').value.trim();
+      const password=$('login-password').value;
+      if(mode!=='reset'&&(!email||!$('login-email').checkValidity())){
         setAuthMessage('Enter a valid email address.');
-        $('auth-email').focus();
+        $('login-email').focus();
         return;
       }
       if(mode!=='forgot'&&mode!=='reset'&&!password){
         setAuthMessage('Enter your password.');
-        $('auth-password').focus();
+        $('login-password').focus();
         return;
       }
       const submit=$('auth-submit');
@@ -2202,7 +2207,7 @@
           }else{
             setAuthMessage('Account created. Check your email to confirm your address, then sign in.',true);
             setAuthMode('signin');
-            $('auth-email').value=email;
+            $('login-email').value=email;
             setAuthMessage('Account created. Check your email to confirm your address, then sign in.',true);
           }
           return;
@@ -2228,6 +2233,10 @@
     function renderHeader(){
       const host=$('nav-actions-content');
       document.getElementById('profile-menu')?.remove();
+      if(!state.authInitialized){
+        host.innerHTML='<span role="status">Checking your sign-in status…</span>';
+        return;
+      }
       if(!state.user){
         host.innerHTML=renderOffersTrigger()+renderOrdersTrigger()+'<button class="google-login" id="google-login" title="Sign in with Google" aria-label="Sign in with Google"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.73 7.18l7.27 5.64c4.25-3.92 7.5-9.72 7.5-17.29z"/><path fill="#FBBC05" d="M10.53 28.59a14.4 14.4 0 0 1 0-9.18l-7.98-6.19a23.95 23.95 0 0 0 0 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.9-5.8l-7.27-5.64c-2.02 1.35-4.6 2.15-8.63 2.15-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg></button>';
         renderOffersTriggerHandler();
@@ -2238,10 +2247,12 @@
         return;
       }
       const avatar=String(state.user.user_metadata?.avatar_url||'');
+      const customerName=String(state.user.user_metadata?.full_name||state.user.user_metadata?.name||state.user.email||'Customer').trim();
       const avatarMarkup=/^https:\/\//i.test(avatar)
         ? `<img src="${escapeHtml(avatar)}" alt="" referrerpolicy="no-referrer">`
         : `<span class="avatar-fallback">${escapeHtml((state.user.email||'U').slice(0,1).toUpperCase())}</span>`;
       host.innerHTML=renderOrdersTrigger()+`<button class="wallet-chip" id="wallet-chip" aria-label="Open wallet, balance ₹${money(state.balance)}" title="Wallet balance ₹${money(state.balance)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 9h18M16 14h2"/></svg><span>₹${money(state.balance)}</span></button><div class="avatar-wrap"><button class="avatar-button" id="avatar-button" aria-label="Open account menu" title="Account menu" aria-expanded="false">${avatarMarkup}</button><div class="profile-menu hidden" id="profile-menu"><div class="profile-email">${escapeHtml(state.user.email||'')}</div><div class="profile-balance">Wallet balance · ₹${money(state.balance)}</div><button data-menu="wallet">Add Money</button><button data-menu="orders">My Orders</button><button data-menu="history">Wallet History</button><button data-menu="logout">Logout</button></div></div>`;
+      $('profile-menu').querySelector('.profile-email').textContent=customerName;
       host.insertAdjacentHTML('afterbegin',renderOffersTrigger());
       document.body.append($('profile-menu'));
       $('orders-trigger').addEventListener('click',()=>{
@@ -3084,7 +3095,7 @@
     $('auth-google').addEventListener('click',signInWithGoogle);
     $('auth-forgot').addEventListener('click',()=>setAuthMode('forgot'));
     $('auth-password-toggle').addEventListener('click',()=>{
-      const password=$('auth-password');
+      const password=$('login-password');
       const visible=password.type==='password';
       password.type=visible?'text':'password';
       $('auth-password-toggle').setAttribute('aria-label',visible?'Hide password':'Show password');
@@ -3144,26 +3155,71 @@
         const config = await response.json();
         if(!config.supabaseUrl || !config.supabaseAnonKey) throw new Error('Store setup is incomplete. Add your Supabase URL and anon key to the .env file.');
         if(!window.supabase) throw new Error('The store could not load its database client. Check your internet connection and reload.');
-        state.client = window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey);
+        state.client = window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey,{
+          auth:{
+            autoRefreshToken:true,
+            detectSessionInUrl:true,
+            persistSession:true,
+            storage:window.localStorage
+          }
+        });
+        state.client.auth.onAuthStateChange((event,session)=>{
+          if(event==='PASSWORD_RECOVERY'){
+            if(state.authInitialized)openAuthPage('reset',sessionStorage.getItem('wallet_pending_track_order')?'orders':'');
+            return;
+          }
+          if(event==='SIGNED_OUT'){
+            if(state.authInitialized)setTimeout(()=>updateSession(null).catch(error=>showNotice(error.message)),0);
+            return;
+          }
+          if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||event==='INITIAL_SESSION')&&session){
+            setTimeout(async()=>{
+              try{
+                await updateSession(session);
+                if(!state.authInitialized){
+                  state.authInitialized=true;
+                  renderHeader();
+                }
+              }catch(error){
+                console.error(`Could not apply the ${event} customer session:`,error);
+                showNotice('Your sign-in is active, but account details could not be refreshed. Please try again.');
+              }
+            },0);
+          }
+        });
         const recoveryHash=new URLSearchParams(window.location.hash.slice(1));
-        if(recoveryHash.get('type')==='recovery')openAuthPage('reset',sessionStorage.getItem('wallet_pending_track_order')?'orders':'');
+        const isPasswordRecovery=recoveryHash.get('type')==='recovery';
         state.authReadyPromise=(async()=>{
           const {data:sessionData,error:sessionError}=await state.client.auth.getSession();
           if(sessionError)throw sessionError;
-          state.authInitialized=true;
           console.log('[buy-debug] initial Supabase session check complete', {authenticated:Boolean(sessionData.session?.user)});
-          await updateSession(sessionData.session);
+          try{
+            await updateSession(sessionData.session);
+          }catch(error){
+            console.error('Could not load customer account details:',error);
+            showNotice('Your sign-in is active, but some account details could not be refreshed.');
+          }
+          state.authInitialized=true;
+          renderHeader();
         })();
+        state.authReadyPromise.then(()=>{
+          if(isPasswordRecovery){
+            openAuthPage('reset',sessionStorage.getItem('wallet_pending_track_order')?'orders':'');
+            return;
+          }
+          const pendingAuthRequest=state.pendingAuthRequest;
+          state.pendingAuthRequest=null;
+          if(pendingAuthRequest&&!state.user)openAuthPage(pendingAuthRequest.mode,pendingAuthRequest.intent);
+        }).catch(error=>{
+          console.error('Could not verify the customer session for password recovery:',error);
+          showNotice('Could not verify your sign-in status. Please check your connection and try again.');
+        });
         await Promise.all([refreshStore(),state.authReadyPromise]);
         window.setTimeout(()=>refreshOffers(true).catch(error=>{
           console.error('Could not load active offers:',error);
           showNotice('Offers could not be loaded. Please try again later.');
         }),Math.max(0,offerLoadDeadline-Date.now()));
         window.setTimeout(showRecentOfferClaimNotification,3000);
-        state.client.auth.onAuthStateChange((event,session)=>{
-          if(event==='PASSWORD_RECOVERY')openAuthPage('reset',sessionStorage.getItem('wallet_pending_track_order')?'orders':'');
-          setTimeout(()=>updateSession(session).catch(error=>showNotice(error.message)),0);
-        });
         state.client.channel('public-store-changes')
           .on('postgres_changes',{event:'*',schema:'public',table:'products'},refreshStore)
           .on('postgres_changes',{event:'*',schema:'public',table:'settings'},refreshStore)
