@@ -317,7 +317,7 @@
               <input id="offer-id" type="hidden">
               <div class="field"><label for="offer-title">Offer title</label><input id="offer-title" maxlength="120" required placeholder="e.g. Two for one"></div>
               <div class="field"><label for="offer-description">Short description</label><textarea id="offer-description" maxlength="500" placeholder="Tell customers what this offer includes"></textarea></div>
-              <div class="field"><label for="offer-collection">Collection</label><select id="offer-collection" required><option value="software">Software</option><option value="vps">Windows VPS</option><option value="proxy">Static Proxy</option><option value="residential">Residential Proxies</option></select></div>
+              <div class="field"><label for="offer-collection">Collection</label><select id="offer-collection" required><option value="software">Software</option><option value="vps">Windows VPS</option><option value="proxy">Static Proxy</option></select></div>
               <div class="field"><label for="offer-product">Product (optional)</label><select id="offer-product"><option value="">Entire collection</option></select><small class="sub" style="display:block;margin:5px 0 0">Choose a product to take customers directly to it, or leave empty for the full collection.</small></div>
               <section class="offer-claim-settings">
                 <label class="check" for="offer-claim-enabled"><input id="offer-claim-enabled" type="checkbox"> Enable screenshot-verified claim and free-software transfer</label>
@@ -442,7 +442,7 @@
     <section class="admin-confirm-dialog"><h2>Claim screenshot</h2><img class="offer-screenshot hidden" id="offer-screenshot" alt="Customer-provided offer claim screenshot"><button class="btn ghost" id="offer-screenshot-close" type="button">Close</button></section>
   </div>
   <script>
-    const categories=[{id:'software',title:'Software'},{id:'vps',title:'Windows VPS'},{id:'proxy',title:'Static Proxy'},{id:'residential',title:'Residential Proxies'}];
+    const categories=[{id:'software',title:'Software'},{id:'vps',title:'Windows VPS'},{id:'proxy',title:'Static Proxy'}];
     const DEFAULT_SPIN_PRIZES=[{code:'SAVE20',label:'20%',type:'percent',value:20,color:'#e11d48',maxDiscountAmount:500,weight:15},{code:'SAVE50',label:'50%',type:'percent',value:50,color:'#2f3fb8',maxDiscountAmount:500,weight:10},{code:'SAVE100',label:'100%',type:'percent',value:100,color:'#f5c04a',maxDiscountAmount:500,weight:4},{code:'BONUS100',label:'100%',type:'percent',value:100,color:'#e11d48',maxDiscountAmount:500,weight:1},{code:'TRY_AGAIN',label:'TRY AGAIN',type:'tryAgain',value:0,color:'#2a2f3a',maxDiscountAmount:0,weight:45},{code:'SAVE10',label:'10%',type:'percent',value:10,color:'#2f3fb8',maxDiscountAmount:500,weight:25}];
     const state={client:null,category:'software',products:[],editing:null,editingDownloadUrl:null,downloadLinkLoaded:true,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null,paymentQrImageUrl:'',offers:[],offerProducts:[],offerReports:[],spinPrizes:DEFAULT_SPIN_PRIZES,coupons:[],usedKeyProducts:[],usedKeys:[],orderRequestStatus:'new',orderRequestPage:1,orderRequestPageSize:20,orderRequestCount:0,orderRequestCounts:{new:0,completed:0,rejected:0,all:0},selectedOrderRequest:null};
     let productPreviewUrl=null;

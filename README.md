@@ -34,6 +34,8 @@ For UTR-verified Software and VPS requests, run [`supabase/order-requests-migrat
 
 ### Used Keys
 
+After `setup.sql` and `order-requests-migration.sql` are installed, run [`supabase/security-admin-authorization-migration.sql`](./supabase/security-admin-authorization-migration.sql). It allowlists email-signup metadata to the customer's name, keeps admin membership in the server-managed `admin_users` table, and removes client write access to that table. Admin RPCs must continue to verify `public.is_store_admin()` on the database.
+
 After `order-requests-migration.sql`, run [`supabase/used-keys-migration.sql`](./supabase/used-keys-migration.sql) in the Supabase SQL Editor. It creates private encrypted key inventory and admin-only management RPCs, server-priced UPI QR payment orders, UTR-time stock reservation, rejection release, and completed-owner-only delivery. The storefront hides expired, hidden, reserved, and sold stock. No coupon value is accepted for these orders, and the database rejects attempts to change their price or attach a coupon. The license key inventory uses AES-256 encryption and a keyed duplicate fingerprint; back up `private.order_delivery_secrets` securely.
 
 After that, run [`supabase/used-keys-live-products-migration.sql`](./supabase/used-keys-live-products-migration.sql). Used Keys cards read the current Software name and image from the linked product, while order lists/details and completed customer orders read the current name. Product photo/name edits carry through without a separate Used Key upload or copy.
