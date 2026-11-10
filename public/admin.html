@@ -383,12 +383,11 @@
               <input id="used-key-visible" type="hidden" value="true">
               <div class="field"><label for="used-key-product">Software</label><select id="used-key-product" required></select></div>
               <div class="field"><label for="used-key-license">Key Name / License Key</label><textarea id="used-key-license" maxlength="4000" required></textarea></div>
-              <div class="field"><label for="used-key-download">Download Link</label><input id="used-key-download" type="url" maxlength="2048" required></div>
-              <div class="row"><div class="field"><label for="used-key-price">Price (₹)</label><input id="used-key-price" type="number" min="0.01" max="100000" step="0.01" required></div><div class="field"><label for="used-key-expiry">Expiry Date</label><input id="used-key-expiry" type="date" required></div></div>
+              <div class="row"><div class="field"><label for="used-key-price">Price (₹)</label><input id="used-key-price" type="number" min="0.01" max="100000" step="0.01" required></div><div class="field"><label for="used-key-days">Days</label><input id="used-key-days" type="number" min="1" max="36500" step="1" required></div></div>
               <button class="btn gold" id="used-key-save" type="submit">Add key</button><button class="btn ghost hidden" id="used-key-cancel" type="button">Cancel edit</button>
               <div class="error" id="used-key-error" aria-live="polite"></div>
             </form>
-            <div class="field" style="margin-top:22px"><label for="used-key-bulk">Bulk add · one key per line</label><textarea id="used-key-bulk" maxlength="100000" placeholder="KEY NAME&#9;DOWNLOAD LINK&#9;PRICE&#9;YYYY-MM-DD"></textarea><small class="sub">Use tab-separated values: key, download link, price, expiry date. Up to 100 keys.</small></div>
+            <div class="field" style="margin-top:22px"><label for="used-key-bulk">Bulk add · one key per line</label><textarea id="used-key-bulk" maxlength="100000" placeholder="KEY NAME&#9;PRICE&#9;DAYS"></textarea><small class="sub">Use tab-separated values: key, price, days. The software's current Download Link is used automatically. Up to 100 keys.</small></div>
             <button class="btn ghost" id="used-key-bulk-add" type="button">Add keys in bulk</button>
           </section>
           <section class="panel" style="margin:0"><h3>Inventory</h3><div class="order-tools"><select id="used-key-filter-product" aria-label="Filter by software"><option value="">All software</option></select><input id="used-key-search" type="search" maxlength="120" placeholder="Search software, key, or link"></div><div id="used-key-list" class="product-list"></div></section>
@@ -664,7 +663,7 @@
         const editable=['available','hidden'].includes(item.status);
         const visible=item.status==='available';
         const status=item.status==='available'?'Available':item.status==='hidden'?'Hidden':item.status;
-        return `<article class="product-row"><div><strong>${escapeHtml(item.software_name)}</strong><small>Key #${escapeHtml(item.id)} · ${escapeHtml(item.license_key)}</small><small>₹${money(item.price)} · expires ${escapeHtml(item.expires_on)} · ${Number(item.remaining_days)} day(s) remaining</small><small>${escapeHtml(item.download_link)}</small></div><span class="pill">${escapeHtml(status)}</span><div class="product-row-actions"><button class="btn ghost" type="button" data-edit-used-key="${item.id}" ${editable?'':'disabled'}>Edit</button><button class="btn ghost" type="button" data-toggle-used-key="${item.id}" ${editable?'':'disabled'}>${visible?'Hide':'Show'}</button><button class="btn danger" type="button" data-delete-used-key="${item.id}" ${editable?'':'disabled'}>Delete</button></div></article>`;
+        return `<article class="product-row"><div><strong>${escapeHtml(item.software_name)}</strong><small>Key #${escapeHtml(item.id)} · ${escapeHtml(item.license_key)}</small><small>₹${money(item.price)} · ${Number(item.validity_days)} day(s) validity · ${Number(item.remaining_days)} day(s) remaining</small><small>${escapeHtml(item.download_link)}</small></div><span class="pill">${escapeHtml(status)}</span><div class="product-row-actions"><button class="btn ghost" type="button" data-edit-used-key="${item.id}" ${editable?'':'disabled'}>Edit</button><button class="btn ghost" type="button" data-toggle-used-key="${item.id}" ${editable?'':'disabled'}>${visible?'Hide':'Show'}</button><button class="btn danger" type="button" data-delete-used-key="${item.id}" ${editable?'':'disabled'}>Delete</button></div></article>`;
       }).join(''):'<div class="empty">No used keys in inventory.</div>';
       revealAdmin($('used-key-list'));
     }
@@ -683,9 +682,9 @@
           p_id:$('used-key-id').value?Number($('used-key-id').value):null,
           p_product_id:Number($('used-key-product').value),
           p_license_key:$('used-key-license').value,
-          p_download_link:$('used-key-download').value.trim(),
           p_price:Number($('used-key-price').value),
-          p_expires_on:$('used-key-expiry').value,p_is_visible:$('used-key-visible').value==='true'
+          p_validity_days:Number($('used-key-days').value),
+          p_is_visible:$('used-key-visible').value==='true'
         });
         if(error)throw error;
         if(!data?.ok)throw new Error(data?.message||'Could not save this key.');
@@ -700,11 +699,14 @@
       const button=$('used-key-bulk-add');button.disabled=true;
       try{
         const keys=lines.map((line,index)=>{
-          const [license_key,download_link,price,expires_on,...extra]=line.split('\t').map(value=>value.trim());
-          if(extra.length||!license_key||!download_link||!price||!expires_on){
-            throw new Error(`Line ${index+1}: enter key, download link, price, and expiry date separated by tabs.`);
+          const [license_key,price,days,...extra]=line.split('\t').map(value=>value.trim());
+          if(extra.length||!license_key||!price||!days){
+            throw new Error(`Line ${index+1}: enter key, price, and days separated by tabs.`);
           }
-          return {license_key,download_link,price:Number(price),expires_on};
+          if(!/^\d+$/.test(days)){
+            throw new Error(`Line ${index+1}: days must be a whole number.`);
+          }
+          return {license_key,price:Number(price),validity_days:Number(days)};
         });
         const {data,error}=await state.client.rpc('admin_bulk_add_used_keys_with_details',{
           p_product_id:Number($('used-key-product').value),p_keys:keys
@@ -723,8 +725,8 @@
       if(button.matches('[data-edit-used-key]')){
         $('used-key-id').value=String(item.id);$('used-key-product').value=String(item.product_id);
         $('used-key-visible').value=String(item.status==='available');
-        $('used-key-license').value=item.license_key;$('used-key-download').value=item.download_link;
-        $('used-key-price').value=item.price;$('used-key-expiry').value=item.expires_on;
+        $('used-key-license').value=item.license_key;
+        $('used-key-price').value=item.price;$('used-key-days').value=item.validity_days;
         $('used-key-form-title').textContent='Edit used key';$('used-key-save').textContent='Save changes';
         $('used-key-cancel').classList.remove('hidden');$('used-key-error').textContent='';
       }else if(button.matches('[data-toggle-used-key]')){
