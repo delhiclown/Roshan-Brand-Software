@@ -22,6 +22,7 @@ function setOrder(overrides = {}) {
   order = {
     id: 42,
     user_id: 'user-1',
+    product_id: 1,
     product_name: '<OCEAN PRO>',
     product_type: 'software',
     quantity: 1,
@@ -77,6 +78,7 @@ test.beforeEach(() => {
       return response(200, { id: 'user-1', email: 'customer@example.com', user_metadata: { full_name: 'Customer <One>' } });
     }
     if (String(url).includes('/rest/v1/orders?')) return response(200, order ? [order] : []);
+    if (String(url).includes('/rest/v1/products?')) return response(200, [{ name: 'Current Software Name' }]);
     if (String(url).endsWith('/rest/v1/telegram_order_alerts') && options.method === 'POST') {
       return response(claimStatus, {});
     }
@@ -107,6 +109,30 @@ test('sends an escaped alert using database order details', async () => {
   assert.match(message, /Product: &lt;OCEAN PRO&gt;/);
   assert.match(message, /UTR: 123456789012/);
   assert.equal(requests.filter(item => item.url.includes('api.telegram.org')).length, 1);
+});
+
+test('marks used-key requests and includes the reserved key validity', async () => {
+  setOrder({ used_key_id: 7, used_key_remaining_days: 24, product_name: 'Old Software Name' });
+  const res = await call();
+  assert.equal(res.statusCode, 200);
+  const telegramRequest = requests.find(item => item.url.includes('api.telegram.org'));
+  const message = JSON.parse(telegramRequest.options.body).text;
+  assert.match(message, /Type: USED KEY/);
+  assert.match(message, /Product: Current Software Name/);
+  assert.match(message, /Used Key ID: #7/);
+  assert.doesNotMatch(message, /Old Software Name/);
+  assert.match(message, /Remaining days: 24/);
+  assert.match(message, /Order ID: #42/);
+  assert.match(message, /Amount: ₹1,299/);
+  assert.match(message, /UTR: 123456789012/);
+});
+
+test('does not send a used-key alert without database validity details', async () => {
+  setOrder({ used_key_id: 7, used_key_remaining_days: null });
+  const res = await call();
+  assert.equal(res.statusCode, 409);
+  assert.equal(requests.some(item => item.options.method === 'POST'), false);
+  assert.equal(requests.some(item => item.url.includes('api.telegram.org')), false);
 });
 
 test('does not claim or alert an order without a valid UTR', async () => {

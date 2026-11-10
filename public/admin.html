@@ -373,6 +373,27 @@
         <div id="order-request-list"></div>
         <div class="request-pagination"><button id="order-request-prev" class="btn ghost" type="button">Previous</button><span id="order-request-page" class="sub" style="margin:0"></span><button id="order-request-next" class="btn ghost" type="button">Next</button></div>
       </section>
+      <section id="used-keys-panel" class="panel hidden" data-card-tone="software">
+        <div class="bar" style="margin-bottom:15px"><div><h2 class="title-premium">Used Keys</h2><p class="sub desc-premium" style="margin:3px 0 0">Manage encrypted software keys and their remaining validity.</p></div><button id="used-keys-refresh" class="btn ghost" type="button">Refresh</button></div>
+        <div class="admin-grid">
+          <section class="panel" style="margin:0">
+            <h3 id="used-key-form-title">Add used key</h3>
+            <form id="used-key-form">
+              <input id="used-key-id" type="hidden">
+              <input id="used-key-visible" type="hidden" value="true">
+              <div class="field"><label for="used-key-product">Software</label><select id="used-key-product" required></select></div>
+              <div class="field"><label for="used-key-license">Key Name / License Key</label><textarea id="used-key-license" maxlength="4000" required></textarea></div>
+              <div class="field"><label for="used-key-download">Download Link</label><input id="used-key-download" type="url" maxlength="2048" required></div>
+              <div class="row"><div class="field"><label for="used-key-price">Price (₹)</label><input id="used-key-price" type="number" min="0.01" max="100000" step="0.01" required></div><div class="field"><label for="used-key-expiry">Expiry Date</label><input id="used-key-expiry" type="date" required></div></div>
+              <button class="btn gold" id="used-key-save" type="submit">Add key</button><button class="btn ghost hidden" id="used-key-cancel" type="button">Cancel edit</button>
+              <div class="error" id="used-key-error" aria-live="polite"></div>
+            </form>
+            <div class="field" style="margin-top:22px"><label for="used-key-bulk">Bulk add · one key per line</label><textarea id="used-key-bulk" maxlength="100000" placeholder="KEY NAME&#9;DOWNLOAD LINK&#9;PRICE&#9;YYYY-MM-DD"></textarea><small class="sub">Use tab-separated values: key, download link, price, expiry date. Up to 100 keys.</small></div>
+            <button class="btn ghost" id="used-key-bulk-add" type="button">Add keys in bulk</button>
+          </section>
+          <section class="panel" style="margin:0"><h3>Inventory</h3><div class="order-tools"><select id="used-key-filter-product" aria-label="Filter by software"><option value="">All software</option></select><input id="used-key-search" type="search" maxlength="120" placeholder="Search software, key, or link"></div><div id="used-key-list" class="product-list"></div></section>
+        </div>
+      </section>
     </section>
   </main>
   <div class="order-drawer" id="order-drawer" aria-hidden="true">
@@ -424,7 +445,7 @@
   <script>
     const categories=[{id:'software',title:'Software'},{id:'vps',title:'Windows VPS'},{id:'proxy',title:'Static Proxy'},{id:'residential',title:'Residential Proxies'}];
     const DEFAULT_SPIN_PRIZES=[{code:'SAVE20',label:'20%',type:'percent',value:20,color:'#e11d48',maxDiscountAmount:500,weight:15},{code:'SAVE50',label:'50%',type:'percent',value:50,color:'#2f3fb8',maxDiscountAmount:500,weight:10},{code:'SAVE100',label:'100%',type:'percent',value:100,color:'#f5c04a',maxDiscountAmount:500,weight:4},{code:'BONUS100',label:'100%',type:'percent',value:100,color:'#e11d48',maxDiscountAmount:500,weight:1},{code:'TRY_AGAIN',label:'TRY AGAIN',type:'tryAgain',value:0,color:'#2a2f3a',maxDiscountAmount:0,weight:45},{code:'SAVE10',label:'10%',type:'percent',value:10,color:'#2f3fb8',maxDiscountAmount:500,weight:25}];
-    const state={client:null,category:'software',products:[],editing:null,editingDownloadUrl:null,downloadLinkLoaded:true,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null,paymentQrImageUrl:'',offers:[],offerProducts:[],offerReports:[],spinPrizes:DEFAULT_SPIN_PRIZES,coupons:[],orderRequestStatus:'new',orderRequestPage:1,orderRequestPageSize:20,orderRequestCount:0,orderRequestCounts:{new:0,completed:0,rejected:0,all:0},selectedOrderRequest:null};
+    const state={client:null,category:'software',products:[],editing:null,editingDownloadUrl:null,downloadLinkLoaded:true,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null,paymentQrImageUrl:'',offers:[],offerProducts:[],offerReports:[],spinPrizes:DEFAULT_SPIN_PRIZES,coupons:[],usedKeyProducts:[],usedKeys:[],orderRequestStatus:'new',orderRequestPage:1,orderRequestPageSize:20,orderRequestCount:0,orderRequestCounts:{new:0,completed:0,rejected:0,all:0},selectedOrderRequest:null};
     let productPreviewUrl=null;
     let paymentQrPreviewUrl=null;
     const $=id=>document.getElementById(id);
@@ -563,6 +584,7 @@
         <button type="button" data-offers="true" class="${state.activeView==='offers'?'active':''}">Offers</button>
         <button type="button" data-finance="topups" class="${state.activeView==='topups'?'active':''}">Top-up Requests</button>
         <button type="button" data-finance="orders" class="${state.activeView==='orders'?'active':''}">Orders</button>
+        <button type="button" data-used-keys="true" class="${state.activeView==='used-keys'?'active':''}">Used Keys</button>
         <button type="button" data-order-requests="true" class="request-menu ${state.activeView==='order-requests'?'active':''}">Order Requests${requestBadge}</button>
         <button type="button" data-finance="coupons" class="${state.activeView==='coupons'?'active':''}">Coupons</button>
         <button type="button" data-finance="users" class="${state.activeView==='users'?'active':''}">Users</button>
@@ -570,23 +592,24 @@
       $('tabs').querySelectorAll('[data-category]').forEach(button=>button.addEventListener('click',()=>selectCategory(button.dataset.category)));
       $('tabs').querySelectorAll('[data-finance]').forEach(button=>button.addEventListener('click',()=>showFinance(button.dataset.finance)));
       $('tabs').querySelector('[data-order-requests]').addEventListener('click',showOrderRequests);
+      $('tabs').querySelector('[data-used-keys]').addEventListener('click',showUsedKeys);
       $('tabs').querySelector('[data-spin]').addEventListener('click',showSpinWin);
       $('tabs').querySelector('[data-offers]').addEventListener('click',showOffers);
       $('tabs').querySelector('[data-settings]').addEventListener('click',showSettings);
     }
     function selectCategory(category){
       state.category=category;state.activeView=category;
-      $('products-panel').classList.remove('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');
+      $('products-panel').classList.remove('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');
       $('page-title').textContent=categories.find(item=>item.id===category).title;
       $('list-title').textContent=`${categories.find(item=>item.id===category).title} products`;
       renderTabs();renderProducts();resetForm();syncPlanFields();
     }
     function showSettings(){
-      state.activeView='settings';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.remove('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('page-title').textContent='Settings';
+      state.activeView='settings';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.remove('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');$('page-title').textContent='Settings';
       renderTabs();loadSettings().catch(error=>setError('settings-error',error.message));
     }
     function showSpinWin(){
-      state.activeView='spin';$('products-panel').classList.add('hidden');$('spin-panel').classList.remove('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('page-title').textContent='Spin & Win';
+      state.activeView='spin';$('products-panel').classList.add('hidden');$('spin-panel').classList.remove('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');$('page-title').textContent='Spin & Win';
       renderTabs();$('spin-prize-list').innerHTML='<div class="empty">Loading spin settings…</div>';
       loadSpinPrizeConfig().then(renderSpinPrizeEditor).catch(error=>{
         console.error('Could not load spin settings:',error);
@@ -594,22 +617,126 @@
       });
     }
     function showOffers(){
-      state.activeView='offers';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.remove('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('page-title').textContent='Offers';
+      state.activeView='offers';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.remove('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');$('page-title').textContent='Offers';
       renderTabs();resetOfferForm();
       Promise.all([renderOffers(),renderOfferOperations()]).catch(error=>setError('offer-error',`Could not load offer data: ${error.message}`));
     }
     async function showFinance(tab){
-      state.activeView=tab;$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.remove('hidden');$('order-requests-panel').classList.add('hidden');
+      state.activeView=tab;$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.remove('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');
       const titles={topups:['Top-up Requests','Review customer UPI payments before crediting wallets.'],orders:['Orders','Deliver customer purchases manually or issue a wallet refund.'],coupons:['Coupons','Read-only database records for spin rewards and coupon use.'],users:['Users','Manage customer wallet balances with an audit note.']};
       $('page-title').textContent=titles[tab][0];$('finance-title').textContent=titles[tab][0];$('finance-description').textContent=titles[tab][1];renderTabs();await renderFinance(tab);
     }
     async function showOrderRequests(){
       state.activeView='order-requests';
       $('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');
-      $('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.remove('hidden');
+      $('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.remove('hidden');$('used-keys-panel').classList.add('hidden');
       $('page-title').textContent='Order Requests';renderTabs();
       try{await refreshOrderRequestCounts();await renderOrderRequests()}
       catch(error){$('order-request-list').innerHTML=`<div class="empty">Could not load Order Requests: ${escapeHtml(error.message)}</div>`}
+    }
+    async function showUsedKeys(){
+      state.activeView='used-keys';
+      $('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');
+      $('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.remove('hidden');
+      $('page-title').textContent='Used Keys';renderTabs();$('used-key-list').innerHTML='<div class="empty">Loading inventory…</div>';
+      try{
+        const {data,error}=await state.client.from('products').select('id,name').eq('category','software').order('name');
+        if(error)throw error;
+        state.usedKeyProducts=data||[];
+        $('used-key-product').innerHTML=state.usedKeyProducts.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`).join('');
+        $('used-key-filter-product').innerHTML='<option value="">All software</option>'+state.usedKeyProducts.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`).join('');
+        if(!state.usedKeyProducts.length)$('used-key-product').innerHTML='<option value="">Add Software products first</option>';
+        await renderUsedKeyInventory();
+      }catch(error){$('used-key-list').innerHTML=`<div class="empty">Could not load Used Keys: ${escapeHtml(error.message)}</div>`}
+    }
+    async function renderUsedKeyInventory(){
+      const {data,error}=await state.client.rpc('admin_list_used_keys');
+      if(error)throw error;
+      state.usedKeys=data||[];
+      renderFilteredUsedKeys();
+    }
+    function renderFilteredUsedKeys(){
+      const filterProduct=$('used-key-filter-product').value;
+      const search=$('used-key-search').value.trim().toLowerCase();
+      const filtered=state.usedKeys.filter(item=>(!filterProduct||String(item.product_id)===filterProduct)
+        &&(!search||[item.software_name,item.license_key,item.download_link].some(value=>String(value||'').toLowerCase().includes(search))));
+      $('used-key-list').innerHTML=filtered.length?filtered.map(item=>{
+        const editable=['available','hidden'].includes(item.status);
+        const visible=item.status==='available';
+        const status=item.status==='available'?'Available':item.status==='hidden'?'Hidden':item.status;
+        return `<article class="product-row"><div><strong>${escapeHtml(item.software_name)}</strong><small>Key #${escapeHtml(item.id)} · ${escapeHtml(item.license_key)}</small><small>₹${money(item.price)} · expires ${escapeHtml(item.expires_on)} · ${Number(item.remaining_days)} day(s) remaining</small><small>${escapeHtml(item.download_link)}</small></div><span class="pill">${escapeHtml(status)}</span><div class="product-row-actions"><button class="btn ghost" type="button" data-edit-used-key="${item.id}" ${editable?'':'disabled'}>Edit</button><button class="btn ghost" type="button" data-toggle-used-key="${item.id}" ${editable?'':'disabled'}>${visible?'Hide':'Show'}</button><button class="btn danger" type="button" data-delete-used-key="${item.id}" ${editable?'':'disabled'}>Delete</button></div></article>`;
+      }).join(''):'<div class="empty">No used keys in inventory.</div>';
+      revealAdmin($('used-key-list'));
+    }
+    function resetUsedKeyForm(){
+      $('used-key-form').reset();$('used-key-id').value='';
+      $('used-key-visible').value='true';
+      $('used-key-form-title').textContent='Add used key';$('used-key-save').textContent='Add key';
+      $('used-key-cancel').classList.add('hidden');$('used-key-error').textContent='';
+      if(state.usedKeyProducts.length)$('used-key-product').value=String(state.usedKeyProducts[0].id);
+    }
+    async function saveUsedKey(event){
+      event.preventDefault();$('used-key-error').textContent='';
+      const button=$('used-key-save');button.disabled=true;
+      try{
+        const {data,error}=await state.client.rpc('admin_save_used_key',{
+          p_id:$('used-key-id').value?Number($('used-key-id').value):null,
+          p_product_id:Number($('used-key-product').value),
+          p_license_key:$('used-key-license').value,
+          p_download_link:$('used-key-download').value.trim(),
+          p_price:Number($('used-key-price').value),
+          p_expires_on:$('used-key-expiry').value,p_is_visible:$('used-key-visible').value==='true'
+        });
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not save this key.');
+        resetUsedKeyForm();await renderUsedKeyInventory();notify('Used key saved.');
+      }catch(error){$('used-key-error').textContent=error.message||'Could not save this key.'}
+      finally{button.disabled=false}
+    }
+    async function bulkAddUsedKeys(){
+      $('used-key-error').textContent='';
+      const lines=$('used-key-bulk').value.split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
+      if(!lines.length){$('used-key-error').textContent='Enter one or more tab-separated key rows.';return}
+      const button=$('used-key-bulk-add');button.disabled=true;
+      try{
+        const keys=lines.map((line,index)=>{
+          const [license_key,download_link,price,expires_on,...extra]=line.split('\t').map(value=>value.trim());
+          if(extra.length||!license_key||!download_link||!price||!expires_on){
+            throw new Error(`Line ${index+1}: enter key, download link, price, and expiry date separated by tabs.`);
+          }
+          return {license_key,download_link,price:Number(price),expires_on};
+        });
+        const {data,error}=await state.client.rpc('admin_bulk_add_used_keys_with_details',{
+          p_product_id:Number($('used-key-product').value),p_keys:keys
+        });
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not add these keys.');
+        $('used-key-bulk').value='';await renderUsedKeyInventory();notify(`${Number(data.count)} used key(s) added.`);
+      }catch(error){$('used-key-error').textContent=error.message||'Could not add these keys.'}
+      finally{button.disabled=false}
+    }
+    async function handleUsedKeyAction(event){
+      const button=event.target instanceof Element?event.target.closest('[data-edit-used-key],[data-toggle-used-key],[data-delete-used-key]'):null;
+      if(!button||!$('used-key-list').contains(button))return;
+      const item=state.usedKeys.find(key=>String(key.id)===button.dataset.editUsedKey||String(key.id)===button.dataset.toggleUsedKey||String(key.id)===button.dataset.deleteUsedKey);
+      if(!item)return;
+      if(button.matches('[data-edit-used-key]')){
+        $('used-key-id').value=String(item.id);$('used-key-product').value=String(item.product_id);
+        $('used-key-visible').value=String(item.status==='available');
+        $('used-key-license').value=item.license_key;$('used-key-download').value=item.download_link;
+        $('used-key-price').value=item.price;$('used-key-expiry').value=item.expires_on;
+        $('used-key-form-title').textContent='Edit used key';$('used-key-save').textContent='Save changes';
+        $('used-key-cancel').classList.remove('hidden');$('used-key-error').textContent='';
+      }else if(button.matches('[data-toggle-used-key]')){
+        const {data,error}=await state.client.rpc('admin_set_used_key_visibility',{p_id:Number(item.id),p_is_visible:item.status!=='available'});
+        if(error||!data?.ok){notify(error?.message||data?.message||'Could not update key visibility.');return}
+        await renderUsedKeyInventory();
+      }else{
+        if(!await confirmAdminAction('Delete used key?','Delete this available or hidden license key from inventory? This cannot be undone.','Delete'))return;
+        const {data,error}=await state.client.rpc('admin_delete_used_key',{p_id:Number(item.id)});
+        if(error||!data?.ok){notify(error?.message||data?.message||'Could not delete this key.');return}
+        await renderUsedKeyInventory();notify('Used key deleted.');
+      }
     }
     function offerDateTimeInput(value){
       const date=value instanceof Date?value:new Date(value);
@@ -1251,8 +1378,8 @@
       $('order-request-list').innerHTML=requests.length?`<div class="request-table-wrap"><table class="request-table">
         <thead><tr><th>Order ID</th><th>Customer</th><th>Product</th><th>Type</th><th>Amount</th><th>UTR Number</th><th>Payment Time</th><th>Status</th></tr></thead>
         <tbody>${requests.map(order=>`<tr tabindex="0" role="button" data-open-request="${escapeHtml(order.id)}">
-          <td>#${escapeHtml(order.id)}</td><td>${escapeHtml(order.customer)}</td><td>${escapeHtml(order.product_name)}</td>
-          <td>${order.product_type==='vps'?'Windows VPS':order.product_type==='software'?'Software':escapeHtml(order.product_type)}</td><td class="amount">₹${money(order.amount)}</td>
+          <td>#${escapeHtml(order.id)}</td><td>${escapeHtml(order.customer)}</td><td>${escapeHtml(order.product_name)}${order.used_key_id?`<small>Used Key #${escapeHtml(order.used_key_id)} · ${Number(order.used_key_remaining_days)} days left</small>`:''}</td>
+          <td>${order.product_type==='vps'?'Windows VPS':order.product_type==='used_key'?'USED KEY':order.product_type==='software'?'Software':escapeHtml(order.product_type)}</td><td class="amount">₹${money(order.amount)}</td>
           <td>${escapeHtml(order.utr_number||'—')}</td><td>${escapeHtml(formatDate(order.payment_submitted_at||order.created_at))}</td>
           <td><span class="status-badge ${escapeHtml(order.status)}">${escapeHtml(order.status)}</span></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No orders match this filter.</div>';
       $('order-request-list').querySelectorAll('[data-open-request]').forEach(row=>{
@@ -1273,7 +1400,8 @@
         state.selectedOrderRequest=data;
         const vps=data.product_type==='vps'||data.product_type==='windows-vps';
         $('order-request-payment').innerHTML=[
-          ['Customer',data.customer||'Customer'],['Product',data.product_name],['Amount',`₹${money(data.amount)}`],
+          ['Customer',data.customer||'Customer'],['Product',data.product_name],['Type',data.used_key_id?'USED KEY':vps?'Windows VPS':'Software'],
+          ...(data.used_key_id?[['Used Key ID',`#${data.used_key_id}`],['Key Name',data.license_key||'—']]:[]),['Amount',`₹${money(data.amount)}`],
           ['UTR Number',data.utr_number||'—'],['Payment time',formatDate(data.payment_submitted_at)],
           ['Status',data.status],...(data.reject_reason?[['Rejection reason',data.reject_reason]]:[])
         ].map(([label,value])=>`<div class="order-detail"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></div>`).join('');
@@ -1291,7 +1419,8 @@
         const editable=data.status==='new';
         ['save-order-request','complete-order-request','reject-order-request'].forEach(buttonId=>$(buttonId).disabled=!editable);
         $('request-rejection-reason').disabled=!editable;
-        $('request-software-name').disabled=!editable;$('request-license-key').disabled=!editable;$('request-download-link').disabled=!editable;
+        const fixedUsedKey=Boolean(data.used_key_id);
+        $('request-software-name').disabled=!editable||fixedUsedKey;$('request-license-key').disabled=!editable||fixedUsedKey;$('request-download-link').disabled=!editable||fixedUsedKey;
         ['request-vps-ip','request-vps-port','request-vps-username','request-vps-password','request-vps-storage'].forEach(inputId=>$(inputId).disabled=!editable);
       }catch(error){
         $('order-request-error').textContent=error.message||'Could not load order details.';
@@ -1575,6 +1704,13 @@
       }catch(error){setError('password-reset-error',`Could not update the password: ${error.message}`)}
     });
     $('product-form').addEventListener('submit',saveProduct);
+    $('used-key-form').addEventListener('submit',saveUsedKey);
+    $('used-key-bulk-add').addEventListener('click',bulkAddUsedKeys);
+    $('used-key-cancel').addEventListener('click',resetUsedKeyForm);
+    $('used-key-refresh').addEventListener('click',()=>renderUsedKeyInventory().catch(error=>notify(`Could not load Used Keys: ${error.message}`)));
+    $('used-key-list').addEventListener('click',event=>handleUsedKeyAction(event).catch(error=>notify(`Could not update Used Keys: ${error.message}`)));
+    $('used-key-filter-product').addEventListener('change',()=>renderFilteredUsedKeys());
+    $('used-key-search').addEventListener('input',()=>renderFilteredUsedKeys());
     $('order-requests-refresh').addEventListener('click',()=>refreshOrderRequestCounts().then(renderOrderRequests).catch(error=>{$('order-request-list').innerHTML=`<div class="empty">${escapeHtml(error.message)}</div>`}));
     $('order-request-prev').addEventListener('click',()=>{if(state.orderRequestPage>1){state.orderRequestPage--;renderOrderRequests()}});
     $('order-request-next').addEventListener('click',()=>{state.orderRequestPage++;renderOrderRequests()});

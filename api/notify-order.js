@@ -94,15 +94,18 @@ function createOrderMessage(order, user) {
   const email = plainText(user.email, 254);
   const customer = name && email ? `${name} / ${email}` : name || email || 'Customer';
   const product = plainText(order.product_name);
-  const type = order.product_type === 'vps' || order.product_type === 'windows-vps'
-    ? 'Windows VPS'
-    : 'Software';
+  const type = order.used_key_id
+    ? 'USED KEY'
+    : order.product_type === 'vps' || order.product_type === 'windows-vps'
+      ? 'Windows VPS'
+      : 'Software';
   const quantity = Math.max(1, Number.parseInt(order.quantity, 10) || 1);
   const amount = Number(order.amount ?? order.price);
   const utr = String(order.utr_number || order.utr || '').trim();
   const paidAt = order.payment_submitted_at || order.utr_submitted_at || order.created_at;
-
-  if (!product || !Number.isFinite(amount) || !/^\d{12}$/.test(utr)) {
+  const remainingDays = Number(order.used_key_remaining_days);
+  if (order.used_key_id && (order.used_key_remaining_days == null
+      || !Number.isInteger(remainingDays) || remainingDays < 0)) {
     throw new Error('Order is missing alert details.');
   }
 
@@ -113,6 +116,8 @@ function createOrderMessage(order, user) {
     `Customer: ${escapeHtml(customer)}`,
     `Product: ${escapeHtml(product)}`,
     `Type: ${type}`,
+    ...(order.used_key_id ? [`Used Key ID: #${escapeHtml(order.used_key_id)}`] : []),
+    ...(order.used_key_id ? [`Remaining days: ${remainingDays}`] : []),
     `Quantity: ${quantity}`,
     `Amount: ₹${formatAmount(amount)}`,
     `UTR: ${escapeHtml(utr)}`,
@@ -189,7 +194,7 @@ module.exports = async function notifyOrder(req, res) {
 
     // Read all alert details from Supabase; client-supplied order details are ignored.
     const orderQuery = new URLSearchParams({
-      select: 'id,user_id,product_name,product_type,quantity,price,amount,utr,utr_number,created_at,payment_submitted_at,utr_submitted_at',
+      select: 'id,user_id,product_id,product_name,product_type,quantity,price,amount,utr,utr_number,created_at,payment_submitted_at,utr_submitted_at,used_key_id,used_key_remaining_days',
       id: `eq.${orderId}`,
       user_id: `eq.${user.id}`,
       status: 'eq.new',
@@ -206,8 +211,30 @@ module.exports = async function notifyOrder(req, res) {
     if (!['software', 'vps', 'windows-vps'].includes(order.product_type)) {
       return sendJson(res, 409, { error: 'Order type is not eligible for an alert.' });
     }
+    if (order.used_key_id) {
+      const productQuery = new URLSearchParams({
+        select: 'name',
+        id: `eq.${order.product_id}`,
+        limit: '1'
+      });
+      const productResponse = await fetchWithTimeout(
+        `${supabaseUrl}/rest/v1/products?${productQuery}`,
+        { headers: supabaseHeaders(serviceRoleKey) }
+      );
+      if (!productResponse.ok) throw new Error(`Supabase product lookup failed with status ${productResponse.status}.`);
+      const products = await responseJson(productResponse);
+      if (!Array.isArray(products) || !products[0]?.name) {
+        return sendJson(res, 409, { error: 'Used Key software product was not found.' });
+      }
+      order.product_name = products[0].name;
+    }
     if (!/^\d{12}$/.test(String(order.utr_number || order.utr || '').trim())) {
       return sendJson(res, 409, { error: 'Order has no valid submitted UTR.' });
+    }
+    if (order.used_key_id && (order.used_key_remaining_days == null
+      || !Number.isInteger(Number(order.used_key_remaining_days))
+      || Number(order.used_key_remaining_days) < 0)) {
+      return sendJson(res, 409, { error: 'Used Key order is missing its remaining validity.' });
     }
     const message = createOrderMessage(order, user);
 
