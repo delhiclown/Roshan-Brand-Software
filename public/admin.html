@@ -50,6 +50,7 @@
     .order-tools{display:grid;grid-template-columns:minmax(200px,1fr) auto;gap:10px;margin-bottom:12px}.order-filters{display:flex;gap:6px;flex-wrap:wrap}.order-filter{background:#0b1429;border:1px solid var(--line);color:var(--muted);padding:8px 11px;border-radius:9px;font-size:11px}.order-filter.active{border-color:#6d5727;color:var(--gold);background:#1b1920}
     .order-row{color:var(--text);background:#0b1429;border:1px solid var(--line);border-radius:13px;padding:14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}.order-row:hover{border-color:#6d5727}.order-row.pending,.order-row.pending_verification{border-color:#6d5727;background:#171609}.order-open{width:100%;text-align:left;color:inherit;background:transparent;border:0;padding:0;display:grid;grid-template-columns:70px minmax(0,1.3fr) minmax(0,1fr) auto;gap:12px;align-items:center;cursor:pointer;min-width:0}.order-cell{min-width:0}.order-cell small{display:block;color:var(--muted);font-size:11px;margin-top:4px;overflow-wrap:anywhere}.status-badge{font-size:10px;border:1px solid var(--line);border-radius:999px;padding:5px 9px;color:var(--muted);white-space:nowrap}    .status-badge.pending,.status-badge.pending_verification,.status-badge.pending_payment{color:var(--gold);border-color:#6d5727}.status-badge.delivered{color:#84e4b6;border-color:#23563f}.status-badge.rejected,.status-badge.refunded,.status-badge.expired{color:#ffb5bb;border-color:#71303b}.order-row-actions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
     .order-drawer{position:fixed;inset:0;z-index:20;display:flex;justify-content:flex-end;overflow:hidden;visibility:hidden;pointer-events:none}.order-drawer.open{visibility:visible;pointer-events:auto}.order-overlay{position:absolute;inset:0;border:0;background:#02050bcc;opacity:0;transition:opacity .2s}.order-drawer.open .order-overlay{opacity:1}.order-panel{position:relative;width:min(620px,100%);height:100%;overflow:auto;background:var(--card);border-left:1px solid var(--line);padding:23px;box-shadow:-18px 0 50px #0008;transform:translateX(100%);transition:transform .25s}.order-drawer.open .order-panel{transform:translateX(0)}.order-panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.order-details{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}.order-detail{min-width:0;border:1px solid var(--line);border-radius:10px;padding:11px}.order-detail small{display:block;color:var(--muted);font-size:10px;margin-bottom:4px}.order-detail strong{font-size:12px;overflow-wrap:anywhere}.delivery-text{min-height:220px;white-space:pre-wrap;overflow-wrap:anywhere}.order-panel-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+    .request-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}.request-table{width:100%;border-collapse:collapse;min-width:900px;font-size:12px}.request-table th,.request-table td{padding:11px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}.request-table th{color:var(--muted);font-weight:600}.request-table tbody tr{cursor:pointer}.request-table tbody tr:hover{background:#111b32}.request-table tbody tr:last-child td{border-bottom:0}.request-pagination{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px}.request-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:15px 0}.request-tabs button{background:#0b1429;border:1px solid var(--line);color:var(--muted);padding:8px 11px;border-radius:9px;font-size:11px}.request-tabs button.active{border-color:#6d5727;color:var(--gold);background:#1b1920}.request-count{display:inline-grid;place-items:center;min-width:17px;height:17px;margin-left:4px;padding:0 4px;border-radius:999px;background:#a53742;color:#fff;font-size:10px}.request-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.request-form-grid .field{margin-bottom:5px}.request-menu{position:relative}.request-drawer .order-panel{width:min(680px,100%)}
     .product-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:13px;padding:13px}
     .product-row strong{display:block;overflow-wrap:anywhere}.product-row small{color:var(--muted);display:block;margin-top:4px}
     .actions{display:flex;align-items:center;justify-content:end;gap:6px;flex-wrap:wrap}.actions .btn{padding:8px 10px}
@@ -236,7 +237,8 @@
 <body>
   <header><div class="wrap bar"><a class="brand" href="/" aria-label="Roshan Brand home"><span class="rb-logo-slot" data-logo-size="rb-logo-admin" aria-hidden="true"></span><span class="admin-brand-copy"><span class="brand-wordmark">ROSHAN<span>BRAND</span></span><small>ADMIN</small></span></a><h1 id="page-title"></h1><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light theme" title="Switch to light theme"><span id="theme-toggle-icon" aria-hidden="true">☼</span></button><button id="logout" class="btn ghost hidden">Sign out</button></div></header>
   <main class="wrap page-enter">
-    <section id="login-panel" class="panel" data-card-tone="software">
+    <section id="auth-loading" class="panel" role="status">Restoring your session…</section>
+    <section id="login-panel" class="panel hidden" data-card-tone="software">
       <h2>Sign in</h2><p class="sub">Use the admin email and password created in your Supabase project.</p>
       <form id="login-form">
         <div class="field"><label for="email">Admin email</label><input id="email" type="email" autocomplete="username" required></div>
@@ -315,7 +317,7 @@
               <input id="offer-id" type="hidden">
               <div class="field"><label for="offer-title">Offer title</label><input id="offer-title" maxlength="120" required placeholder="e.g. Two for one"></div>
               <div class="field"><label for="offer-description">Short description</label><textarea id="offer-description" maxlength="500" placeholder="Tell customers what this offer includes"></textarea></div>
-              <div class="field"><label for="offer-collection">Collection</label><select id="offer-collection" required><option value="software">Software</option><option value="vps">Linux VPS</option><option value="proxy">Linux Proxy</option><option value="residential">Residential Proxies</option></select></div>
+              <div class="field"><label for="offer-collection">Collection</label><select id="offer-collection" required><option value="software">Software</option><option value="vps">Windows VPS</option><option value="proxy">Static Proxy</option><option value="residential">Residential Proxies</option></select></div>
               <div class="field"><label for="offer-product">Product (optional)</label><select id="offer-product"><option value="">Entire collection</option></select><small class="sub" style="display:block;margin:5px 0 0">Choose a product to take customers directly to it, or leave empty for the full collection.</small></div>
               <section class="offer-claim-settings">
                 <label class="check" for="offer-claim-enabled"><input id="offer-claim-enabled" type="checkbox"> Enable screenshot-verified claim and free-software transfer</label>
@@ -364,6 +366,13 @@
         </form>
       </section>
       <section id="finance-panel" class="panel hidden" data-card-tone="indigo"><div class="bar" style="margin-bottom:15px"><div><h2 class="title-premium" id="finance-title"></h2><p class="sub desc-premium" id="finance-description" style="margin:3px 0 0"></p></div><button id="finance-refresh" class="btn ghost">Refresh</button></div><div id="order-tools" class="order-tools hidden"><input id="order-search" type="search" placeholder="Search order, product or customer"><div class="order-filters" id="order-filters"></div></div><div class="finance-list" id="finance-list"></div></section>
+      <section id="order-requests-panel" class="panel hidden" data-card-tone="indigo">
+        <div class="bar"><div><h2 class="title-premium">Order Requests</h2><p class="sub desc-premium" style="margin:3px 0 0">Only orders with a submitted UTR appear here.</p></div><button id="order-requests-refresh" class="btn ghost" type="button">Refresh</button></div>
+        <div class="request-tabs" id="order-request-tabs"></div>
+        <div class="order-tools"><input id="order-request-search" type="search" maxlength="120" placeholder="Search UTR, order ID, or customer"><span class="sub" style="margin:0;align-self:center">Newest payment submissions first</span></div>
+        <div id="order-request-list"></div>
+        <div class="request-pagination"><button id="order-request-prev" class="btn ghost" type="button">Previous</button><span id="order-request-page" class="sub" style="margin:0"></span><button id="order-request-next" class="btn ghost" type="button">Next</button></div>
+      </section>
     </section>
   </main>
   <div class="order-drawer" id="order-drawer" aria-hidden="true">
@@ -379,6 +388,30 @@
       <div class="order-panel-actions"><button class="btn gold" id="deliver-order" type="button">Deliver</button><button class="btn ghost" id="save-delivery-draft" type="button">Save draft</button><button class="btn danger" id="reject-order" type="button">Reject</button></div>
     </section>
   </div>
+  <div class="order-drawer request-drawer" id="order-request-drawer" aria-hidden="true">
+    <button class="order-overlay" id="order-request-overlay" type="button" aria-label="Close order request details"></button>
+    <section class="order-panel" role="dialog" aria-modal="true" aria-labelledby="order-request-title">
+      <div class="order-panel-head"><h2 id="order-request-title">Order request</h2><button class="btn ghost" id="close-order-request" type="button">Close</button></div>
+      <div class="order-details" id="order-request-payment"></div>
+      <div id="software-delivery-fields">
+        <div class="field"><label for="request-software-name">Software Name</label><input id="request-software-name" maxlength="160"></div>
+        <div class="field"><label for="request-license-key">License Key</label><textarea id="request-license-key" maxlength="4000"></textarea></div>
+        <div class="field"><label for="request-download-link">Download Link</label><input id="request-download-link" type="url" maxlength="2048"></div>
+      </div>
+      <div id="vps-delivery-fields" class="hidden">
+        <div class="request-form-grid">
+          <div class="field"><label for="request-vps-ip">IP address</label><input id="request-vps-ip" maxlength="64"></div>
+          <div class="field"><label for="request-vps-port">Port</label><input id="request-vps-port" type="number" min="1" max="65535"></div>
+          <div class="field"><label for="request-vps-username">Username</label><input id="request-vps-username" maxlength="160"></div>
+          <div class="field"><label for="request-vps-password">Password</label><input id="request-vps-password" type="password" maxlength="4000"></div>
+          <div class="field"><label for="request-vps-storage">Storage (GB)</label><input id="request-vps-storage" type="number" min="1" max="100000"></div>
+        </div>
+      </div>
+      <div class="field"><label for="request-rejection-reason">Rejection reason</label><textarea id="request-rejection-reason" maxlength="1000" placeholder="Required when rejecting the payment"></textarea></div>
+      <div class="error" id="order-request-error" aria-live="polite"></div>
+      <div class="order-panel-actions"><button class="btn gold" id="save-order-request" type="button">Save Details</button><button class="btn ghost" id="complete-order-request" type="button">Complete Order</button><button class="btn danger" id="reject-order-request" type="button">Reject Order</button></div>
+    </section>
+  </div>
   <div class="toast hidden" id="toast" role="status"></div>
   <div class="admin-confirm hidden" id="admin-confirm" role="alertdialog" aria-modal="true" aria-labelledby="admin-confirm-title" aria-describedby="admin-confirm-message">
     <button class="admin-confirm-backdrop" id="admin-confirm-backdrop" type="button" aria-label="Cancel confirmation"></button>
@@ -389,9 +422,9 @@
     <section class="admin-confirm-dialog"><h2>Claim screenshot</h2><img class="offer-screenshot hidden" id="offer-screenshot" alt="Customer-provided offer claim screenshot"><button class="btn ghost" id="offer-screenshot-close" type="button">Close</button></section>
   </div>
   <script>
-    const categories=[{id:'software',title:'Software'},{id:'vps',title:'Linux VPS'},{id:'proxy',title:'Linux Proxy'},{id:'residential',title:'Residential Proxies'}];
+    const categories=[{id:'software',title:'Software'},{id:'vps',title:'Windows VPS'},{id:'proxy',title:'Static Proxy'},{id:'residential',title:'Residential Proxies'}];
     const DEFAULT_SPIN_PRIZES=[{code:'SAVE20',label:'20%',type:'percent',value:20,color:'#e11d48',maxDiscountAmount:500,weight:15},{code:'SAVE50',label:'50%',type:'percent',value:50,color:'#2f3fb8',maxDiscountAmount:500,weight:10},{code:'SAVE100',label:'100%',type:'percent',value:100,color:'#f5c04a',maxDiscountAmount:500,weight:4},{code:'BONUS100',label:'100%',type:'percent',value:100,color:'#e11d48',maxDiscountAmount:500,weight:1},{code:'TRY_AGAIN',label:'TRY AGAIN',type:'tryAgain',value:0,color:'#2a2f3a',maxDiscountAmount:0,weight:45},{code:'SAVE10',label:'10%',type:'percent',value:10,color:'#2f3fb8',maxDiscountAmount:500,weight:25}];
-    const state={client:null,category:'software',products:[],editing:null,editingDownloadUrl:null,downloadLinkLoaded:true,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null,paymentQrImageUrl:'',offers:[],offerProducts:[],offerReports:[],spinPrizes:DEFAULT_SPIN_PRIZES,coupons:[]};
+    const state={client:null,category:'software',products:[],editing:null,editingDownloadUrl:null,downloadLinkLoaded:true,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null,paymentQrImageUrl:'',offers:[],offerProducts:[],offerReports:[],spinPrizes:DEFAULT_SPIN_PRIZES,coupons:[],orderRequestStatus:'new',orderRequestPage:1,orderRequestPageSize:20,orderRequestCount:0,orderRequestCounts:{new:0,completed:0,rejected:0,all:0},selectedOrderRequest:null};
     let productPreviewUrl=null;
     let paymentQrPreviewUrl=null;
     const $=id=>document.getElementById(id);
@@ -498,29 +531,62 @@
       $('login-error').classList.toggle('success',Boolean(message));
       setError('login-error',message);
     }
+    function showAdminLogin(message=''){
+      $('dashboard').classList.add('hidden');
+      $('logout').classList.add('hidden');
+      $('auth-loading').classList.add('hidden');
+      $('login-panel').classList.remove('hidden');
+      if(message)setError('login-error',message);
+    }
+    function showAuthLoadingError(message){
+      $('dashboard').classList.add('hidden');
+      $('logout').classList.add('hidden');
+      $('login-panel').classList.add('hidden');
+      $('auth-loading').classList.remove('hidden');
+      $('auth-loading').textContent=`Could not check your saved session: ${message}. Retry the page after checking your connection.`;
+    }
+    function cleanAuthCallbackUrl(isRecovery=false){
+      if(isRecovery)return;
+      const url=new URL(window.location.href);
+      const hashParams=new URLSearchParams(url.hash.slice(1));
+      if(!url.searchParams.has('code')&&!hashParams.has('access_token')&&!hashParams.has('refresh_token'))return;
+      url.searchParams.delete('code');
+      url.hash='';
+      history.replaceState(null,'',url.pathname+url.search);
+    }
     let isPasswordRecovery=new URLSearchParams(location.hash.slice(1)).get('type')==='recovery';
     if(isPasswordRecovery)showPasswordReset();
     function renderTabs(){
-      $('tabs').innerHTML=categories.map(category=>`<button type="button" data-category="${category.id}" class="${state.activeView===category.id?'active':''}">${category.title}</button>`).join('')+'<button type="button" data-spin="true" class="'+(state.activeView==='spin'?'active':'')+'">Spin &amp; Win</button><button type="button" data-offers="true" class="'+(state.activeView==='offers'?'active':'')+'">Offers</button><button type="button" data-finance="topups" class="'+(state.activeView==='topups'?'active':'')+'">Top-up Requests</button><button type="button" data-finance="orders" class="'+(state.activeView==='orders'?'active':'')+'">Orders</button><button type="button" data-finance="coupons" class="'+(state.activeView==='coupons'?'active':'')+'">Coupons</button><button type="button" data-finance="users" class="'+(state.activeView==='users'?'active':'')+'">Users</button><button type="button" data-settings="true" class="'+(state.activeView==='settings'?'active':'')+'">Settings</button>';
+      const categoryTabs=categories.map(category=>`<button type="button" data-category="${category.id}" class="${state.activeView===category.id?'active':''}">${category.title}</button>`).join('');
+      const requestBadge=state.orderRequestCounts.new?`<span class="request-count">${Number(state.orderRequestCounts.new)}</span>`:'';
+      $('tabs').innerHTML=`${categoryTabs}<button type="button" data-spin="true" class="${state.activeView==='spin'?'active':''}">Spin &amp; Win</button>
+        <button type="button" data-offers="true" class="${state.activeView==='offers'?'active':''}">Offers</button>
+        <button type="button" data-finance="topups" class="${state.activeView==='topups'?'active':''}">Top-up Requests</button>
+        <button type="button" data-finance="orders" class="${state.activeView==='orders'?'active':''}">Orders</button>
+        <button type="button" data-order-requests="true" class="request-menu ${state.activeView==='order-requests'?'active':''}">Order Requests${requestBadge}</button>
+        <button type="button" data-finance="coupons" class="${state.activeView==='coupons'?'active':''}">Coupons</button>
+        <button type="button" data-finance="users" class="${state.activeView==='users'?'active':''}">Users</button>
+        <button type="button" data-settings="true" class="${state.activeView==='settings'?'active':''}">Settings</button>`;
       $('tabs').querySelectorAll('[data-category]').forEach(button=>button.addEventListener('click',()=>selectCategory(button.dataset.category)));
       $('tabs').querySelectorAll('[data-finance]').forEach(button=>button.addEventListener('click',()=>showFinance(button.dataset.finance)));
+      $('tabs').querySelector('[data-order-requests]').addEventListener('click',showOrderRequests);
       $('tabs').querySelector('[data-spin]').addEventListener('click',showSpinWin);
       $('tabs').querySelector('[data-offers]').addEventListener('click',showOffers);
       $('tabs').querySelector('[data-settings]').addEventListener('click',showSettings);
     }
     function selectCategory(category){
       state.category=category;state.activeView=category;
-      $('products-panel').classList.remove('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');
+      $('products-panel').classList.remove('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');
       $('page-title').textContent=categories.find(item=>item.id===category).title;
       $('list-title').textContent=`${categories.find(item=>item.id===category).title} products`;
       renderTabs();renderProducts();resetForm();syncPlanFields();
     }
     function showSettings(){
-      state.activeView='settings';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.remove('hidden');$('finance-panel').classList.add('hidden');$('page-title').textContent='Settings';
+      state.activeView='settings';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.remove('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('page-title').textContent='Settings';
       renderTabs();loadSettings().catch(error=>setError('settings-error',error.message));
     }
     function showSpinWin(){
-      state.activeView='spin';$('products-panel').classList.add('hidden');$('spin-panel').classList.remove('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('page-title').textContent='Spin & Win';
+      state.activeView='spin';$('products-panel').classList.add('hidden');$('spin-panel').classList.remove('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('page-title').textContent='Spin & Win';
       renderTabs();$('spin-prize-list').innerHTML='<div class="empty">Loading spin settings…</div>';
       loadSpinPrizeConfig().then(renderSpinPrizeEditor).catch(error=>{
         console.error('Could not load spin settings:',error);
@@ -528,14 +594,22 @@
       });
     }
     function showOffers(){
-      state.activeView='offers';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.remove('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('page-title').textContent='Offers';
+      state.activeView='offers';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.remove('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('page-title').textContent='Offers';
       renderTabs();resetOfferForm();
       Promise.all([renderOffers(),renderOfferOperations()]).catch(error=>setError('offer-error',`Could not load offer data: ${error.message}`));
     }
     async function showFinance(tab){
-      state.activeView=tab;$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.remove('hidden');
+      state.activeView=tab;$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.remove('hidden');$('order-requests-panel').classList.add('hidden');
       const titles={topups:['Top-up Requests','Review customer UPI payments before crediting wallets.'],orders:['Orders','Deliver customer purchases manually or issue a wallet refund.'],coupons:['Coupons','Read-only database records for spin rewards and coupon use.'],users:['Users','Manage customer wallet balances with an audit note.']};
       $('page-title').textContent=titles[tab][0];$('finance-title').textContent=titles[tab][0];$('finance-description').textContent=titles[tab][1];renderTabs();await renderFinance(tab);
+    }
+    async function showOrderRequests(){
+      state.activeView='order-requests';
+      $('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');
+      $('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.remove('hidden');
+      $('page-title').textContent='Order Requests';renderTabs();
+      try{await refreshOrderRequestCounts();await renderOrderRequests()}
+      catch(error){$('order-request-list').innerHTML=`<div class="empty">Could not load Order Requests: ${escapeHtml(error.message)}</div>`}
     }
     function offerDateTimeInput(value){
       const date=value instanceof Date?value:new Date(value);
@@ -1134,6 +1208,163 @@
       if(tab==='users')renderUsers(data||[]);
       revealAdmin($('finance-list'));
     }
+    async function refreshOrderRequestCounts(){
+      const {data,error}=await state.client.rpc('admin_order_request_counts');
+      if(error)throw error;
+      state.orderRequestCounts=data||{new:0,completed:0,rejected:0,all:0};
+      const menu=$('tabs').querySelector('[data-order-requests]');
+      if(menu){
+        menu.innerHTML=`Order Requests${state.orderRequestCounts.new?`<span class="request-count">${Number(state.orderRequestCounts.new)}</span>`:''}`;
+      }
+      renderOrderRequestTabs();
+    }
+    function renderOrderRequestTabs(){
+      const labels={new:'New',completed:'Completed',rejected:'Rejected',all:'All'};
+      $('order-request-tabs').innerHTML=Object.entries(labels).map(([status,label])=>
+        `<button type="button" class="${state.orderRequestStatus===status?'active':''}" data-request-status="${status}">${label} (${Number(state.orderRequestCounts[status])||0})</button>`
+      ).join('');
+      $('order-request-tabs').querySelectorAll('[data-request-status]').forEach(button=>button.addEventListener('click',()=>{
+        state.orderRequestStatus=button.dataset.requestStatus;state.orderRequestPage=1;renderOrderRequests();
+      }));
+    }
+    async function renderOrderRequests(){
+      $('order-request-list').innerHTML='<div class="empty">Loading order requests…</div>';
+      $('order-request-tabs').querySelectorAll('[data-request-status]').forEach(button=>{
+        button.classList.toggle('active',button.dataset.requestStatus===state.orderRequestStatus);
+      });
+      const {data,error}=await state.client.rpc('admin_list_order_requests',{
+        p_status:state.orderRequestStatus,p_search:$('order-request-search').value.trim(),
+        p_page:state.orderRequestPage,p_page_size:state.orderRequestPageSize
+      });
+      if(error){
+        $('order-request-list').innerHTML=`<div class="empty">${escapeHtml(error.message)}</div>`;
+        $('order-request-page').textContent='Could not load requests.';
+        return;
+      }
+      const requests=data||[];
+      state.orderRequestCount=Number(requests[0]?.total_count)||0;
+      const pageCount=Math.max(1,Math.ceil(state.orderRequestCount/state.orderRequestPageSize));
+      if(state.orderRequestPage>pageCount){state.orderRequestPage=pageCount;return renderOrderRequests()}
+      $('order-request-page').textContent=`Page ${state.orderRequestPage} of ${pageCount} · ${state.orderRequestCount} orders`;
+      $('order-request-prev').disabled=state.orderRequestPage<=1;
+      $('order-request-next').disabled=state.orderRequestPage>=pageCount;
+      $('order-request-list').innerHTML=requests.length?`<div class="request-table-wrap"><table class="request-table">
+        <thead><tr><th>Order ID</th><th>Customer</th><th>Product</th><th>Type</th><th>Amount</th><th>UTR Number</th><th>Payment Time</th><th>Status</th></tr></thead>
+        <tbody>${requests.map(order=>`<tr tabindex="0" role="button" data-open-request="${escapeHtml(order.id)}">
+          <td>#${escapeHtml(order.id)}</td><td>${escapeHtml(order.customer)}</td><td>${escapeHtml(order.product_name)}</td>
+          <td>${order.product_type==='vps'?'Windows VPS':order.product_type==='software'?'Software':escapeHtml(order.product_type)}</td><td class="amount">₹${money(order.amount)}</td>
+          <td>${escapeHtml(order.utr_number||'—')}</td><td>${escapeHtml(formatDate(order.payment_submitted_at||order.created_at))}</td>
+          <td><span class="status-badge ${escapeHtml(order.status)}">${escapeHtml(order.status)}</span></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty">No orders match this filter.</div>';
+      $('order-request-list').querySelectorAll('[data-open-request]').forEach(row=>{
+        row.addEventListener('click',()=>openOrderRequest(row.dataset.openRequest));
+        row.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openOrderRequest(row.dataset.openRequest)}});
+      });
+    }
+    async function openOrderRequest(id){
+      $('order-request-error').textContent='';
+      $('order-request-title').textContent=`Order #${id}`;
+      $('order-request-payment').innerHTML='<div class="empty">Loading payment details…</div>';
+      $('order-request-drawer').classList.add('open');$('order-request-drawer').setAttribute('aria-hidden','false');
+      document.body.style.overflow='hidden';
+      try{
+        const {data,error}=await state.client.rpc('admin_get_order_request',{p_order_id:Number(id)});
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Order request was not found.');
+        state.selectedOrderRequest=data;
+        const vps=data.product_type==='vps'||data.product_type==='windows-vps';
+        $('order-request-payment').innerHTML=[
+          ['Customer',data.customer||'Customer'],['Product',data.product_name],['Amount',`₹${money(data.amount)}`],
+          ['UTR Number',data.utr_number||'—'],['Payment time',formatDate(data.payment_submitted_at)],
+          ['Status',data.status],...(data.reject_reason?[['Rejection reason',data.reject_reason]]:[])
+        ].map(([label,value])=>`<div class="order-detail"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></div>`).join('');
+        $('software-delivery-fields').classList.toggle('hidden',vps);
+        $('vps-delivery-fields').classList.toggle('hidden',!vps);
+        $('request-software-name').value=data.software_name||'';
+        $('request-license-key').value=data.license_key||'';
+        $('request-download-link').value=data.download_link||'';
+        $('request-vps-ip').value=data.vps_ip||'';
+        $('request-vps-port').value=data.vps_port||'';
+        $('request-vps-username').value=data.vps_username||'';
+        $('request-vps-password').value=data.vps_password||'';
+        $('request-vps-storage').value=data.vps_storage_gb||'';
+        $('request-rejection-reason').value='';
+        const editable=data.status==='new';
+        ['save-order-request','complete-order-request','reject-order-request'].forEach(buttonId=>$(buttonId).disabled=!editable);
+        $('request-rejection-reason').disabled=!editable;
+        $('request-software-name').disabled=!editable;$('request-license-key').disabled=!editable;$('request-download-link').disabled=!editable;
+        ['request-vps-ip','request-vps-port','request-vps-username','request-vps-password','request-vps-storage'].forEach(inputId=>$(inputId).disabled=!editable);
+      }catch(error){
+        $('order-request-error').textContent=error.message||'Could not load order details.';
+      }
+    }
+    function getOrderRequestDetails(){
+      return {
+        software_name:$('request-software-name').value.trim(),
+        license_key:$('request-license-key').value,
+        download_link:$('request-download-link').value.trim(),
+        vps_ip:$('request-vps-ip').value.trim(),
+        vps_port:$('request-vps-port').value.trim(),
+        vps_username:$('request-vps-username').value.trim(),
+        vps_password:$('request-vps-password').value,
+        vps_storage_gb:$('request-vps-storage').value.trim()
+      };
+    }
+    function closeOrderRequest(){
+      $('order-request-drawer').classList.remove('open');$('order-request-drawer').setAttribute('aria-hidden','true');
+      document.body.style.overflow='';state.selectedOrderRequest=null;
+    }
+    async function saveOrderRequest(complete){
+      const order=state.selectedOrderRequest;
+      if(!order)return;
+      $('order-request-error').textContent='';
+      const details=getOrderRequestDetails();
+      const link=details.download_link;
+      if(link&&!/^https?:\/\/\S+$/i.test(link)){
+        $('order-request-error').textContent='Download link must start with http:// or https://.';return;
+      }
+      const button=$(complete?'complete-order-request':'save-order-request');
+      button.disabled=true;
+      try{
+        const {data,error}=await state.client.rpc(complete?'admin_complete_order':'admin_save_order_delivery',{
+          p_order_id:Number(order.id),p_details:details
+        });
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not save order details.');
+        if(complete){
+          notify('Order completed. Delivery is available to the customer.');
+          closeOrderRequest();await refreshOrderRequestCounts();await renderOrderRequests();
+        }else{
+          notify('Order details saved as a draft.');
+          await openOrderRequest(order.id);
+        }
+      }catch(error){
+        $('order-request-error').textContent=error.message||'Could not save order details.';
+      }finally{
+        button.disabled=false;
+      }
+    }
+    async function rejectOrderRequest(){
+      const order=state.selectedOrderRequest;
+      if(!order)return;
+      $('order-request-error').textContent='';
+      const reason=$('request-rejection-reason').value.trim();
+      if(reason.length<3||reason.length>1000){
+        $('order-request-error').textContent='Enter a rejection reason between 3 and 1000 characters.';return;
+      }
+      const button=$('reject-order-request');button.disabled=true;
+      try{
+        const {data,error}=await state.client.rpc('admin_reject_order_request',{
+          p_order_id:Number(order.id),p_reason:reason
+        });
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not reject this order.');
+        notify('Order rejected and reason shared with the customer.');
+        closeOrderRequest();await refreshOrderRequestCounts();await renderOrderRequests();
+      }catch(error){
+        $('order-request-error').textContent=error.message||'Could not reject this order.';
+        button.disabled=false;
+      }
+    }
     function renderCoupons(coupons){
       state.coupons=coupons;
       $('finance-list').innerHTML=coupons.length?coupons.map(coupon=>`<article class="finance-row">
@@ -1296,9 +1527,12 @@
     function formatDate(value){return indianDate(value)}
     async function enterDashboard(session){
       const {data,error}=await state.client.from('admin_users').select('id').eq('id',session.user.id).maybeSingle();
-      if(error||!data){await state.client.auth.signOut();throw new Error('This account is not authorized to access the store admin.')}
+      if(error||!data){await state.client.auth.signOut({scope:'local'});throw new Error('This account is not authorized to access the store admin.')}
       $('login-panel').classList.add('hidden');$('dashboard').classList.remove('hidden');$('logout').classList.remove('hidden');
-      renderTabs();revealAdmin($('dashboard'));await renderProducts();state.client.channel('admin-live-updates').on('postgres_changes',{event:'*',schema:'public',table:'products'},()=>{if(categories.some(category=>category.id===state.activeView))renderProducts()}).on('postgres_changes',{event:'*',schema:'public',table:'topup_requests'},()=>{if(state.activeView==='topups')renderFinance('topups')}).on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>{if(state.activeView==='orders')renderFinance('orders')}).subscribe();
+      renderTabs();revealAdmin($('dashboard'));
+      try{await refreshOrderRequestCounts()}
+      catch(requestError){console.error('Could not load Order Requests:',requestError);notify(`Order Requests unavailable: ${requestError.message}`)}
+      await renderProducts();state.client.channel('admin-live-updates').on('postgres_changes',{event:'*',schema:'public',table:'products'},()=>{if(categories.some(category=>category.id===state.activeView))renderProducts()}).on('postgres_changes',{event:'*',schema:'public',table:'topup_requests'},()=>{if(state.activeView==='topups')renderFinance('topups')}).on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>{refreshOrderRequestCounts().then(()=>{if(state.activeView==='order-requests')renderOrderRequests()}).catch(error=>console.error('Could not refresh order request count:',error));if(state.activeView==='orders')renderFinance('orders')}).subscribe();
       state.client.channel('admin-offer-updates').on('postgres_changes',{event:'*',schema:'public',table:'offers'},()=>{
         if(state.activeView==='offers')renderOffers().catch(failure=>setError('offer-error',`Could not refresh offers: ${failure.message}`));
       }).subscribe();
@@ -1335,12 +1569,24 @@
       try{
         const {error}=await state.client.auth.updateUser({password});
         if(error){setError('password-reset-error',`Could not update the password: ${error.message}`);return}
-        const {error:signOutError}=await state.client.auth.signOut();
+        const {error:signOutError}=await state.client.auth.signOut({scope:'local'});
         if(signOutError){setError('password-reset-error',`Password updated, but sign-out failed: ${signOutError.message}. Return to the login page and sign in.`);return}
         showPasswordLogin('Password updated. Sign in with your new password.');
       }catch(error){setError('password-reset-error',`Could not update the password: ${error.message}`)}
     });
     $('product-form').addEventListener('submit',saveProduct);
+    $('order-requests-refresh').addEventListener('click',()=>refreshOrderRequestCounts().then(renderOrderRequests).catch(error=>{$('order-request-list').innerHTML=`<div class="empty">${escapeHtml(error.message)}</div>`}));
+    $('order-request-prev').addEventListener('click',()=>{if(state.orderRequestPage>1){state.orderRequestPage--;renderOrderRequests()}});
+    $('order-request-next').addEventListener('click',()=>{state.orderRequestPage++;renderOrderRequests()});
+    let orderRequestSearchTimer;
+    $('order-request-search').addEventListener('input',()=>{
+      clearTimeout(orderRequestSearchTimer);orderRequestSearchTimer=setTimeout(()=>{state.orderRequestPage=1;renderOrderRequests()},250);
+    });
+    $('close-order-request').addEventListener('click',closeOrderRequest);
+    $('order-request-overlay').addEventListener('click',closeOrderRequest);
+    $('save-order-request').addEventListener('click',()=>saveOrderRequest(false));
+    $('complete-order-request').addEventListener('click',()=>saveOrderRequest(true));
+    $('reject-order-request').addEventListener('click',rejectOrderRequest);
     $('plan-section').addEventListener('change',syncPlanFields);
     $('cancel-edit').addEventListener('click',resetForm);
     $('offer-form').addEventListener('submit',saveOffer);
@@ -1437,22 +1683,46 @@
       },{passive:true});
     }
     renderBrandLogos();
-    $('logout').addEventListener('click',async()=>{await state.client.auth.signOut();location.reload()});
+    $('logout').addEventListener('click',async()=>{
+      const {error}=await state.client.auth.signOut({scope:'local'});
+      if(error){notify(`Could not sign out: ${error.message}`);return}
+      showAdminLogin();
+    });
     (async function init(){
       try{
         const response=await fetch('/api/config');if(!response.ok)throw new Error('Could not load admin configuration.');
         const config=await response.json();if(!config.supabaseUrl||!config.supabaseAnonKey)throw new Error('Add SUPABASE_URL and SUPABASE_ANON_KEY to .env before signing in.');
         if(!window.supabase)throw new Error('Could not load the Supabase client. Check your internet connection.');
-        state.client=window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey);
-        state.client.auth.onAuthStateChange(event=>{
+        const authStorageKey=`sb-${new URL(config.supabaseUrl).hostname.split('.')[0]}-admin-auth-token`;
+        state.client=window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey,{
+          auth:{
+            autoRefreshToken:true,
+            detectSessionInUrl:true,
+            persistSession:true,
+            storage:window.localStorage,
+            storageKey:authStorageKey
+          }
+        });
+        state.client.auth.onAuthStateChange((event)=>{
           if(event==='PASSWORD_RECOVERY'){
             isPasswordRecovery=true;
+            $('auth-loading').classList.add('hidden');
+            $('login-panel').classList.remove('hidden');
             showPasswordReset();
+          }else if(event==='SIGNED_OUT'){
+            setTimeout(()=>showAdminLogin(),0);
           }
         });
         const {data,error}=await state.client.auth.getSession();if(error)throw error;
-        if(data.session&&!isPasswordRecovery){try{await enterDashboard(data.session)}catch(failure){setError('login-error',failure.message)}}
-      }catch(error){setError('login-error',error.message)}
+        cleanAuthCallbackUrl(isPasswordRecovery);
+        if(data.session&&!isPasswordRecovery){
+          try{await enterDashboard(data.session)}
+          catch(failure){showAdminLogin(failure.message)}
+        }else{
+          $('auth-loading').classList.add('hidden');
+          $('login-panel').classList.remove('hidden');
+        }
+      }catch(error){showAuthLoadingError(error.message)}
     })();
   </script>
 </body>

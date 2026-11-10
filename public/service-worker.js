@@ -1,7 +1,8 @@
-const CACHE_NAME = 'roshan-static-v2';
+const CACHE_NAME = 'roshan-static-v3';
 const OFFLINE_URL = '/offline.html';
 const STATIC_FILE_PATTERN = /\.(?:css|png|jpe?g|gif|webp|svg|ico|woff2?|json)$/i;
 const NETWORK_ONLY_PATH_PATTERN = /^\/(?:api(?:\/|$)|admin(?:\.html)?(?:\/|$)|login(?:\/|$)|auth(?:\/|$)|checkout(?:\/|$)|orders?(?:\/|$)|payment(?:\/|$))/i;
+const SUPABASE_AUTH_PATH_PATTERN = /^\/auth\/v1(?:\/|$)/i;
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -28,9 +29,12 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
+  if (SUPABASE_AUTH_PATH_PATTERN.test(url.pathname)
+      && /(^|\.)supabase\.(?:co|in)$/i.test(url.hostname)) return;
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === 'navigate') {
+    if (url.pathname === '/' || url.pathname === '/index.html') return;
     event.respondWith(
       fetch(request).catch(async () => {
         const offlinePage = await caches.match(OFFLINE_URL);

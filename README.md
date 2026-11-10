@@ -28,6 +28,25 @@ For UPI product-payment countdowns and late UTR review, run [`supabase/product-p
 
 For database-backed coupons, run [`supabase/checkout-coupon-migration.sql`](./supabase/checkout-coupon-migration.sql) in the Supabase SQL Editor after the payment-expiry migration. It creates customer-owned coupon records, server-selected Spin & Win prizes (one spin per user per UTC day), coupon validation limits, and database-backed admin prize settings. For QR/UPI orders, the server calculates the final amount from the product price and the coupon record. Wallet purchases remain full-price through the existing wallet RPC. A coupon is reserved when a payment order is created, released after a rejected UPI payment or an unpaid order's grace period, and remains consumed after a successful purchase. Legacy coupons saved in browser storage are not trusted or transferable; the storefront clears them and displays a one-time notice.
 
+## Order Requests
+
+For UTR-verified Software and VPS requests, run [`supabase/order-requests-migration.sql`](./supabase/order-requests-migration.sql) after `setup.sql`, `product-payment-expiry-migration.sql`, and `checkout-coupon-migration.sql` (in that order). It adds the `unpaid` → `new` → `completed` / `rejected` lifecycle, amount/UTR/payment/completion timestamps, a private `order_delivery` table, admin-only list/detail/save/complete/reject RPCs, customer-owned order delivery, UTR rate limiting, and a database-generated encryption key. License keys and VPS passwords are encrypted with AES-256 before they are stored; only the admin detail RPC and the owning customer’s completed-order RPC decrypt them. Do not delete `private.order_delivery_secrets`; losing that key makes saved credentials unrecoverable. Unpaid orders are omitted from both admin order-list RPCs.
+
+The storefront already provides the payment QR/UPI settings and exact checkout amount. Submitting a 12-digit UTR changes the eligible Software/VPS request to `new`; without a submitted UTR it remains `unpaid` and is never listed to admins. Rejected customers can submit a different valid UTR for the same order. Order UTR submissions are limited to five attempts per customer per hour. Other existing product categories and wallet purchases keep their existing fulfillment paths.
+
+All order mutations and private delivery reads go through authenticated Supabase RPCs, with `auth.uid()` ownership checks and `is_store_admin()` checks; direct client access to `order_delivery` and the encryption key is revoked. The browser uses Supabase bearer-token authorization rather than cookie authentication, so cross-site form requests cannot attach the customer/admin JWT (CSRF). SQL parameters are bound by PostgREST, database functions validate UTRs, URLs, numeric fields and lengths, and rendered customer/admin values are HTML-escaped.
+
+### Order-request test checklist
+
+Run these checks using two customer accounts and one account listed in `public.admin_users`:
+
+1. Start a Software/VPS checkout and stop before entering a UTR. Confirm the customer sees **Payment Pending**, while **Admin → Order Requests** and the existing **Orders** list do not show it.
+2. Submit an empty, non-numeric, or non-12-digit UTR. Confirm it is rejected. Submit the same valid UTR on another order (or a wallet top-up) and confirm the duplicate is rejected. Repeat invalid submissions until the hourly limit is reached and confirm further attempts are blocked.
+3. Submit an unused 12-digit UTR. Confirm the customer sees **Payment verification pending** and the admin **New** tab shows the request with its amount, customer, UTR, and payment time.
+4. As admin, save partial delivery details and reopen the request to confirm draft persistence. Complete a Software request with all three required fields or a VPS request with IP, port, username, password, and storage. Confirm the customer can see/copy the software key and download, or reveal/copy the VPS password and see its storage.
+5. Reject another new request with a reason. Confirm the customer sees that reason and can resubmit a different 12-digit UTR; verify that the request returns to the **New** tab.
+6. Sign in as the second customer and attempt to load the first customer's order through `my_orders`; confirm it is absent. Confirm the second customer cannot invoke the first customer's delivery through any customer RPC. Before an order is completed, verify that customer responses contain no license key, download link, or VPS credentials.
+
 ## Deploy to Vercel
 
 Import this GitHub repository as a Vercel project with the repository root as the project root and no build command. Add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as Vercel environment variables for the environments you use; never add a service-role key. Vercel serves the storefront and admin page from `public/` and exposes the public configuration endpoint at `/api/config`. Add your deployed store URL to Supabase's allowed redirect URLs and configure the Google OAuth redirect URLs as described above.
@@ -81,4 +100,4 @@ The checkout offers **Pay from Wallet**, **Scan QR (UPI)**, and **UPI ID / App**
 - `SUPABASE_ANON_KEY`: Supabase anon/public key. This key is safe to use in a browser because database access is restricted by RLS.
 - `PORT`: optional web server port (defaults to `3000`).
 
-The six requested Software products are inserted by the setup script. The other categories start empty and can be populated in the admin panel. Linux VPS, Linux Proxy, and Residential Proxies products can be organized into named plan sections with category-specific IP, data-size, OS, specification, IP-count, validity, stock, price, badge, and expandable detail fields; the storefront provides search, category-appropriate filters, section jumps, and the existing checkout.
+The six requested Software products are inserted by the setup script. The other categories start empty and can be populated in the admin panel. Windows VPS, Static Proxy, and Residential Proxies products can be organized into named plan sections with category-specific IP, data-size, OS, specification, IP-count, validity, stock, price, badge, and expandable detail fields; the storefront provides search, category-appropriate filters, section jumps, and the existing checkout.
