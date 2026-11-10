@@ -6,7 +6,7 @@ Responsive storefront with Google customer sign-in, wallet and UPI product check
 
 1. Create a Supabase project.
 2. In the Supabase SQL Editor, run [`supabase/setup.sql`](./supabase/setup.sql). You can rerun it to restore missing Software seed products, add product photo/download and VPS/proxy plan fields, and apply timed offers, claim review, payment, free-item transfer, audit, wallet, UPI order verification, UTR uniqueness, settings, and delivery schema/RPCs.
-3. Copy `.env.example` to `.env` and add the project's **Project URL** and **anon/public key**. Do not put a `service_role` key in this app.
+3. Copy `.env.example` to `.env` and add the project's **Project URL** and **anon/public key**. The Telegram serverless function also needs the service-role key; keep it only in server environment variables and never expose it in browser code or commit its value.
 4. In Supabase Authentication, enable the Google provider for customers and configure its Google OAuth client. Add the Supabase callback URL shown in the provider setup to your Google OAuth client's authorized redirect URIs. Add `http://localhost:3000` and your deployed store URL to Supabase's allowed redirect URLs.
 5. In Supabase Authentication, create your admin account with the email and password you will use to sign in. Confirm the email if email confirmation is enabled.
 6. Add that user's UUID and email to `public.admin_users` using the SQL Editor:
@@ -34,6 +34,29 @@ For UTR-verified Software and VPS requests, run [`supabase/order-requests-migrat
 
 The storefront already provides the payment QR/UPI settings and exact checkout amount. Submitting a 12-digit UTR changes the eligible Software/VPS request to `new`; without a submitted UTR it remains `unpaid` and is never listed to admins. Rejected customers can submit a different valid UTR for the same order. Order UTR submissions are limited to five attempts per customer per hour. Other existing product categories and wallet purchases keep their existing fulfillment paths.
 
+### Telegram order alerts
+
+After a successful UTR submission changes a Software/VPS order to `new`, the storefront sends only its order ID and signed-in session to `/api/notify-order`. The Vercel function verifies the session, reads the order and customer details from Supabase, and sends the Telegram message. Orders without a valid UTR or in any other status are ignored. A private database table claims each order once, preventing duplicate alerts even if the request is repeated.
+
+After running `supabase/order-requests-migration.sql`, run [`supabase/telegram-order-alerts-migration.sql`](./supabase/telegram-order-alerts-migration.sql) in the Supabase SQL Editor. Add these Vercel environment variables for the deployments you use:
+
+- `TELEGRAM_BOT_TOKEN`: token for the Roshan Admin Alerts bot.
+- `TELEGRAM_CHAT_ID`: the admin chat ID where alerts should arrive.
+- `TELEGRAM_TEST_SECRET`: a long random secret used only to authorize the test message route.
+- `SUPABASE_URL` and `SUPABASE_ANON_KEY`: the same project URL and public anon key used by the storefront.
+- `SUPABASE_SERVICE_ROLE_KEY`: the Supabase service-role/secret key, used only by the serverless function. Never add it to frontend code or expose it in a `NEXT_PUBLIC_`/browser variable.
+
+To test Telegram delivery, send a `POST` request to `/api/notify-order` with JSON `{"test":true}` and header `x-telegram-test-secret: <TELEGRAM_TEST_SECRET>`. The endpoint sends a test message but does not access or modify an order.
+
+The order table stores one product name and a quantity per order, so an alert includes that product name and quantity. The Telegram call is best-effort: a failure is logged and does not undo or block the order submission.
+
+#### Telegram alert test checklist
+
+1. Send the test request above and confirm **Roshan Admin Alerts** receives it.
+2. Submit a valid UTR for a Software/VPS order. Confirm the order reaches **New** and one Telegram message includes its database-backed customer, product, amount, UTR, and payment time.
+3. Start another checkout and do not submit a UTR. Confirm it remains unpaid and no Telegram alert arrives.
+4. For a failure check, temporarily use an invalid bot token and submit a fresh valid UTR. Confirm the order still succeeds for the customer and a Telegram failure appears in the Vercel function logs. Restore the correct token afterward; the same order will not be retried automatically.
+
 All order mutations and private delivery reads go through authenticated Supabase RPCs, with `auth.uid()` ownership checks and `is_store_admin()` checks; direct client access to `order_delivery` and the encryption key is revoked. The browser uses Supabase bearer-token authorization rather than cookie authentication, so cross-site form requests cannot attach the customer/admin JWT (CSRF). SQL parameters are bound by PostgREST, database functions validate UTRs, URLs, numeric fields and lengths, and rendered customer/admin values are HTML-escaped.
 
 ### Order-request test checklist
@@ -49,7 +72,7 @@ Run these checks using two customer accounts and one account listed in `public.a
 
 ## Deploy to Vercel
 
-Import this GitHub repository as a Vercel project with the repository root as the project root and no build command. Add `SUPABASE_URL` and `SUPABASE_ANON_KEY` as Vercel environment variables for the environments you use; never add a service-role key. Vercel serves the storefront and admin page from `public/` and exposes the public configuration endpoint at `/api/config`. Add your deployed store URL to Supabase's allowed redirect URLs and configure the Google OAuth redirect URLs as described above.
+Import this GitHub repository as a Vercel project with the repository root as the project root and no build command. Add the environment variables listed above for each Vercel environment you use. `SUPABASE_SERVICE_ROLE_KEY` and Telegram credentials must remain server-only and must never be exposed in frontend code. Vercel serves the storefront and admin page from `public/`, exposes the public configuration endpoint at `/api/config`, and deploys `/api/notify-order` as a serverless function. Add your deployed store URL to Supabase's allowed redirect URLs and configure the Google OAuth redirect URLs as described above.
 
 ## Favicon
 
@@ -98,6 +121,9 @@ The checkout offers **Pay from Wallet**, **Scan QR (UPI)**, and **UPI ID / App**
 
 - `SUPABASE_URL`: Supabase project URL.
 - `SUPABASE_ANON_KEY`: Supabase anon/public key. This key is safe to use in a browser because database access is restricted by RLS.
+- `SUPABASE_SERVICE_ROLE_KEY`: server-only credential for `/api/notify-order`; never expose it to browsers or commit the real value.
+- `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`: server-only Telegram bot and destination configuration.
+- `TELEGRAM_TEST_SECRET`: server-only secret required to send the test message.
 - `PORT`: optional web server port (defaults to `3000`).
 
 The six requested Software products are inserted by the setup script. The other categories start empty and can be populated in the admin panel. Windows VPS, Static Proxy, and Residential Proxies products can be organized into named plan sections with category-specific IP, data-size, OS, specification, IP-count, validity, stock, price, badge, and expandable detail fields; the storefront provides search, category-appropriate filters, section jumps, and the existing checkout.

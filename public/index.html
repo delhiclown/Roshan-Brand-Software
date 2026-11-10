@@ -115,7 +115,9 @@
     .orders-item-detail p{margin:9px 0;color:var(--muted)}
     .orders-item-detail pre{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:8px;background:#080f20;padding:9px;font:inherit;line-height:1.55;color:var(--text)}
     .orders-item-detail a{display:inline-flex;margin:5px 0;color:var(--gold);overflow-wrap:anywhere}
-    .orders-item-detail .orders-copy{min-height:40px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:#111b32;color:var(--text);cursor:pointer}
+    .orders-copy{min-height:40px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:#111b32;color:var(--text);font:inherit;font-weight:600;cursor:pointer;transition:border-color .2s,color .2s,background .2s}
+    .orders-copy:hover{border-color:var(--gold);color:var(--gold);background:#151d32}
+    .orders-item-detail .key-name-label{font:inherit;text-transform:uppercase}
     .orders-skeleton{height:64px;margin:0 0 8px;border:1px solid var(--line);border-radius:11px;background:linear-gradient(100deg,#0b1429 30%,#15213a 48%,#0b1429 66%);background-size:200% 100%;animation:orders-shimmer 1.25s linear infinite}
     @keyframes orders-shimmer{to{background-position-x:-200%}}
     .auth-page{position:fixed;inset:0;z-index:300;display:grid;place-items:center;overflow:auto;padding:28px 18px;background:radial-gradient(ellipse at 50% 12%,rgba(41,152,255,.16),transparent 42%),#040812;backdrop-filter:blur(18px)}
@@ -307,7 +309,7 @@
     .product-pricing{display:grid;gap:4px;justify-items:start}
     .product-price-meta{display:flex;align-items:center;flex-wrap:wrap;gap:7px;color:var(--muted);font-size:11px}
     .product-price-meta s{color:#8791a6}
-    .product-save-badge{padding:3px 7px;border-radius:999px;background:rgba(32,201,121,.15);color:#65e8a4;font-size:10px;font-weight:800}
+    .product-save-badge{padding:3px 7px;border-radius:999px;background:rgba(245,192,74,.15);color:var(--gold);font-size:10px;font-weight:800}
     .product-stats{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:0 0 13px;color:var(--muted);font-size:11px}
     .rating-stars{display:inline-flex;letter-spacing:1px;color:#59657a}
     .rating-star{background:linear-gradient(90deg,#f5c451 var(--star-fill),#59657a var(--star-fill));background-clip:text;-webkit-background-clip:text;color:transparent}
@@ -315,43 +317,43 @@
     .buy{border:0;border-radius:10px;padding:10px 14px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#171101;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;transition:filter .2s,transform .2s}
     .buy:hover{filter:brightness(1.08);transform:translateY(-1px)}
     .buy:disabled{background:#26314a;color:#828da5;cursor:not-allowed;transform:none}
-    .vps-browse{margin:0 0 24px;padding:18px;border:1px solid rgba(32,201,121,.2);border-radius:18px;background:linear-gradient(145deg,rgba(13,28,34,.94),rgba(8,16,30,.98));box-shadow:inset 0 1px rgba(255,255,255,.04),0 12px 30px rgba(0,0,0,.2)}
+    .vps-browse{margin:0 0 24px;padding:18px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,rgba(16,26,48,.94),rgba(8,14,27,.98));box-shadow:inset 0 1px rgba(255,255,255,.04),0 12px 30px rgba(0,0,0,.2)}
     .vps-tools{display:grid;grid-template-columns:minmax(180px,1fr) auto;gap:12px;align-items:center}
-    .vps-search{border-color:rgba(32,201,121,.22);background:#09151b}
+    .vps-search{border-color:rgba(245,192,74,.22);background:#09101f}
     .vps-filters,.vps-jump-list{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .vps-filter,.vps-jump,.vps-top{border:1px solid rgba(32,201,121,.2);border-radius:999px;background:#0b181d;color:#aac0bb;padding:9px 13px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
-    .vps-filter.active,.vps-jump.active{border-color:#20c979;background:rgba(32,201,121,.13);color:#72ecac;box-shadow:0 0 16px rgba(32,201,121,.1)}
-    .vps-jumpbar{position:sticky;top:calc(72px + env(safe-area-inset-top,0px));z-index:20;display:flex;justify-content:space-between;align-items:center;gap:12px;margin:14px 0 24px;padding:10px;border:1px solid rgba(32,201,121,.18);border-radius:15px;background:rgba(7,15,22,.94);backdrop-filter:blur(14px)}
-    .vps-jump-label{flex:none;color:#68d99d;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+    .vps-filter,.vps-jump,.vps-top{border:1px solid rgba(245,192,74,.2);border-radius:999px;background:#0b1222;color:var(--muted);padding:9px 13px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+    .vps-filter.active,.vps-jump.active{border-color:var(--gold);background:rgba(245,192,74,.13);color:var(--gold);box-shadow:0 0 16px rgba(245,192,74,.1)}
+    .vps-jumpbar{position:sticky;top:calc(72px + env(safe-area-inset-top,0px));z-index:20;display:flex;justify-content:space-between;align-items:center;gap:12px;margin:14px 0 24px;padding:10px;border:1px solid rgba(245,192,74,.18);border-radius:15px;background:rgba(7,12,25,.94);backdrop-filter:blur(14px)}
+    .vps-jump-label{flex:none;color:var(--gold);font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
     .vps-jump-list{min-width:0;overflow:auto;flex-wrap:nowrap;scrollbar-width:thin}
-    .vps-top{flex:none;color:#72ecac}
+    .vps-top{flex:none;color:var(--gold)}
     .vps-plan-section{scroll-margin-top:145px;margin:0 0 28px}
     .vps-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:0 2px;color:var(--text);font:700 clamp(16px,2.4vw,20px) var(--font-heading)}
-    .vps-section-heading span{color:#77e9aa}
+    .vps-section-heading span{color:var(--gold)}
     .vps-plan-list{display:grid;gap:9px}
-    .vps-plan{display:grid;grid-template-columns:34px 38px minmax(0,1fr) auto;gap:13px;align-items:center;padding:15px;border:1px solid rgba(106,144,135,.19);border-radius:15px;background:linear-gradient(120deg,rgba(17,32,39,.96),rgba(8,17,29,.97));box-shadow:inset 0 1px rgba(255,255,255,.035);transition:border-color .2s,transform .2s}
-    .vps-plan:hover{border-color:rgba(32,201,121,.44);transform:translateY(-1px)}
-    .vps-server-icon{width:28px;height:28px;color:#62d99b}
-    .vps-os-logo{width:34px;height:34px;display:grid;place-items:center;border:1px solid rgba(32,201,121,.15);border-radius:10px;background:rgba(32,201,121,.07);color:#71e6a8;font-size:22px}
+    .vps-plan{display:grid;grid-template-columns:34px 38px minmax(0,1fr) auto;gap:13px;align-items:center;padding:15px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(120deg,rgba(16,26,48,.96),rgba(8,14,27,.97));box-shadow:inset 0 1px rgba(255,255,255,.035);transition:border-color .2s,transform .2s}
+    .vps-plan:hover{border-color:rgba(245,192,74,.44);transform:translateY(-1px)}
+    .vps-server-icon{width:28px;height:28px;color:var(--gold)}
+    .vps-os-logo{width:34px;height:34px;display:grid;place-items:center;border:1px solid rgba(245,192,74,.15);border-radius:10px;background:rgba(245,192,74,.07);color:var(--gold);font-size:22px}
     .vps-os-logo svg{width:21px;height:21px;fill:currentColor}
     .vps-plan-copy{min-width:0}
-    .vps-plan-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0;color:#f2f7f5;font-size:14px;font-weight:750;overflow-wrap:anywhere}
-    .vps-plan-title.sold-out{text-decoration:line-through;color:#899694}
-    .vps-plan-ip,.vps-plan-specs{color:#aabbb7;font-size:11px;line-height:1.55;overflow-wrap:anywhere}
+    .vps-plan-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0;color:var(--text);font-size:14px;font-weight:750;overflow-wrap:anywhere}
+    .vps-plan-title.sold-out{text-decoration:line-through;color:#8991a3}
+    .vps-plan-ip,.vps-plan-specs{color:var(--muted);font-size:11px;line-height:1.55;overflow-wrap:anywhere}
     .vps-plan-ip{margin-top:4px}
-    .vps-plan-badge{border:1px solid rgba(32,201,121,.24);border-radius:999px;padding:4px 8px;color:#79e6ad;background:rgba(32,201,121,.08);font-size:9px;font-weight:800;white-space:nowrap}
-    .vps-stock{display:inline-flex;margin-top:7px;border:1px solid rgba(32,201,121,.25);border-radius:999px;padding:4px 8px;color:#70e1a3;background:rgba(32,201,121,.08);font-size:9px;font-weight:800}
+    .vps-plan-badge{border:1px solid rgba(245,192,74,.24);border-radius:999px;padding:4px 8px;color:var(--gold);background:rgba(245,192,74,.08);font-size:9px;font-weight:800;white-space:nowrap}
+    .vps-stock{display:inline-flex;margin-top:7px;border:1px solid rgba(245,192,74,.25);border-radius:999px;padding:4px 8px;color:var(--gold);background:rgba(245,192,74,.08);font-size:9px;font-weight:800}
     .vps-stock.out{border-color:rgba(255,89,105,.3);color:#ff8790;background:rgba(255,89,105,.08)}
     .vps-plan-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}
-    .vps-price{color:#8af0b7;font-size:13px;font-weight:800;white-space:nowrap}
+    .vps-price{color:var(--gold);font-size:13px;font-weight:800;white-space:nowrap}
     .vps-plan-actions .product-pricing{justify-items:end;margin-right:auto}
     .vps-plan-actions .product-price-meta{justify-content:flex-end}
-    .vps-cart{width:38px;height:38px;display:grid;place-items:center;border:1px solid rgba(32,201,121,.27);border-radius:11px;background:rgba(32,201,121,.08);color:#7be6ac;cursor:pointer}
+    .vps-cart{width:38px;height:38px;display:grid;place-items:center;border:1px solid rgba(245,192,74,.27);border-radius:11px;background:rgba(245,192,74,.08);color:var(--gold);cursor:pointer}
     .vps-cart svg{width:18px;height:18px}
-    .vps-buy{min-width:102px;padding:10px 12px;border:0;border-radius:10px;background:linear-gradient(135deg,#36d987,#16ae67);color:#04160d;font-size:10px;font-weight:900;letter-spacing:.04em;cursor:pointer}
-    .vps-buy:disabled,.vps-cart:disabled{border-color:#303b3d;background:#202a2d;color:#788483;cursor:not-allowed;box-shadow:none}
-    .vps-details{grid-column:3/5;margin-top:-3px;border-top:1px solid rgba(106,144,135,.15);padding-top:10px;color:#aabbb7;font-size:11px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
-    .vps-details summary{width:fit-content;color:#77e9aa;cursor:pointer;font-weight:700;list-style:none}
+    .vps-buy{min-width:102px;padding:10px 12px;border:0;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#171101;font-size:10px;font-weight:900;letter-spacing:.04em;cursor:pointer}
+    .vps-buy:disabled,.vps-cart:disabled{border-color:#30384a;background:#20283a;color:#788195;cursor:not-allowed;box-shadow:none}
+    .vps-details{grid-column:3/5;margin-top:-3px;border-top:1px solid var(--line);padding-top:10px;color:var(--muted);font-size:11px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+    .vps-details summary{width:fit-content;color:var(--gold);cursor:pointer;font-weight:700;list-style:none}
     .vps-details summary::-webkit-details-marker{display:none}
     .vps-details summary:after{content:"⌄";display:inline-block;margin-left:7px;transition:transform .2s}
     .vps-details[open] summary:after{transform:rotate(180deg)}
@@ -591,7 +593,7 @@
       .vps-server-icon{width:24px;height:24px}
       .vps-os-logo{width:30px;height:30px}
       .vps-plan-title{font-size:12px}
-      .vps-plan-actions{grid-column:1/-1;justify-content:flex-end;border-top:1px solid rgba(106,144,135,.12);padding-top:10px}
+      .vps-plan-actions{grid-column:1/-1;justify-content:flex-end;border-top:1px solid var(--line);padding-top:10px}
       .vps-price{margin-right:auto;font-size:12px}
       .vps-details{grid-column:1/-1}
     }
@@ -1994,7 +1996,7 @@
         const delivery=delivered
           ? `${orderInfo}${vpsOrder
             ? `<p>IP:Port: <strong>${escapeHtml(order.vps_ip||'')}:${escapeHtml(order.vps_port||'')}</strong></p><p>Username: <strong>${escapeHtml(order.vps_username||'')}</strong></p><p>Password: <strong data-vps-password="${escapeHtml(order.id)}">••••••••</strong> <button class="orders-copy" type="button" data-show-vps-password="${escapeHtml(order.id)}">Show</button> <button class="orders-copy" type="button" data-copy-vps-password="${escapeHtml(order.id)}">Copy</button></p><p>Storage: ${escapeHtml(order.vps_storage_gb||'')} GB</p>`
-            : `<p>Software: <strong>${escapeHtml(order.software_name||order.product_name)}</strong></p><p>License key: <strong>${escapeHtml(order.license_key||'')}</strong> <button class="orders-copy" type="button" data-copy-license="${escapeHtml(order.id)}">Copy</button></p>${link?`<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(order.software_name||order.product_name)}</a>`:''}`}
+            : `<p>Software: <strong>${escapeHtml(order.software_name||order.product_name)}</strong></p><p><span class="key-name-label">KEY NAME:</span> <strong class="orders-key-value">${escapeHtml(order.license_key||'')}</strong> <button class="orders-copy" type="button" data-copy-license="${escapeHtml(order.id)}" aria-live="polite">Copy</button></p>${link?`<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(order.software_name||order.product_name)}</a>`:''}`}
             ${order.delivery_note?`<p>${escapeHtml(order.delivery_note)}</p>`:''}${order.delivery_text?`<pre>${escapeHtml(order.delivery_text)}</pre>`:''}`
           : `${orderInfo}<p>${order.late_payment?'Payment verification is pending.':order.status==='pending_payment'||order.status==='unpaid'?'Payment is due. Resume checkout to submit your UTR.':order.status==='expired'?'Payment time expired. If you already paid, submit your UTR for manual review.':order.status==='pending_verification'||order.status==='new'?'Payment verification pending.':status.label==='Processing'?'Your order is being processed.':`This order was ${status.label.toLowerCase()}.`}</p>${order.payment_method&&order.payment_method!=='wallet'?`<p>Payment: ${escapeHtml(order.payment_method==='upi_qr'?'Scan QR (UPI)':'UPI app')} · ₹${money(order.price)}</p>`:''}${order.coupon_code?`<p>Coupon ${escapeHtml(order.coupon_code)} · ${escapeHtml(order.discount_percent)}% off · Original ₹${money(order.original_price)} · Final ₹${money(order.price)}</p>`:''}${order.reject_reason?`<p>Reason: ${escapeHtml(order.reject_reason)}</p>`:''}${['pending_payment','unpaid','expired'].includes(order.status)&&order.payment_method!=='wallet'&&!order.offer_claim_id?`<button class="orders-pay-button" type="button" data-resume-payment="${escapeHtml(order.id)}">Submit UTR / Resume Payment</button>`:''}${order.status==='rejected'&&order.payment_method!=='wallet'?`<form class="orders-resubmit-form" data-resubmit-form="${escapeHtml(order.id)}"><label for="resubmit-utr-${escapeHtml(order.id)}">Submit a new 12-digit UTR</label><input id="resubmit-utr-${escapeHtml(order.id)}" data-resubmit-utr="${escapeHtml(order.id)}" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" required><button class="orders-pay-button" type="submit">Resubmit UTR</button><p class="modal-error" data-resubmit-error="${escapeHtml(order.id)}" aria-live="polite"></p></form>`:''}${order.status==='pending_payment'&&order.offer_claim_id?`<button class="orders-pay-button" type="button" data-pay-offer-order="${escapeHtml(order.id)}">Pay now</button><button class="orders-delete-button" type="button" data-delete-offer-order="${escapeHtml(order.id)}">Delete unpaid order</button>`:''}`;
         const itemName=order.is_offer_free?`Free · ${order.product_name}`:order.product_name;
@@ -2024,19 +2026,23 @@
         const expanded=detail.classList.toggle('hidden')===false;
         button.setAttribute('aria-expanded',String(expanded));
       }));
-      content.querySelectorAll('[data-copy-order]').forEach(button=>button.addEventListener('click',()=>{
-        const order=orders.find(item=>String(item.id)===button.dataset.copyOrder);
-        const values=[order?.delivery_text,order?.delivery_note,order?.software_name,order?.license_key,order?.vps_ip,order?.vps_port,order?.vps_username,order?.vps_password,order?.vps_storage_gb,safeHttpUrl(order?.download_link||order?.delivery_link)].filter(Boolean);
-        copyCustomerValue(values.join('\n'),'Order details');
-      }));
-      content.querySelectorAll('[data-copy-license]').forEach(button=>{
-        const order=orders.find(item=>String(item.id)===button.dataset.copyLicense);
-        button.addEventListener('click',()=>copyCustomerValue(order?.license_key||'','License key'));
-      });
-      content.querySelectorAll('[data-copy-vps-password]').forEach(button=>{
-        const order=orders.find(item=>String(item.id)===button.dataset.copyVpsPassword);
-        button.addEventListener('click',()=>copyCustomerValue(order?.vps_password||'','VPS password'));
-      });
+      content.onclick=event=>{
+        const button=event.target instanceof Element?event.target.closest('.orders-copy'):null;
+        if(!button||!content.contains(button))return;
+        if(button.matches('[data-copy-license]')){
+          const value=button.closest('p')?.querySelector('.orders-key-value')?.textContent||'';
+          copyCustomerValue(value,'Key name',button);
+        }else if(button.matches('[data-copy-vps-password]')){
+          const order=orders.find(item=>String(item.id)===button.dataset.copyVpsPassword);
+          copyCustomerValue(order?.vps_password||'','VPS password',button);
+        }else if(button.matches('[data-copy-coupon]')){
+          copyCustomerValue(button.dataset.copyCoupon,'Coupon code',button);
+        }else if(button.matches('[data-copy-order]')){
+          const order=orders.find(item=>String(item.id)===button.dataset.copyOrder);
+          const values=[order?.delivery_text,order?.delivery_note,order?.software_name,order?.license_key,order?.vps_ip,order?.vps_port,order?.vps_username,order?.vps_password,order?.vps_storage_gb,safeHttpUrl(order?.download_link||order?.delivery_link)].filter(Boolean);
+          copyCustomerValue(values.join('\n'),'Order details',button);
+        }
+      };
       content.querySelectorAll('[data-show-vps-password]').forEach(button=>{
         const order=orders.find(item=>String(item.id)===button.dataset.showVpsPassword);
         button.addEventListener('click',()=>{
@@ -2060,12 +2066,10 @@
           const {data,error}=await state.client.rpc('resubmit_order_utr',{p_order_id:Number(id),p_utr:utr});
           if(error)throw error;
           if(!data?.ok)throw new Error(data?.message||'Could not submit this UTR.');
+          if(data.status==='new'&&data.order_id)void notifyOrderRequest(data.order_id);
           await refreshMyOrders();
           showNotice('Payment verification pending.');
         }catch(error){errorNode.textContent=error.message||'Could not submit this UTR.';button.disabled=false}
-      }));
-      content.querySelectorAll('[data-copy-coupon]').forEach(button=>button.addEventListener('click',()=>{
-        copyCustomerValue(button.dataset.copyCoupon, 'Coupon code');
       }));
       content.querySelectorAll('[data-pay-offer-order]').forEach(button=>button.addEventListener('click',()=>showOfferOrderPayment(button.dataset.payOfferOrder)));
       content.querySelectorAll('[data-delete-offer-order]').forEach(button=>button.addEventListener('click',()=>deleteOfferOrder(button.dataset.deleteOfferOrder)));
@@ -2107,6 +2111,23 @@
         if(state.selected)renderProducts();
         if(state.ordersPanelOpen)renderOrdersPanel();
       }
+    }
+
+    async function notifyOrderRequest(orderId){
+      try{
+        const {data,error}=await state.client.auth.getSession();
+        if(error)throw error;
+        if(!data.session?.access_token)throw new Error('Customer session is unavailable.');
+        const response=await fetch('/api/notify-order',{
+          method:'POST',
+          headers:{'Content-Type':'application/json',Authorization:`Bearer ${data.session.access_token}`},
+          body:JSON.stringify({order_id:orderId})
+        });
+        if(!response.ok){
+          const result=await response.json().catch(()=>null);
+          throw new Error(result?.error||`Alert endpoint returned HTTP ${response.status}.`);
+        }
+      }catch(error){console.error('Could not notify the store admin about this order:',error)}
     }
 
     function openOrdersPanel(){
@@ -2445,12 +2466,51 @@
     function closeModal(){ $('wallet-modal').classList.remove('open');$('wallet-dialog').classList.remove('checkout-dialog');document.body.style.overflow='';state.checkout=null;sessionStorage.removeItem('active_upi_product'); }
     function transactionLabel(type){return ({topup:'Wallet top-up',purchase:'Purchase',refund:'Refund',admin_credit:'Balance added',admin_debit:'Balance deducted'})[type]||type}
     function formatDate(value){return new Date(value).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'})}
-    async function copyCustomerValue(value,label){
+    const copyFeedbackTimers=new WeakMap();
+    async function writeClipboardText(value){
+      const text=String(value??'');
+      if(window.isSecureContext&&navigator.clipboard?.writeText){
+        try{
+          await navigator.clipboard.writeText(text);
+          return;
+        }catch(error){
+          console.warn('Clipboard API copy failed; trying the compatibility fallback:',error);
+        }
+      }
+      const textarea=document.createElement('textarea');
+      textarea.value=text;
+      textarea.readOnly=true;
+      textarea.tabIndex=-1;
+      textarea.setAttribute('aria-hidden','true');
+      textarea.style.cssText='position:fixed;left:0;top:0;width:1px;height:1px;padding:0;border:0;opacity:0;font-size:16px';
+      document.body.appendChild(textarea);
       try{
-        if(!navigator.clipboard)throw new Error('Clipboard access is unavailable in this browser.');
-        await navigator.clipboard.writeText(value);
-        showNotice(`${label} copied.`);
-      }catch(error){showNotice(`Could not copy ${label.toLowerCase()}: ${error.message}`)}
+        textarea.focus();
+        textarea.select();
+        textarea.setSelectionRange(0,textarea.value.length);
+        if(!document.execCommand('copy'))throw new Error('The browser rejected the copy command.');
+      }finally{textarea.remove()}
+    }
+    async function copyCustomerValue(value,label,button=null){
+      try{
+        if(!String(value??''))throw new Error('There is no value to copy.');
+        await writeClipboardText(value);
+        if(button){
+          button.setAttribute('aria-live','polite');
+          button.textContent='Copied';
+          clearTimeout(copyFeedbackTimers.get(button));
+          copyFeedbackTimers.set(button,setTimeout(()=>{if(button.isConnected)button.textContent='Copy'},2000));
+        }else showNotice(`${label} copied.`);
+      }catch(error){
+        console.error(`Could not copy ${label.toLowerCase()}:`,error);
+        if(button){
+          button.setAttribute('aria-live','polite');
+          button.textContent='Failed';
+          clearTimeout(copyFeedbackTimers.get(button));
+          copyFeedbackTimers.set(button,setTimeout(()=>{if(button.isConnected)button.textContent='Copy'},2000));
+        }
+        showNotice(`Could not copy ${label.toLowerCase()}.`);
+      }
     }
 
     async function showOfferOrderPayment(orderId){
@@ -2481,6 +2541,7 @@
       try{
         const {data,error}=await state.client.rpc('submit_offer_order_payment',{p_order_id:order.id,p_utr:utr});
         if(error||!data?.ok)throw new Error(error?.message||data?.message||'Could not submit payment.');
+        if(data.status==='new'&&data.order_id)void notifyOrderRequest(data.order_id);
         await refreshMyOrders();
         $('modal-title').textContent='Payment submitted';
         $('modal-body').innerHTML=`<div class="wallet-balance"><strong style="font-size:18px">Payment submitted. Waiting for admin verification.</strong><small style="margin-top:9px">${escapeHtml(order.product_name)} · Quantity ${Number(order.quantity)||1} · ₹${money(order.price)}</small><small>Order #${escapeHtml(order.id)} · UTR ${escapeHtml(utr)}</small></div><button class="modal-primary" id="offer-payment-done" type="button">Done</button>`;
@@ -2541,14 +2602,17 @@
             const open=detail.classList.toggle('hidden')===false;
             button.setAttribute('aria-expanded',String(open));
           }));
-          body.querySelectorAll('[data-copy-delivery]').forEach(button=>button.addEventListener('click',()=>{
-            const order=data.find(item=>String(item.id)===button.dataset.copyDelivery);
-            copyCustomerValue(order?.delivery_text||'','Delivery details');
-          }));
-          body.querySelectorAll('[data-copy-link]').forEach(button=>button.addEventListener('click',()=>{
-            const order=data.find(item=>String(item.id)===button.dataset.copyLink);
-            copyCustomerValue(safeHttpUrl(order?.delivery_link),'Download link');
-          }));
+          body.onclick=event=>{
+            const button=event.target instanceof Element?event.target.closest('[data-copy-delivery],[data-copy-link]'):null;
+            if(!button||!body.contains(button))return;
+            if(button.matches('[data-copy-delivery]')){
+              const order=data.find(item=>String(item.id)===button.dataset.copyDelivery);
+              copyCustomerValue(order?.delivery_text||'','Delivery details',button);
+            }else{
+              const order=data.find(item=>String(item.id)===button.dataset.copyLink);
+              copyCustomerValue(safeHttpUrl(order?.delivery_link),'Download link',button);
+            }
+          };
           return;
         }
         const {data:wallet,error:walletError}=await state.client.from('wallets').select('balance').eq('user_id',state.user.id).maybeSingle();
@@ -3060,6 +3124,7 @@
           else checkout.paymentError=data?.message||'Could not submit this payment.';
           renderCheckout();return;
         }
+        if(data.status==='new'&&data.order_id)void notifyOrderRequest(data.order_id);
         sessionStorage.removeItem('active_upi_product');
         try{localStorage.removeItem(`pending-payment:${state.user.id}:${checkout.product.id}`)}
         catch(storageError){console.warn('Could not clear the submitted payment order from local storage:',storageError)}
