@@ -1707,7 +1707,7 @@
     $('used-key-form').addEventListener('submit',saveUsedKey);
     $('used-key-bulk-add').addEventListener('click',bulkAddUsedKeys);
     $('used-key-cancel').addEventListener('click',resetUsedKeyForm);
-    $('used-key-refresh').addEventListener('click',()=>renderUsedKeyInventory().catch(error=>notify(`Could not load Used Keys: ${error.message}`)));
+    $('used-keys-refresh').addEventListener('click',()=>renderUsedKeyInventory().catch(error=>notify(`Could not load Used Keys: ${error.message}`)));
     $('used-key-list').addEventListener('click',event=>handleUsedKeyAction(event).catch(error=>notify(`Could not update Used Keys: ${error.message}`)));
     $('used-key-filter-product').addEventListener('change',()=>renderFilteredUsedKeys());
     $('used-key-search').addEventListener('input',()=>renderFilteredUsedKeys());
