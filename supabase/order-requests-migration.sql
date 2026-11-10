@@ -526,6 +526,7 @@ declare
   v_username text := btrim(coalesce(p_details ->> 'vps_username', ''));
   v_password text := coalesce(p_details ->> 'vps_password', '');
   v_storage text := btrim(coalesce(p_details ->> 'vps_storage_gb', ''));
+  v_key text;
 begin
   if not public.is_store_admin() then raise exception 'Admin access required'; end if;
   if p_details is null or jsonb_typeof(p_details) <> 'object' then
