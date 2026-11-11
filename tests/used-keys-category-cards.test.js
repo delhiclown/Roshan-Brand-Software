@@ -7,13 +7,22 @@ const root = path.join(__dirname, '..');
 const homepage = fs.readFileSync(path.join(root, 'public', 'index.html'), 'utf8');
 const adminHtml = fs.readFileSync(path.join(root, 'public', 'admin.html'), 'utf8');
 
-test('Used Keys replaces the fourth customer category card and opens its section', () => {
-  assert.match(homepage, /const categories = \[\s*\{id:'software'[\s\S]*?\{id:'proxy'[\s\S]*?\];/);
-  assert.doesNotMatch(homepage, /\{id:'residential', title:'Residential Proxies'/);
-  assert.match(homepage, /data-used-keys-collection/);
-  assert.match(homepage, /navigateSection\('used-keys-view'\)/);
-  assert.match(homepage, /<strong class="title-premium">Used Keys<\/strong>/);
-  assert.match(homepage, /<h3 class="title-premium">Used Keys/);
+test('homepage collection and category grids render all six requested cards in order', () => {
+  const expected = ['Software', 'Used Keys', 'Rental Software', 'Demo Keys', 'Residential Proxies', 'Windows VPS'];
+  const categories = homepage.match(/const categories = \[([\s\S]*?)\n    \];/);
+  assert.ok(categories);
+  const orderedTitles = [...categories[1].matchAll(/title:'([^']+)'/g)].map(match => match[1]);
+  assert.deepEqual(orderedTitles, expected);
+  assert.match(homepage, /id:'used-keys', title:'Used Keys'/);
+  assert.match(homepage, /id:'rental-software', title:'Rental Software'/);
+  assert.match(homepage, /id:'demo-keys', title:'Demo Keys'/);
+  assert.match(homepage, /data-collection="\$\{category\.id\}"/);
+  assert.match(homepage, /function openCollection\(collection\)/);
+  assert.match(homepage, /'used-keys':'used-keys-view'/);
+  assert.match(homepage, /'rental-software':'rental-software-view'/);
+  assert.match(homepage, /'demo-keys':'demo-keys-view'/);
+  assert.match(homepage, /grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(homepage, /@media\(max-width:639\.98px\)\{[\s\S]*?\.hero-category-grid,\.category-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
 
 test('Used Keys card count is based on live available inventory and refreshed in the background', () => {
@@ -40,8 +49,8 @@ test('top navigation omits Used Keys while preserving the other navigation items
   }
 });
 
-test('admin category and offer controls hide Residential Proxies without database deletion', () => {
-  assert.doesNotMatch(adminHtml, /<option value="residential">Residential Proxies<\/option>/);
-  assert.match(adminHtml, /const categories=\[\{id:'software',title:'Software'\},\{id:'vps',title:'Windows VPS'\},\{id:'proxy',title:'Static Proxy'\}\]/);
+test('admin Software categories and offers restore Residential Proxies without deleting old data', () => {
+  assert.match(adminHtml, /<option value="residential">Residential Proxies<\/option>/);
+  assert.match(adminHtml, /const categories=\[\{id:'software',title:'Software'\},\{id:'vps',title:'Windows VPS'\},\{id:'proxy',title:'Static Proxy'\},\{id:'residential',title:'Residential Proxies'\}\]/);
   assert.doesNotMatch(adminHtml, /delete\s+from\s+(?:public\.)?products|drop\s+table\s+(?:public\.)?products/i);
 });

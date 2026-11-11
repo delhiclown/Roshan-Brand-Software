@@ -96,7 +96,9 @@ function createOrderMessage(order, user) {
   const product = plainText(order.product_name);
   const type = order.used_key_id
     ? 'USED KEY'
-    : order.product_type === 'vps' || order.product_type === 'windows-vps'
+    : order.product_type === 'rental'
+      ? 'RENTAL SOFTWARE · 1 DAY'
+      : order.product_type === 'vps' || order.product_type === 'windows-vps'
       ? 'Windows VPS'
       : 'Software';
   const quantity = Math.max(1, Number.parseInt(order.quantity, 10) || 1);
@@ -208,7 +210,7 @@ module.exports = async function notifyOrder(req, res) {
     const orders = await responseJson(orderResponse);
     const order = Array.isArray(orders) ? orders[0] : null;
     if (!order) return sendJson(res, 409, { error: 'Order is not eligible for an alert.' });
-    if (!['software', 'vps', 'windows-vps'].includes(order.product_type)) {
+    if (!['software', 'vps', 'windows-vps', 'rental'].includes(order.product_type)) {
       return sendJson(res, 409, { error: 'Order type is not eligible for an alert.' });
     }
     if (order.used_key_id) {

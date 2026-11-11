@@ -317,7 +317,7 @@
               <input id="offer-id" type="hidden">
               <div class="field"><label for="offer-title">Offer title</label><input id="offer-title" maxlength="120" required placeholder="e.g. Two for one"></div>
               <div class="field"><label for="offer-description">Short description</label><textarea id="offer-description" maxlength="500" placeholder="Tell customers what this offer includes"></textarea></div>
-              <div class="field"><label for="offer-collection">Collection</label><select id="offer-collection" required><option value="software">Software</option><option value="vps">Windows VPS</option><option value="proxy">Static Proxy</option></select></div>
+              <div class="field"><label for="offer-collection">Collection</label><select id="offer-collection" required><option value="software">Software</option><option value="vps">Windows VPS</option><option value="proxy">Static Proxy</option><option value="residential">Residential Proxies</option></select></div>
               <div class="field"><label for="offer-product">Product (optional)</label><select id="offer-product"><option value="">Entire collection</option></select><small class="sub" style="display:block;margin:5px 0 0">Choose a product to take customers directly to it, or leave empty for the full collection.</small></div>
               <section class="offer-claim-settings">
                 <label class="check" for="offer-claim-enabled"><input id="offer-claim-enabled" type="checkbox"> Enable screenshot-verified claim and free-software transfer</label>
@@ -393,6 +393,39 @@
           <section class="panel" style="margin:0"><h3>Inventory</h3><div class="order-tools"><select id="used-key-filter-product" aria-label="Filter by software"><option value="">All software</option></select><input id="used-key-search" type="search" maxlength="120" placeholder="Search software, key, or link"></div><div id="used-key-list" class="product-list"></div></section>
         </div>
       </section>
+      <section id="demo-keys-panel" class="panel hidden" data-card-tone="software">
+        <div class="bar" style="margin-bottom:15px"><div><h2 class="title-premium">Demo Keys</h2><p class="sub desc-premium" style="margin:3px 0 0">Manage free demo keys separately from paid and used keys.</p></div><button id="demo-keys-refresh" class="btn ghost" type="button">Refresh</button></div>
+        <div class="admin-grid">
+          <section class="panel" style="margin:0"><h3>Add or update demo key</h3>
+            <form id="demo-key-form">
+              <div class="field"><label for="demo-key-product">Software</label><select id="demo-key-product" required></select></div>
+              <div class="field"><label for="demo-key-value">Demo key</label><textarea id="demo-key-value" maxlength="4000" required></textarea></div>
+              <div class="field"><label for="demo-key-days">Demo days (optional)</label><input id="demo-key-days" type="number" min="1" max="36500" step="1" placeholder="Leave empty for no day label"></div>
+              <button class="btn gold" type="submit">Save demo key</button><div class="error" id="demo-key-error" aria-live="polite"></div>
+            </form>
+          </section>
+          <section class="panel" style="margin:0"><h3>Demo key inventory</h3><div id="demo-key-list" class="product-list"></div></section>
+        </div>
+      </section>
+      <section id="rental-panel" class="panel hidden" data-card-tone="software">
+        <div class="bar" style="margin-bottom:15px"><div><h2 class="title-premium">Rental Software</h2><p class="sub desc-premium" style="margin:3px 0 0">Set one-day rates, add encrypted login IDs, and review UTR payments.</p></div><button id="rental-refresh" class="btn ghost" type="button">Refresh</button></div>
+        <div class="admin-grid">
+          <section class="panel" style="margin:0"><h3>Rental product and daily rate</h3>
+            <form id="rental-product-form">
+              <div class="field"><label for="rental-product">Software</label><select id="rental-product" required></select></div>
+              <div class="field"><label for="rental-rate">Rate for 1 day (₹)</label><input id="rental-rate" type="number" min="0.01" max="100000" step="0.01" required></div>
+              <button class="btn gold" type="submit">Save rental rate</button><div class="error" id="rental-product-error" aria-live="polite"></div>
+            </form>
+            <form id="rental-accounts-form" style="margin-top:24px">
+              <div class="field"><label for="rental-account-product">Software</label><select id="rental-account-product" required></select></div>
+              <div class="field"><label for="rental-accounts">Rental IDs / login details · one per line</label><textarea id="rental-accounts" maxlength="100000" placeholder="ID or login details, one per line"></textarea><small class="sub">Each line is encrypted and added as a separate rental ID. Up to 100 lines.</small></div>
+              <button class="btn ghost" type="submit">Add rental IDs</button><div class="error" id="rental-accounts-error" aria-live="polite"></div>
+            </form>
+          </section>
+          <section class="panel" style="margin:0"><h3>Rental inventory</h3><div id="rental-inventory-list" class="product-list"></div></section>
+        </div>
+        <div style="margin-top:22px"><h3>Rental Order Requests</h3><div id="rental-request-list" class="product-list"></div></div>
+      </section>
     </section>
   </main>
   <div class="order-drawer" id="order-drawer" aria-hidden="true">
@@ -442,9 +475,9 @@
     <section class="admin-confirm-dialog"><h2>Claim screenshot</h2><img class="offer-screenshot hidden" id="offer-screenshot" alt="Customer-provided offer claim screenshot"><button class="btn ghost" id="offer-screenshot-close" type="button">Close</button></section>
   </div>
   <script>
-    const categories=[{id:'software',title:'Software'},{id:'vps',title:'Windows VPS'},{id:'proxy',title:'Static Proxy'}];
+    const categories=[{id:'software',title:'Software'},{id:'vps',title:'Windows VPS'},{id:'proxy',title:'Static Proxy'},{id:'residential',title:'Residential Proxies'}];
     const DEFAULT_SPIN_PRIZES=[{code:'SAVE20',label:'20%',type:'percent',value:20,color:'#e11d48',maxDiscountAmount:500,weight:15},{code:'SAVE50',label:'50%',type:'percent',value:50,color:'#2f3fb8',maxDiscountAmount:500,weight:10},{code:'SAVE100',label:'100%',type:'percent',value:100,color:'#f5c04a',maxDiscountAmount:500,weight:4},{code:'BONUS100',label:'100%',type:'percent',value:100,color:'#e11d48',maxDiscountAmount:500,weight:1},{code:'TRY_AGAIN',label:'TRY AGAIN',type:'tryAgain',value:0,color:'#2a2f3a',maxDiscountAmount:0,weight:45},{code:'SAVE10',label:'10%',type:'percent',value:10,color:'#2f3fb8',maxDiscountAmount:500,weight:25}];
-    const state={client:null,category:'software',products:[],editing:null,editingDownloadUrl:null,downloadLinkLoaded:true,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null,paymentQrImageUrl:'',offers:[],offerProducts:[],offerReports:[],spinPrizes:DEFAULT_SPIN_PRIZES,coupons:[],usedKeyProducts:[],usedKeys:[],orderRequestStatus:'new',orderRequestPage:1,orderRequestPageSize:20,orderRequestCount:0,orderRequestCounts:{new:0,completed:0,rejected:0,all:0},selectedOrderRequest:null};
+    const state={client:null,category:'software',products:[],editing:null,editingDownloadUrl:null,downloadLinkLoaded:true,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null,paymentQrImageUrl:'',offers:[],offerProducts:[],offerReports:[],spinPrizes:DEFAULT_SPIN_PRIZES,coupons:[],usedKeyProducts:[],usedKeys:[],demoKeyProducts:[],demoKeys:[],rentalProducts:[],rentalAccounts:[],orderRequestStatus:'new',orderRequestPage:1,orderRequestPageSize:20,orderRequestCount:0,orderRequestCounts:{new:0,completed:0,rejected:0,all:0},selectedOrderRequest:null};
     let productPreviewUrl=null;
     let paymentQrPreviewUrl=null;
     const $=id=>document.getElementById(id);
@@ -584,6 +617,8 @@
         <button type="button" data-finance="topups" class="${state.activeView==='topups'?'active':''}">Top-up Requests</button>
         <button type="button" data-finance="orders" class="${state.activeView==='orders'?'active':''}">Orders</button>
         <button type="button" data-used-keys="true" class="${state.activeView==='used-keys'?'active':''}">Used Keys</button>
+        <button type="button" data-demo-keys="true" class="${state.activeView==='demo-keys'?'active':''}">Demo Keys</button>
+        <button type="button" data-rentals="true" class="${state.activeView==='rentals'?'active':''}">Rental Software</button>
         <button type="button" data-order-requests="true" class="request-menu ${state.activeView==='order-requests'?'active':''}">Order Requests${requestBadge}</button>
         <button type="button" data-finance="coupons" class="${state.activeView==='coupons'?'active':''}">Coupons</button>
         <button type="button" data-finance="users" class="${state.activeView==='users'?'active':''}">Users</button>
@@ -592,23 +627,25 @@
       $('tabs').querySelectorAll('[data-finance]').forEach(button=>button.addEventListener('click',()=>showFinance(button.dataset.finance)));
       $('tabs').querySelector('[data-order-requests]').addEventListener('click',showOrderRequests);
       $('tabs').querySelector('[data-used-keys]').addEventListener('click',showUsedKeys);
+      $('tabs').querySelector('[data-demo-keys]').addEventListener('click',showDemoKeys);
+      $('tabs').querySelector('[data-rentals]').addEventListener('click',showRentalSoftware);
       $('tabs').querySelector('[data-spin]').addEventListener('click',showSpinWin);
       $('tabs').querySelector('[data-offers]').addEventListener('click',showOffers);
       $('tabs').querySelector('[data-settings]').addEventListener('click',showSettings);
     }
     function selectCategory(category){
       state.category=category;state.activeView=category;
-      $('products-panel').classList.remove('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');
+      $('products-panel').classList.remove('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');$('demo-keys-panel').classList.add('hidden');$('rental-panel').classList.add('hidden');
       $('page-title').textContent=categories.find(item=>item.id===category).title;
       $('list-title').textContent=`${categories.find(item=>item.id===category).title} products`;
       renderTabs();renderProducts();resetForm();syncPlanFields();
     }
     function showSettings(){
-      state.activeView='settings';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.remove('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');$('page-title').textContent='Settings';
+      state.activeView='settings';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.remove('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');$('demo-keys-panel').classList.add('hidden');$('rental-panel').classList.add('hidden');$('page-title').textContent='Settings';
       renderTabs();loadSettings().catch(error=>setError('settings-error',error.message));
     }
     function showSpinWin(){
-      state.activeView='spin';$('products-panel').classList.add('hidden');$('spin-panel').classList.remove('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');$('page-title').textContent='Spin & Win';
+      state.activeView='spin';$('products-panel').classList.add('hidden');$('spin-panel').classList.remove('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');$('demo-keys-panel').classList.add('hidden');$('rental-panel').classList.add('hidden');$('page-title').textContent='Spin & Win';
       renderTabs();$('spin-prize-list').innerHTML='<div class="empty">Loading spin settings…</div>';
       loadSpinPrizeConfig().then(renderSpinPrizeEditor).catch(error=>{
         console.error('Could not load spin settings:',error);
@@ -616,19 +653,19 @@
       });
     }
     function showOffers(){
-      state.activeView='offers';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.remove('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');$('page-title').textContent='Offers';
+      state.activeView='offers';$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.remove('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');$('demo-keys-panel').classList.add('hidden');$('rental-panel').classList.add('hidden');$('page-title').textContent='Offers';
       renderTabs();resetOfferForm();
       Promise.all([renderOffers(),renderOfferOperations()]).catch(error=>setError('offer-error',`Could not load offer data: ${error.message}`));
     }
     async function showFinance(tab){
-      state.activeView=tab;$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.remove('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');
+      state.activeView=tab;$('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');$('settings-panel').classList.add('hidden');$('finance-panel').classList.remove('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');$('demo-keys-panel').classList.add('hidden');$('rental-panel').classList.add('hidden');
       const titles={topups:['Top-up Requests','Review customer UPI payments before crediting wallets.'],orders:['Orders','Deliver customer purchases manually or issue a wallet refund.'],coupons:['Coupons','Read-only database records for spin rewards and coupon use.'],users:['Users','Manage customer wallet balances with an audit note.']};
       $('page-title').textContent=titles[tab][0];$('finance-title').textContent=titles[tab][0];$('finance-description').textContent=titles[tab][1];renderTabs();await renderFinance(tab);
     }
     async function showOrderRequests(){
       state.activeView='order-requests';
       $('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');
-      $('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.remove('hidden');$('used-keys-panel').classList.add('hidden');
+      $('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.remove('hidden');$('used-keys-panel').classList.add('hidden');$('demo-keys-panel').classList.add('hidden');$('rental-panel').classList.add('hidden');
       $('page-title').textContent='Order Requests';renderTabs();
       try{await refreshOrderRequestCounts();await renderOrderRequests()}
       catch(error){$('order-request-list').innerHTML=`<div class="empty">Could not load Order Requests: ${escapeHtml(error.message)}</div>`}
@@ -636,7 +673,7 @@
     async function showUsedKeys(){
       state.activeView='used-keys';
       $('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');
-      $('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.remove('hidden');
+      $('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.remove('hidden');$('demo-keys-panel').classList.add('hidden');$('rental-panel').classList.add('hidden');
       $('page-title').textContent='Used Keys';renderTabs();$('used-key-list').innerHTML='<div class="empty">Loading inventory…</div>';
       try{
         const {data,error}=await state.client.from('products').select('id,name').eq('category','software').order('name');
@@ -647,6 +684,118 @@
         if(!state.usedKeyProducts.length)$('used-key-product').innerHTML='<option value="">Add Software products first</option>';
         await renderUsedKeyInventory();
       }catch(error){$('used-key-list').innerHTML=`<div class="empty">Could not load Used Keys: ${escapeHtml(error.message)}</div>`}
+    }
+    async function showDemoKeys(){
+      state.activeView='demo-keys';
+      $('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');
+      $('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');$('demo-keys-panel').classList.remove('hidden');$('rental-panel').classList.add('hidden');
+      $('page-title').textContent='Demo Keys';renderTabs();$('demo-key-list').innerHTML='<div class="empty">Loading demo keys…</div>';
+      try{
+        const {data:products,error:productError}=await state.client.from('products').select('id,name').eq('category','software').order('name');
+        if(productError)throw productError;
+        state.demoKeyProducts=products||[];
+        $('demo-key-product').innerHTML=state.demoKeyProducts.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`).join('');
+        if(!state.demoKeyProducts.length)$('demo-key-product').innerHTML='<option value="">Add Software products first</option>';
+        await renderDemoKeyInventory();
+      }catch(error){$('demo-key-list').innerHTML=`<div class="empty">Could not load Demo Keys: ${escapeHtml(error.message)}</div>`}
+    }
+    async function renderDemoKeyInventory(){
+      const {data,error}=await state.client.rpc('admin_list_demo_keys');
+      if(error)throw error;
+      state.demoKeys=Array.isArray(data)?data:[];
+      $('demo-key-list').innerHTML=state.demoKeys.length?state.demoKeys.map(item=>`<div class="product-row"><strong>${escapeHtml(item.software_name)}</strong><span>${Number(item.validity_days)>0?`${Number(item.validity_days)} days demo`:'Demo key'}</span><span>${Number(item.claim_count)||0} claim(s)</span></div>`).join(''):'<div class="empty">No demo keys configured.</div>';
+    }
+    async function saveDemoKey(event){
+      event.preventDefault();
+      const productId=Number($('demo-key-product').value);
+      const licenseKey=$('demo-key-value').value.trim();
+      const daysText=$('demo-key-days').value.trim();
+      const days=daysText?Number(daysText):null;
+      $('demo-key-error').textContent='';
+      if(!Number.isSafeInteger(productId)||productId<=0){$('demo-key-error').textContent='Choose a software product.';return}
+      if(!licenseKey||licenseKey.length>4000){$('demo-key-error').textContent='Enter a demo key up to 4,000 characters.';return}
+      if(days!==null&&(!Number.isInteger(days)||days<1||days>36500)){$('demo-key-error').textContent='Demo days must be between 1 and 36,500.';return}
+      const button=$('demo-key-form').querySelector('[type="submit"]');
+      button.disabled=true;
+      try{
+        const {data,error}=await state.client.rpc('admin_save_demo_key',{p_product_id:productId,p_license_key:licenseKey,p_validity_days:days});
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not save demo key.');
+        $('demo-key-value').value='';$('demo-key-days').value='';
+        await renderDemoKeyInventory();
+      }catch(error){$('demo-key-error').textContent=error.message||'Could not save demo key.'}
+      finally{button.disabled=false}
+    }
+    async function showRentalSoftware(){
+      state.activeView='rentals';
+      $('products-panel').classList.add('hidden');$('spin-panel').classList.add('hidden');$('offers-panel').classList.add('hidden');
+      $('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');$('demo-keys-panel').classList.add('hidden');$('rental-panel').classList.remove('hidden');
+      $('page-title').textContent='Rental Software';renderTabs();
+      $('rental-inventory-list').innerHTML='<div class="empty">Loading rental inventory…</div>';
+      try{
+        const {data:products,error}=await state.client.from('products').select('id,name').eq('category','software').order('name');
+        if(error)throw error;
+        const options=(products||[]).map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`).join('');
+        $('rental-product').innerHTML=options||'<option value="">Add Software products first</option>';
+        $('rental-account-product').innerHTML=options||'<option value="">Add Software products first</option>';
+        await renderRentalAdminData();
+      }catch(error){$('rental-inventory-list').innerHTML=`<div class="empty">Could not load Rental Software: ${escapeHtml(error.message)}</div>`}
+    }
+    async function renderRentalAdminData(){
+      const [productsResult,requestsResult]=await Promise.all([
+        state.client.rpc('admin_list_rental_products'),
+        state.client.rpc('admin_list_rental_requests')
+      ]);
+      if(productsResult.error)throw productsResult.error;
+      if(requestsResult.error)throw requestsResult.error;
+      state.rentalProducts=Array.isArray(productsResult.data)?productsResult.data:[];
+      $('rental-inventory-list').innerHTML=state.rentalProducts.length?state.rentalProducts.map(item=>`<div class="product-row"><strong>${escapeHtml(item.software_name)}</strong><span>₹${money(item.daily_rate)} / day</span><span>${Number(item.available_count)} available · ${Number(item.active_count)} rented</span></div>`).join(''):'<div class="empty">No rental products configured.</div>';
+      const requests=Array.isArray(requestsResult.data)?requestsResult.data:[];
+      $('rental-request-list').innerHTML=requests.length?requests.map(item=>`<article class="product-row"><div><strong>Order #${escapeHtml(item.order_id)} · ${escapeHtml(item.software_name)}</strong><small>${escapeHtml(item.customer_email)} · ₹${money(item.amount)} / one day</small><small>UTR: ${escapeHtml(item.utr_number)} · ${escapeHtml(item.created_at)}</small><input data-rental-reason="${escapeHtml(item.order_id)}" maxlength="1000" value="Payment could not be verified" aria-label="Rejection reason for rental order ${escapeHtml(item.order_id)}"></div><div class="product-row-actions"><button class="btn gold" type="button" data-rental-review="approve" data-rental-order="${escapeHtml(item.order_id)}">Verify &amp; assign</button><button class="btn danger" type="button" data-rental-review="reject" data-rental-order="${escapeHtml(item.order_id)}">Reject</button></div></article>`).join(''):'<div class="empty">No rental payment requests.</div>';
+    }
+    async function saveRentalProduct(event){
+      event.preventDefault();
+      const productId=Number($('rental-product').value);
+      const rate=Number($('rental-rate').value);
+      $('rental-product-error').textContent='';
+      if(!Number.isSafeInteger(productId)||productId<=0||!Number.isFinite(rate)||rate<=0||rate>100000){$('rental-product-error').textContent='Choose software and enter a rate from ₹0.01 to ₹100,000.';return}
+      try{
+        const {data,error}=await state.client.rpc('admin_save_rental_product',{p_product_id:productId,p_daily_rate:rate});
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not save the rental rate.');
+        $('rental-rate').value='';
+        await renderRentalAdminData();
+      }catch(error){$('rental-product-error').textContent=error.message||'Could not save the rental rate.'}
+    }
+    async function addRentalAccounts(event){
+      event.preventDefault();
+      const productId=Number($('rental-account-product').value);
+      const accounts=$('rental-accounts').value.split(/\r?\n/).map(value=>value.trim()).filter(Boolean);
+      $('rental-accounts-error').textContent='';
+      if(!Number.isSafeInteger(productId)||productId<=0){$('rental-accounts-error').textContent='Choose rental software first.';return}
+      if(!accounts.length||accounts.length>100||accounts.some(value=>value.length>4000)){$('rental-accounts-error').textContent='Enter 1 to 100 lines, each up to 4,000 characters.';return}
+      try{
+        const {data,error}=await state.client.rpc('admin_add_rental_accounts',{p_product_id:productId,p_accounts:accounts});
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not add rental IDs.');
+        $('rental-accounts').value='';
+        await renderRentalAdminData();
+      }catch(error){$('rental-accounts-error').textContent=error.message||'Could not add rental IDs.'}
+    }
+    async function reviewRentalRequest(event){
+      const button=event.target instanceof Element?event.target.closest('[data-rental-review]'):null;
+      if(!button||!$('rental-request-list').contains(button))return;
+      button.disabled=true;
+      try{
+        const orderId=Number(button.dataset.rentalOrder);
+        const approve=button.dataset.rentalReview==='approve';
+        const reason=$(`[data-rental-reason="${CSS.escape(String(orderId))}"]`).value.trim();
+        const {data,error}=await state.client.rpc('admin_review_rental_payment',{p_order_id:orderId,p_approve:approve,p_reason:reason});
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not review rental payment.');
+        await renderRentalAdminData();
+      }catch(error){notify(`Could not review rental request: ${error.message}`)}
+      finally{if(button.isConnected)button.disabled=false}
     }
     async function renderUsedKeyInventory(){
       const {data,error}=await state.client.rpc('admin_list_used_keys');
@@ -1713,6 +1862,12 @@
     $('used-key-list').addEventListener('click',event=>handleUsedKeyAction(event).catch(error=>notify(`Could not update Used Keys: ${error.message}`)));
     $('used-key-filter-product').addEventListener('change',()=>renderFilteredUsedKeys());
     $('used-key-search').addEventListener('input',()=>renderFilteredUsedKeys());
+    $('demo-key-form').addEventListener('submit',saveDemoKey);
+    $('demo-keys-refresh').addEventListener('click',()=>renderDemoKeyInventory().catch(error=>notify(`Could not load Demo Keys: ${error.message}`)));
+    $('rental-product-form').addEventListener('submit',saveRentalProduct);
+    $('rental-accounts-form').addEventListener('submit',addRentalAccounts);
+    $('rental-request-list').addEventListener('click',event=>reviewRentalRequest(event));
+    $('rental-refresh').addEventListener('click',()=>renderRentalAdminData().catch(error=>notify(`Could not load Rental Software: ${error.message}`)));
     $('order-requests-refresh').addEventListener('click',()=>refreshOrderRequestCounts().then(renderOrderRequests).catch(error=>{$('order-request-list').innerHTML=`<div class="empty">${escapeHtml(error.message)}</div>`}));
     $('order-request-prev').addEventListener('click',()=>{if(state.orderRequestPage>1){state.orderRequestPage--;renderOrderRequests()}});
     $('order-request-next').addEventListener('click',()=>{state.orderRequestPage++;renderOrderRequests()});

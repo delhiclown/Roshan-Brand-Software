@@ -225,7 +225,7 @@
     .hero-copy{max-width:620px;margin:auto;color:var(--muted);font-size:15px;line-height:1.8}
     .hero-collections{max-width:980px;margin:34px auto 0}
     .hero-collections-heading{margin-bottom:13px;color:var(--muted);font-size:11px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase}
-    .hero-category-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+    .hero-category-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
     .hero-category{min-width:0;min-height:82px;display:flex;align-items:center;gap:12px;padding:14px;text-align:left;border:1px solid rgba(106,125,165,.22);border-radius:15px;background:linear-gradient(145deg,rgba(16,28,52,.96),rgba(8,15,32,.96));color:var(--text);cursor:pointer;box-shadow:inset 0 1px rgba(255,255,255,.035),0 10px 24px rgba(0,0,0,.14);transition:transform .2s,border-color .2s,box-shadow .2s}
     .hero-category[data-hero-category="vps"]{border-color:rgba(59,130,246,.48)}
     .hero-category .hero-category-art{position:absolute;inset:0 0 0 auto;width:61%;overflow:hidden;pointer-events:none;z-index:0;mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.26) 15%,#000 46%)}
@@ -264,7 +264,7 @@
     .section-head h2{margin:0;font-size:21px}
     .section-head p{margin:5px 0 0;color:var(--muted);font-size:13px}
     .category-grid,.product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
-    .category-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .category-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
     .category{width:100%;text-align:left;color:inherit;cursor:pointer;background:linear-gradient(145deg,#0d1730,var(--card));border:1px solid var(--line);border-radius:20px;padding:0;min-height:202px;overflow:hidden;transition:transform .22s,border-color .22s,background .22s}
     .category:hover{transform:translateY(-4px);border-color:var(--gold);background:linear-gradient(145deg,#111d39,#0a1226)}
     .category-banner{position:relative;display:block;width:100%;height:140px;overflow:hidden;border-radius:20px 20px 0 0;background:linear-gradient(110deg,#0a1226 8%,#15213a 18%,#0a1226 33%);background-size:220% 100%;animation:banner-shimmer 1.5s linear infinite;isolation:isolate}
@@ -570,7 +570,8 @@
       .hero-collections{margin-top:27px}
       .hero-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .hero-category{min-height:76px;padding:11px}
-      .category-grid,.product-grid{grid-template-columns:1fr;gap:13px}
+      .category-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+      .product-grid{grid-template-columns:1fr;gap:13px}
       .product-grid{gap:24px}
       .category{min-height:176px}
       .category-banner{height:120px}
@@ -915,8 +916,9 @@
     .wallet-chip,.orders-trigger{font-weight:700}
     .profile-menu button,.main-nav a,.mobile-drawer a{font-weight:600}
     :root[data-theme="light"] .hero-category-copy strong.title-premium,:root[data-theme="light"] .category h3.title-premium,:root[data-theme="light"] .product h3.title-premium,:root[data-theme="light"] .why-card h3.title-premium{filter:drop-shadow(0 2px 6px color-mix(in srgb,var(--card-accent) 12%,transparent))}
-    @media(max-width:980px){.hero-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:980px){.hero-category-grid,.category-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media(max-width:639.98px){
+      .hero-category-grid,.category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .hero h1{font-size:clamp(36px,10vw,50px);letter-spacing:-.05em}
       .hero-category{position:relative;align-content:flex-start;flex-wrap:wrap;gap:7px;min-height:112px;padding:12px}
       .hero-category-icon{width:36px;height:36px}
@@ -1075,6 +1077,14 @@
       <div class="section-head"><div><h2 class="title-premium">Used Keys</h2><p class="desc-premium">Software keys at a lower price for their remaining validity.</p></div><label class="used-key-sort-label" for="used-keys-sort">Sort by <select id="used-keys-sort"><option value="validity">Zyada validity</option><option value="price">Sabse sasti</option></select></label></div>
       <div class="product-grid" id="used-keys-grid" aria-live="polite"></div>
     </section>
+    <section class="legacy-section hidden" id="demo-keys-view">
+      <div class="section-head"><div><h2 class="title-premium">Demo Keys</h2><p class="desc-premium">Try a demo key before buying the full software.</p></div></div>
+      <div class="product-grid" id="demo-keys-grid" aria-live="polite"></div>
+    </section>
+    <section class="legacy-section hidden" id="rental-software-view">
+      <div class="section-head"><div><h2 class="title-premium">Rental Software</h2><p class="desc-premium">One-day software access.</p></div></div>
+      <div class="product-grid" id="rental-software-grid" aria-live="polite"></div>
+    </section>
     <section class="legacy-section" id="why-us">
       <div class="section-head"><div><h2 class="title-premium">Why Roshan Brand</h2><p class="desc-premium">Premium tools, a smooth buying experience, and support when you need it.</p></div></div>
       <div class="why-grid">
@@ -1140,10 +1150,13 @@
   <script>
     const categories = [
       {id:'software', title:'Software', icon:'✦', description:'Premium digital tools for a faster, smoother workflow.'},
-      {id:'vps', title:'Windows VPS', icon:'▣', description:'Reliable Windows servers for projects that need room to grow.'},
-      {id:'proxy', title:'Static Proxy', icon:'⌘', description:'Static proxy solutions for flexible, dependable access.'}
+      {id:'used-keys', title:'Used Keys', icon:'⚿', description:'Discounted software keys with limited remaining validity.'},
+      {id:'rental-software', title:'Rental Software', icon:'◷', description:'Rent software access for one day at a time.'},
+      {id:'demo-keys', title:'Demo Keys', icon:'▹', description:'Try a software demo key before buying a paid key.'},
+      {id:'residential', title:'Residential Proxies', icon:'◎', description:'Residential IP options for your data and browsing needs.'},
+      {id:'vps', title:'Windows VPS', icon:'▣', description:'Reliable Windows servers for projects that need room to grow.'}
     ];
-    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, usedKeys:[], usedKeysError:null, usedKeysLoading:true, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, pendingAuthRequest:null, authMode:'signin', offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
+    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, usedKeys:[], usedKeysError:null, usedKeysLoading:true, demoKeys:[], demoKeysError:null, rentalProducts:[], rentalProductsError:null, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, pendingAuthRequest:null, authMode:'signin', offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
     const $ = id => document.getElementById(id);
     const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     const money = value => new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(Number(value)||0);
@@ -1278,23 +1291,155 @@
     function renderCategories(){
       $('hero-category-grid').innerHTML = categories.map(category => {
         const productCount = state.products.filter(product => normalizeCategory(product.category) === normalizeCategory(category.id) && product.in_stock !== false).length;
-        const countLabel = state.productsLoading && !state.products.length ? 'Explore collection' : `${productCount} ${productCount === 1 ? 'product' : 'products'}`;
+        const countLabel = category.id==='used-keys' ? escapeHtml(usedKeysCountLabel())
+          : category.id==='rental-software' ? '1 day rentals'
+          : category.id==='demo-keys' ? 'Free demo keys'
+          : state.productsLoading && !state.products.length ? 'Explore collection' : `${productCount} ${productCount === 1 ? 'product' : 'products'}`;
         const categoryArt=category.id==='software'?'<span class="hero-category-art" aria-hidden="true"><img src="/categories/software-laptop-8k.webp" alt="" decoding="async"></span>':category.id==='vps'||category.id==='proxy'||category.id==='residential'?`<span class="hero-category-art" aria-hidden="true"><img src="${category.id==='vps'?'/categories/vps-datacenter.png':category.id==='proxy'?'/categories/proxy-logo-navy.png':'/assets/residential-proxies-banner-v3.svg?v=20261107'}" alt="" decoding="async"></span>`:'';
-        return `<button class="hero-category" data-card-tone="${category.id}" type="button" data-hero-category="${category.id}">${categoryArt}<span class="hero-category-icon">${category.icon}</span><span class="hero-category-copy"><strong class="title-premium">${category.title}</strong><small class="badge-premium">${countLabel}</small></span><span class="hero-category-arrow" aria-hidden="true">↗</span></button>`;
-      }).join('')+`<button class="hero-category" data-card-tone="software" type="button" data-used-keys-collection><span class="hero-category-icon">⚿</span><span class="hero-category-copy"><strong class="title-premium">Used Keys</strong><small class="badge-premium" data-used-keys-count>${escapeHtml(usedKeysCountLabel())}</small></span><span class="hero-category-arrow" aria-hidden="true">↗</span></button>`;
-      $('hero-category-grid').querySelectorAll('[data-hero-category]').forEach(button => button.addEventListener('click',() => showCategory(button.dataset.heroCategory)));
-      $('hero-category-grid').querySelector('[data-used-keys-collection]').addEventListener('click',()=>navigateSection('used-keys-view'));
+        const special=category.id==='used-keys'||category.id==='rental-software'||category.id==='demo-keys';
+        const tone=category.id==='used-keys'||category.id==='rental-software'||category.id==='demo-keys'?'software':category.id;
+        return `<button class="hero-category" data-card-tone="${tone}" type="button" ${special?`data-collection="${category.id}"`:`data-hero-category="${category.id}"`}>${categoryArt}<span class="hero-category-icon">${category.icon}</span><span class="hero-category-copy"><strong class="title-premium">${category.title}</strong><small class="badge-premium" ${category.id==='used-keys'?'data-used-keys-count':''}>${countLabel}</small></span><span class="hero-category-arrow" aria-hidden="true">↗</span></button>`;
+      }).join('');
       revealPage($('hero-category-grid'));
       $('category-grid').innerHTML = categories.map(category => {
         const productCount = state.products.filter(product => normalizeCategory(product.category) === normalizeCategory(category.id) && product.in_stock !== false).length;
-        const countLabel = state.productsLoading && !state.products.length ? 'Loading…' : `${productCount} ${productCount === 1 ? 'item' : 'items'}`;
+        const countLabel = category.id==='used-keys' ? escapeHtml(usedKeysCountLabel())
+          : category.id==='rental-software' ? '1 day rentals'
+          : category.id==='demo-keys' ? 'Free demo keys'
+          : state.productsLoading && !state.products.length ? 'Loading…' : `${productCount} ${productCount === 1 ? 'item' : 'items'}`;
         const countBadge = state.productsError ? '' : `<span class="count badge-premium">${countLabel}</span>`;
-        const bannerImage = category.id === 'vps' ? '/categories/vps-datacenter.png' : category.id === 'residential' ? '/assets/residential-proxies-banner-v3.svg?v=20261107' : category.id === 'proxy' ? '/categories/proxy-logo-navy.png' : category.id === 'software' ? '/categories/software-laptop-8k.webp' : `/categories/${category.id}.jpg`;
-        return `<button class="category" data-card-tone="${category.id}" data-category="${category.id}"><span class="category-banner"><img class="category-banner-image" src="${bannerImage}" alt="" loading="lazy" decoding="async" onload="this.classList.add('loaded');this.parentElement.classList.add('loaded')" onerror="this.hidden=true;this.classList.remove('loaded');this.parentElement.classList.remove('loaded');this.parentElement.classList.add('failed')"><span class="category-banner-fallback" aria-hidden="true">${categoryBannerIcons[category.id]}</span></span><span class="category-content"><span class="category-top"><span class="category-icon">${category.icon}</span>${countBadge}</span><h3 class="title-premium">${category.title}<span class="category-arrow">↗</span></h3><p class="desc-premium">${category.description}</p></span></button>`;
-      }).join('')+`<button class="category" data-card-tone="software" data-used-keys-collection><span class="category-banner"><span class="category-banner-fallback" aria-hidden="true">${categoryBannerIcons['used-keys']}</span></span><span class="category-content"><span class="category-top"><span class="category-icon">⚿</span><span class="count badge-premium" data-used-keys-count>${escapeHtml(usedKeysCountLabel())}</span></span><h3 class="title-premium">Used Keys<span class="category-arrow">↗</span></h3><p class="desc-premium">Discounted software keys with limited remaining validity.</p></span></button>`;
-      $('category-grid').querySelectorAll('[data-category]').forEach(button => button.addEventListener('click',() => showCategory(button.dataset.category)));
-      $('category-grid').querySelector('[data-used-keys-collection]').addEventListener('click',()=>navigateSection('used-keys-view'));
+        const bannerImage = category.id === 'vps' ? '/categories/vps-datacenter.png' : category.id === 'residential' ? '/assets/residential-proxies-banner-v3.svg?v=20261107' : category.id === 'proxy' ? '/categories/proxy-logo-navy.png' : category.id === 'software' ? '/categories/software-laptop-8k.webp' : '';
+        const icon=categoryBannerIcons[category.id]||categoryBannerIcons['used-keys'];
+        const special=category.id==='used-keys'||category.id==='rental-software'||category.id==='demo-keys';
+        const tone=category.id==='used-keys'||category.id==='rental-software'||category.id==='demo-keys'?'software':category.id;
+        const imageMarkup=bannerImage?`<img class="category-banner-image" src="${bannerImage}" alt="" loading="lazy" decoding="async" onload="this.classList.add('loaded');this.parentElement.classList.add('loaded')" onerror="this.hidden=true;this.classList.remove('loaded');this.parentElement.classList.remove('loaded');this.parentElement.classList.add('failed')">`:'';
+        return `<button class="category" data-card-tone="${tone}" ${special?`data-collection="${category.id}"`:`data-category="${category.id}"`}><span class="category-banner">${imageMarkup}<span class="category-banner-fallback" aria-hidden="true">${icon}</span></span><span class="category-content"><span class="category-top"><span class="category-icon">${category.icon}</span>${countBadge}</span><h3 class="title-premium">${category.title}<span class="category-arrow">↗</span></h3><p class="desc-premium">${category.description}</p></span></button>`;
+      }).join('');
+      $('hero-category-grid').querySelectorAll('[data-hero-category]').forEach(button=>button.addEventListener('click',()=>showCategory(button.dataset.heroCategory)));
+      $('category-grid').querySelectorAll('[data-category]').forEach(button=>button.addEventListener('click',()=>showCategory(button.dataset.category)));
+      document.querySelectorAll('[data-collection]').forEach(button=>button.addEventListener('click',()=>openCollection(button.dataset.collection)));
+    }
+
+    function openCollection(collection){
+      const sectionByCollection={'used-keys':'used-keys-view','rental-software':'rental-software-view','demo-keys':'demo-keys-view'};
+      const sectionId=sectionByCollection[collection];
+      if(sectionId)navigateSection(sectionId);
       revealPage($('category-grid'));
+    }
+
+    function renderDemoKeys(){
+      const grid=$('demo-keys-grid');
+      if(state.demoKeysError){grid.innerHTML=`<div class="empty">${escapeHtml(state.demoKeysError)}</div>`;return}
+      grid.innerHTML=state.demoKeys.length?state.demoKeys.map(item=>{
+        const image=safeHttpUrl(item.image_url)||USED_KEY_FALLBACK_IMAGE;
+        const validity=Number(item.validity_days)>0?`<p class="desc-premium">${Number(item.validity_days)} days demo</p>`:'<p class="desc-premium">Demo key</p>';
+        return `<article class="product" data-card-tone="software"><div class="product-image-wrap"><img class="product-image" src="${escapeHtml(image)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div><span class="used-key-badge">DEMO KEY</span><h3 class="title-premium">${escapeHtml(item.software_name)}</h3>${validity}<div class="product-foot"><div><strong>Free</strong></div><button class="buy" type="button" data-claim-demo="${escapeHtml(item.product_id)}">Free Demo Key</button></div><button class="back" type="button" data-buy-demo-product="${escapeHtml(item.product_id)}">Paid key kharido</button></article>`;
+      }).join(''):'<div class="empty">No demo keys are available right now.</div>';
+      revealPage(grid);
+    }
+
+    async function refreshDemoKeys(){
+      if(!state.client)return;
+      state.demoKeysError=null;
+      const {data,error}=await state.client.rpc('list_available_demo_keys');
+      if(error)throw error;
+      state.demoKeys=Array.isArray(data)?data:[];
+      renderDemoKeys();
+    }
+
+    function handleDemoKeysLoadError(error){
+      state.demoKeysError='Demo keys could not be loaded. Please try again.';
+      console.error('Could not load Demo Keys:',error);
+      if(!$('demo-keys-view').classList.contains('hidden'))renderDemoKeys();
+    }
+
+    function renderRentalProducts(){
+      const grid=$('rental-software-grid');
+      if(state.rentalProductsError){grid.innerHTML=`<div class="empty">${escapeHtml(state.rentalProductsError)}</div>`;return}
+      grid.innerHTML=state.rentalProducts.length?state.rentalProducts.map(item=>{
+        const image=safeHttpUrl(item.image_url)||USED_KEY_FALLBACK_IMAGE;
+        const available=Number(item.available_count)||0;
+        return `<article class="product" data-card-tone="software"><div class="product-image-wrap"><img class="product-image" src="${escapeHtml(image)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div><span class="used-key-badge">1 DAY RENTAL</span><h3 class="title-premium">${escapeHtml(item.software_name)}</h3><p class="desc-premium">${available?'Available':'Currently unavailable'}</p><div class="product-foot"><div><strong>₹${money(item.daily_rate)}</strong><small class="used-key-original">for 1 day</small></div><button class="buy" type="button" data-rent-product="${escapeHtml(item.product_id)}" ${available?'':'disabled'}>${available?'Rent for 1 day':'Unavailable'}</button></div></article>`;
+      }).join(''):'<div class="empty">No rental software is available right now.</div>';
+      revealPage(grid);
+    }
+
+    async function refreshRentalProducts(){
+      if(!state.client)return;
+      state.rentalProductsError=null;
+      const {data,error}=await state.client.rpc('list_available_rental_products');
+      if(error)throw error;
+      state.rentalProducts=Array.isArray(data)?data:[];
+      renderRentalProducts();
+    }
+
+    function handleRentalProductsLoadError(error){
+      state.rentalProductsError='Rental Software could not be loaded. Please try again.';
+      console.error('Could not load Rental Software:',error);
+      if(!$('rental-software-view').classList.contains('hidden'))renderRentalProducts();
+    }
+
+    async function openRentalCheckout(productId){
+      if(!state.user){
+        sessionStorage.setItem('pending-rental-product',String(productId));
+        openAuthPage('signin','rental');
+        return;
+      }
+      if(state.settings.enable_upi_qr!==true||!String(state.settings.upi_id||'').trim()||!String(state.settings.upi_payee_name||'').trim()){
+        showNotice('Rental UPI QR payment is unavailable right now. Please contact the store admin.');
+        return;
+      }
+      const {data,error}=await state.client.rpc('create_rental_order',{p_product_id:Number(productId)});
+      if(error)throw error;
+      if(!data?.ok)throw new Error(data?.message||'This rental is no longer available.');
+      const amount=Number(data.amount);
+      if(!Number.isFinite(amount)||amount<=0)throw new Error('The server returned an invalid rental amount.');
+      const params=new URLSearchParams({
+        pa:String(state.settings.upi_id).trim(),pn:String(state.settings.upi_payee_name).trim(),
+        am:amount.toFixed(2),cu:'INR',tn:`${state.settings.site_title||'Roshan Brand'} Rental ${data.order_id}`
+      });
+      $('wallet-dialog').classList.add('checkout-dialog');
+      $('modal-title').textContent='Pay for 1 day rental';
+      openModal();
+      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(data.product_name)} · 1 day</strong><div class="checkout-amounts"><span>Exact amount</span><strong>₹${money(amount)}</strong></div></div><p class="checkout-note">Scan this exact-amount QR, then enter the 12-digit UTR. Your rental ID is assigned after admin payment verification.</p><div class="qr-box" id="rental-payment-qr" aria-label="Rental payment QR code"></div><label class="checkout-utr-label" for="rental-payment-utr">UTR / Transaction ID (12 digits)</label><input class="checkout-utr" id="rental-payment-utr" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Enter 12-digit UTR"><div class="modal-error" id="rental-payment-error"></div><button class="modal-primary" id="rental-payment-submit" type="button">Paid</button>`;
+      if(window.QRCode)new QRCode($('rental-payment-qr'),{text:`upi://pay?${params.toString()}`,width:230,height:230,colorDark:'#060b17',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+      $('rental-payment-utr').addEventListener('input',event=>{event.currentTarget.value=event.currentTarget.value.replace(/\D/g,'').slice(0,12)});
+      $('rental-payment-submit').addEventListener('click',()=>submitRentalPayment(data.order_id));
+    }
+
+    async function submitRentalPayment(orderId){
+      const utr=$('rental-payment-utr').value.trim();
+      if(!/^\d{12}$/.test(utr)){$('rental-payment-error').textContent='Enter the 12-digit UTR / transaction ID.';return}
+      const button=$('rental-payment-submit');
+      button.disabled=true;
+      try{
+        const {data,error}=await state.client.rpc('submit_rental_payment_utr',{p_order_id:Number(orderId),p_utr:utr});
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not submit the rental UTR.');
+        if(data.status==='new'&&data.order_id)void notifyOrderRequest(data.order_id);
+        await refreshMyOrders();
+        $('modal-title').textContent='Rental payment submitted';
+        $('modal-body').innerHTML=`<p class="modal-note">Order #${escapeHtml(data.order_id)} is waiting for payment verification. The one-day rental ID will appear in My Orders after admin approval.</p><button class="modal-primary" id="rental-orders-open" type="button">Open My Orders</button>`;
+        $('rental-orders-open').addEventListener('click',()=>{closeModal();openOrdersPanel()});
+      }catch(error){$('rental-payment-error').textContent=error.message||'Could not submit the rental UTR.';button.disabled=false}
+    }
+
+    async function claimDemoKey(productId,button){
+      if(!state.user){
+        sessionStorage.setItem('pending-demo-product',String(productId));
+        signInWithGoogle();
+        return;
+      }
+      if(button)button.disabled=true;
+      try{
+        const {data,error}=await state.client.rpc('claim_demo_key',{p_product_id:Number(productId)});
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not claim this demo key.');
+        await refreshMyOrders();
+        showNotice('Demo key added to My Orders.');
+        await refreshDemoKeys();
+      }catch(error){showNotice(error.message||'Could not claim this demo key.')}
+      finally{if(button?.isConnected)button.disabled=false}
     }
 
     function renderProducts(){
@@ -1435,6 +1580,7 @@
       $('product-grid').classList.toggle('hidden',isPlan);
       $('categories-view').classList.add('hidden');
       $('products-view').classList.remove('hidden');
+      $('used-keys-view').classList.add('hidden');$('demo-keys-view').classList.add('hidden');$('rental-software-view').classList.add('hidden');
       $('why-us').classList.add('hidden');
       $('spin-win').classList.add('hidden');
       $('products-view').classList.remove('view');
@@ -1448,7 +1594,7 @@
     function showCategories(scrollToTop=true){
       state.selected = null;
       $('vps-browse').classList.add('hidden');$('vps-jumpbar').classList.add('hidden');$('vps-products').classList.add('hidden');$('product-grid').classList.remove('hidden');state.vpsSearch='';state.vpsOsFilter='all';
-      $('used-keys-view').classList.add('hidden');
+      $('used-keys-view').classList.add('hidden');$('demo-keys-view').classList.add('hidden');$('rental-software-view').classList.add('hidden');
       $('products-view').classList.add('hidden');
       $('categories-view').classList.remove('hidden');
       $('why-us').classList.remove('hidden');
@@ -1464,10 +1610,15 @@
     function navigateSection(sectionId){
       closeMobileMenu();
       if(state.selected)showCategories(false);
+      ['used-keys-view','demo-keys-view','rental-software-view'].forEach(id=>$(id).classList.toggle('hidden',id!==sectionId));
       if(sectionId==='used-keys-view'){
         $('used-keys-view').classList.remove('hidden');
         refreshUsedKeys().catch(error=>handleUsedKeysLoadError(error,'Could not load Used Keys:'));
-      }else $('used-keys-view').classList.add('hidden');
+      }else if(sectionId==='demo-keys-view'){
+        refreshDemoKeys().catch(error=>handleDemoKeysLoadError(error));
+      }else if(sectionId==='rental-software-view'){
+        refreshRentalProducts().catch(error=>handleRentalProductsLoadError(error));
+      }
       document.getElementById(sectionId)?.scrollIntoView({behavior:'smooth',block:'start'});
     }
 
@@ -2065,16 +2216,17 @@
         const delivered=['delivered','completed'].includes(order.status);
         const link=delivered?safeHttpUrl(order.download_link||order.delivery_link):'';
         const licenseKey=String(order.license_key??'');
-        const orderInfo=`<p>Order #${escapeHtml(order.id)} · ${escapeHtml(order.product_type||'Product')} · Quantity ${Number(order.quantity)||1}${order.is_offer_free?' · Free offer item':''}</p>`;
+        const orderInfo=order.is_demo_key?`<p>Demo key · ${escapeHtml(order.software_name)}</p>`:`<p>Order #${escapeHtml(order.id)} · ${escapeHtml(order.product_type||'Product')} · Quantity ${Number(order.quantity)||1}${order.is_offer_free?' · Free offer item':''}</p>`;
         const vpsOrder=order.product_type==='vps'||order.product_type==='windows-vps';
         const delivery=delivered
           ? `${orderInfo}${vpsOrder
             ? `<p>IP:Port: <strong>${escapeHtml(order.vps_ip||'')}:${escapeHtml(order.vps_port||'')}</strong></p><p>Username: <strong>${escapeHtml(order.vps_username||'')}</strong></p><p>Password: <strong data-vps-password="${escapeHtml(order.id)}">••••••••</strong> <button class="orders-copy" type="button" data-show-vps-password="${escapeHtml(order.id)}">Show</button> <button class="orders-copy" type="button" data-copy-vps-password="${escapeHtml(order.id)}">Copy</button></p><p>Storage: ${escapeHtml(order.vps_storage_gb||'')} GB</p>`
-            : `<p>Software: <strong>${escapeHtml(order.software_name||order.product_name)}</strong></p>${licenseKey?`<p><span class="key-name-label">KEY NAME:</span> <span class="key-name-separator">/</span> <strong class="orders-key-value">${escapeHtml(licenseKey)}</strong> <button class="orders-copy" type="button" data-copy-license="${escapeHtml(order.id)}" data-copy-value="${escapeHtml(licenseKey)}" aria-live="polite">Copy</button></p>`:''}${link?`<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(order.software_name||order.product_name)}</a>`:''}`}
-            ${order.delivery_note?`<p>${escapeHtml(order.delivery_note)}</p>`:''}${order.delivery_text?`<pre>${escapeHtml(order.delivery_text)}</pre>`:''}`
+            : `<p>Software: <strong>${escapeHtml(order.software_name||order.product_name)}</strong></p>${order.is_demo_key&&Number(order.demo_validity_days)>0?`<p>${Number(order.demo_validity_days)} days demo</p>`:''}${licenseKey?`<p><span class="key-name-label">KEY NAME:</span> <span class="key-name-separator">/</span> <strong class="orders-key-value">${escapeHtml(licenseKey)}</strong> <button class="orders-copy" type="button" data-copy-license="${escapeHtml(order.id)}" data-copy-value="${escapeHtml(licenseKey)}" aria-live="polite">Copy</button></p>`:''}${link?`<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(order.software_name||order.product_name)}</a>`:''}`}
+            ${order.is_rental&&order.rental_active===false?'<p>Rental period ended.</p>':''}
+            ${order.is_rental&&order.rental_expires_at?`<p>Rental access until ${escapeHtml(formatDate(order.rental_expires_at))}</p>`:''}${order.delivery_note?`<p>${escapeHtml(order.delivery_note)}</p>`:''}${order.delivery_text?`<pre>${escapeHtml(order.delivery_text)}</pre>`:''}`
           : `${orderInfo}<p>${order.late_payment?'Payment verification is pending.':order.status==='pending_payment'||order.status==='unpaid'?'Payment is due. Resume checkout to submit your UTR.':order.status==='expired'?'Payment time expired. If you already paid, submit your UTR for manual review.':order.status==='pending_verification'||order.status==='new'?'Payment verification pending.':status.label==='Processing'?'Your order is being processed.':`This order was ${status.label.toLowerCase()}.`}</p>${order.payment_method&&order.payment_method!=='wallet'?`<p>Payment: ${escapeHtml(order.payment_method==='upi_qr'?'Scan QR (UPI)':'UPI app')} · ₹${money(order.price)}</p>`:''}${order.coupon_code?`<p>Coupon ${escapeHtml(order.coupon_code)} · ${escapeHtml(order.discount_percent)}% off · Original ₹${money(order.original_price)} · Final ₹${money(order.price)}</p>`:''}${order.reject_reason?`<p>Reason: ${escapeHtml(order.reject_reason)}</p>`:''}${['pending_payment','unpaid','expired'].includes(order.status)&&order.payment_method!=='wallet'&&!order.offer_claim_id?`<button class="orders-pay-button" type="button" data-resume-payment="${escapeHtml(order.id)}">Submit UTR / Resume Payment</button>`:''}${order.status==='rejected'&&order.payment_method!=='wallet'?`<form class="orders-resubmit-form" data-resubmit-form="${escapeHtml(order.id)}"><label for="resubmit-utr-${escapeHtml(order.id)}">Submit a new 12-digit UTR</label><input id="resubmit-utr-${escapeHtml(order.id)}" data-resubmit-utr="${escapeHtml(order.id)}" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" required><button class="orders-pay-button" type="submit">Resubmit UTR</button><p class="modal-error" data-resubmit-error="${escapeHtml(order.id)}" aria-live="polite"></p></form>`:''}${order.status==='pending_payment'&&order.offer_claim_id?`<button class="orders-pay-button" type="button" data-pay-offer-order="${escapeHtml(order.id)}">Pay now</button><button class="orders-delete-button" type="button" data-delete-offer-order="${escapeHtml(order.id)}">Delete unpaid order</button>`:''}`;
         const itemName=order.is_offer_free?`Free · ${order.product_name}`:order.product_name;
-        return `<article class="orders-item"><button class="orders-item-trigger" type="button" data-orders-item="${escapeHtml(order.id)}" aria-expanded="false"><span class="orders-item-main"><strong>${escapeHtml(itemName)}</strong><small>${Number(order.quantity)||1} item(s) · ₹${money(order.price)} · ${formatDate(order.created_at)}</small></span><span class="orders-status ${status.className}">${status.label}</span></button><div class="orders-item-detail hidden" data-orders-detail="${escapeHtml(order.id)}">${delivery}</div></article>`;
+        return `<article class="orders-item"><button class="orders-item-trigger" type="button" data-orders-item="${escapeHtml(order.id)}" aria-expanded="false"><span class="orders-item-main"><strong>${escapeHtml(order.is_demo_key?'Demo · '+order.product_name:order.is_rental?'Rental · '+order.product_name:itemName)}</strong><small>${order.is_demo_key?'Free demo key · ':`${Number(order.quantity)||1} item(s) · ₹${money(order.price)} · `}${formatDate(order.created_at)}</small></span><span class="orders-status ${status.className}">${status.label}</span></button><div class="orders-item-detail hidden" data-orders-detail="${escapeHtml(order.id)}">${delivery}</div></article>`;
       }).join('')}</div>` : '';
       const claims=state.myOfferClaims||[];
       const claimsMarkup=claims.length?`<div class="orders-list" style="margin-top:16px"><div style="padding:8px 0 4px;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.04em">OFFER CLAIMS</div>${claims.map(claim=>{
@@ -2171,13 +2323,32 @@
       state.myOrdersError=null;
       if(state.ordersPanelOpen)renderOrdersPanel();
       try{
-        const [ordersResult,claimsResult]=await Promise.all([
+        const [ordersResult,demoKeysResult,rentalOrdersResult,claimsResult]=await Promise.all([
           state.client.rpc('my_orders'),
+          state.client.rpc('my_demo_keys'),
+          state.client.rpc('my_rental_orders'),
           state.client.rpc('my_offer_claims')
         ]);
         if(ordersResult.error)throw ordersResult.error;
+        if(demoKeysResult.error)throw demoKeysResult.error;
+        if(rentalOrdersResult.error)throw rentalOrdersResult.error;
         if(claimsResult.error)throw claimsResult.error;
-        state.myOrders=Array.isArray(ordersResult.data)?ordersResult.data:[];
+        const demoOrders=(Array.isArray(demoKeysResult.data)?demoKeysResult.data:[]).map(item=>({
+          id:`demo-${item.claim_id}`,product_name:item.software_name,software_name:item.software_name,
+          product_type:'demo',status:'completed',payment_status:'paid',payment_method:'free',price:0,
+          quantity:1,created_at:item.claimed_at,license_key:item.license_key,
+          download_link:item.download_link,demo_validity_days:item.validity_days,is_demo_key:true
+        }));
+        const rentalOrders=(Array.isArray(rentalOrdersResult.data)?rentalOrdersResult.data:[]).map(item=>({
+          id:item.order_id,product_name:item.product_name,software_name:item.product_name,
+          product_type:'rental',status:item.status,payment_status:item.payment_status,
+          payment_method:'upi_qr',price:item.amount,created_at:item.created_at,
+          utr_number:item.utr_number,reject_reason:item.reject_reason,
+          rental_expires_at:item.rental_expires_at,delivery_text:item.access_details,
+          rental_active:item.rental_active,is_rental:true
+        }));
+        const paidOrders=(Array.isArray(ordersResult.data)?ordersResult.data:[]).filter(order=>order.product_type!=='rental');
+        state.myOrders=[...paidOrders,...demoOrders,...rentalOrders];
         state.myOfferClaims=Array.isArray(claimsResult.data)?claimsResult.data:[];
         state.myOrdersError=null;
       }catch(error){
@@ -2516,6 +2687,22 @@
         sessionStorage.removeItem('pending_used_key');
         setTimeout(()=>buyUsedKey(pendingUsedKeyId),0);
       }
+      const pendingDemoProduct=sessionStorage.getItem('pending-demo-product');
+      if(state.user&&pendingDemoProduct&&!pendingId&&!pendingUsedKeyId){
+        sessionStorage.removeItem('pending-demo-product');
+        setTimeout(()=>{
+          if(!$('auth-page').classList.contains('hidden'))closeAuthPage(false);
+          claimDemoKey(pendingDemoProduct,null);
+        },0);
+      }
+      const pendingRentalProduct=sessionStorage.getItem('pending-rental-product');
+      if(state.user&&pendingRentalProduct&&!pendingId&&!pendingUsedKeyId&&!pendingDemoProduct){
+        sessionStorage.removeItem('pending-rental-product');
+        setTimeout(()=>{
+          if(!$('auth-page').classList.contains('hidden'))closeAuthPage(false);
+          openRentalCheckout(pendingRentalProduct).catch(error=>showNotice(error.message||'Could not start rental checkout.'));
+        },0);
+      }
       const activePaymentProduct=sessionStorage.getItem('active_upi_product');
       const activeUsedKeyId=sessionStorage.getItem('active_upi_used_key');
       if(state.user&&activeUsedKeyId&&!pendingId&&!pendingUsedKeyId&&state.authMode!=='reset'){
@@ -2679,15 +2866,31 @@
       body.innerHTML='<div class="empty">Loading your wallet…</div>';
       try{
         if(state.modalMode==='orders'){
-          const {data,error}=await state.client.rpc('my_orders');
-          if(error)throw error;
+          const [ordersResult,demoKeysResult,rentalOrdersResult]=await Promise.all([state.client.rpc('my_orders'),state.client.rpc('my_demo_keys'),state.client.rpc('my_rental_orders')]);
+          if(ordersResult.error)throw ordersResult.error;
+          if(demoKeysResult.error)throw demoKeysResult.error;
+          if(rentalOrdersResult.error)throw rentalOrdersResult.error;
+          const demoOrders=(Array.isArray(demoKeysResult.data)?demoKeysResult.data:[]).map(item=>({
+            id:`demo-${item.claim_id}`,product_name:item.software_name,software_name:item.software_name,
+            product_type:'demo',status:'completed',payment_status:'paid',payment_method:'free',
+            price:0,created_at:item.claimed_at,license_key:item.license_key,
+            download_link:item.download_link,demo_validity_days:item.validity_days,is_demo_key:true
+          }));
+          const rentalOrders=(Array.isArray(rentalOrdersResult.data)?rentalOrdersResult.data:[]).map(item=>({
+            id:item.order_id,product_name:item.product_name,product_type:'rental',status:item.status,
+            payment_status:item.payment_status,payment_method:'upi_qr',price:item.amount,
+            created_at:item.created_at,delivery_text:item.access_details,
+            rental_expires_at:item.rental_expires_at,rental_active:item.rental_active,is_rental:true
+          }));
+          const paidOrders=(Array.isArray(ordersResult.data)?ordersResult.data:[]).filter(order=>order.product_type!=='rental');
+          const data=[...paidOrders,...demoOrders,...rentalOrders];
           body.innerHTML=data.length?data.map(order=>{
             const orderStatusValue=order.status==='completed'?'pending':order.status;
             const status=orderStatus(order);
             const delivered=['delivered','completed'].includes(order.status);
-            const link=delivered?safeHttpUrl(order.delivery_link):'';
+            const link=delivered?safeHttpUrl(order.download_link||order.delivery_link):'';
             const orderType=order.used_key_id?'Used Key':order.product_type||'';
-            const delivery=delivered?`<div class="customer-order-detail">${order.used_key_id&&order.license_key?`<p><span class="key-name-label">KEY NAME:</span> <span class="key-name-separator">/</span> <strong>${escapeHtml(order.license_key)}</strong> <button class="orders-copy" type="button" data-copy-key="${order.id}" data-copy-value="${escapeHtml(order.license_key)}" aria-live="polite">Copy</button></p>`:''}${order.delivery_note?`<p>${escapeHtml(order.delivery_note)}</p>`:''}${order.delivery_text?`<pre class="customer-delivery-text">${escapeHtml(order.delivery_text)}</pre>`:link?'<p class="modal-note">Your software download is ready.</p>':'<p class="modal-note">No text delivery details.</p>'}${link?`<a class="delivery-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(order.product_name)}</a>`:''}<div class="customer-order-actions">${order.delivery_text?`<button class="back" type="button" data-copy-delivery="${order.id}">Copy delivery</button>`:''}${link?`<button class="back" type="button" data-copy-link="${order.id}">Copy link</button>`:''}</div></div>`:`<div class="customer-order-detail"><small>${orderStatus==='pending'?'Your order is awaiting delivery.':`Order status: ${escapeHtml(orderStatus)}`}</small></div>`;
+            const delivery=delivered?`<div class="customer-order-detail">${order.is_demo_key&&Number(order.demo_validity_days)>0?`<p>${Number(order.demo_validity_days)} days demo</p>`:''}${order.is_rental&&order.rental_expires_at?`<p>Rental access until ${escapeHtml(formatDate(order.rental_expires_at))}</p>`:''}${order.is_rental&&order.rental_active===false?'<p>Rental period ended.</p>':''}${order.used_key_id&&order.license_key?`<p><span class="key-name-label">KEY NAME:</span> <span class="key-name-separator">/</span> <strong>${escapeHtml(order.license_key)}</strong> <button class="orders-copy" type="button" data-copy-key="${order.id}" data-copy-value="${escapeHtml(order.license_key)}" aria-live="polite">Copy</button></p>`:''}${order.delivery_note?`<p>${escapeHtml(order.delivery_note)}</p>`:''}${order.delivery_text?`<pre class="customer-delivery-text">${escapeHtml(order.delivery_text)}</pre>`:link?'<p class="modal-note">Your software download is ready.</p>':'<p class="modal-note">No text delivery details.</p>'}${link?`<a class="delivery-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(order.product_name)}</a>`:''}<div class="customer-order-actions">${order.delivery_text?`<button class="back" type="button" data-copy-delivery="${order.id}">Copy delivery</button>`:''}${link?`<button class="back" type="button" data-copy-link="${order.id}">Copy link</button>`:''}</div></div>`:`<div class="customer-order-detail"><small>${orderStatus==='pending'?'Your order is awaiting delivery.':`Order status: ${escapeHtml(orderStatus)}`}</small></div>`;
             const detailMessage=order.payment_method!=='wallet'&&order.payment_status==='pending'
               ?'Payment submitted. Waiting for admin verification.'
               :order.payment_method!=='wallet'&&order.payment_status==='paid'
@@ -3376,6 +3579,26 @@
       buyUsedKey(button.dataset.buyUsedKey).catch(error=>{
         console.error('Could not start Used Keys checkout:',error);
         showNotice(`Could not start checkout: ${error.message||'Please try again.'}`);
+      });
+    });
+    $('demo-keys-grid').addEventListener('click',event=>{
+      const target=event.target instanceof Element?event.target:null;
+      const claimButton=target?.closest('[data-claim-demo]');
+      if(claimButton&&$('demo-keys-grid').contains(claimButton)){
+        claimDemoKey(claimButton.dataset.claimDemo,claimButton);
+        return;
+      }
+      const buyButton=target?.closest('[data-buy-demo-product]');
+      if(buyButton&&$('demo-keys-grid').contains(buyButton)){
+        buyProduct(buyButton.dataset.buyDemoProduct).catch(error=>showNotice(`Could not start checkout: ${error.message||'Please try again.'}`));
+      }
+    });
+    $('rental-software-grid').addEventListener('click',event=>{
+      const button=event.target instanceof Element?event.target.closest('[data-rent-product]'):null;
+      if(!button||!$('rental-software-grid').contains(button))return;
+      openRentalCheckout(button.dataset.rentProduct).catch(error=>{
+        console.error('Could not start rental checkout:',error);
+        showNotice(error.message||'Could not start rental checkout.');
       });
     });
     $('menu-toggle').addEventListener('click',()=>{
