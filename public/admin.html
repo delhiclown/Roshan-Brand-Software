@@ -104,6 +104,9 @@
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.page-enter{animation:none}.reveal{opacity:1;transform:none;transition:none}*,*:before,*:after{transition-duration:.01ms!important}}
     @media(max-width:780px){.admin-grid{grid-template-columns:1fr}.offer-operations-grid{grid-template-columns:1fr}.row{grid-template-columns:1fr 1fr}}
     @media(max-width:520px){.wrap{width:calc(100% - 26px)}main{padding-top:22px}.panel{padding:16px}.row{grid-template-columns:1fr}.product-row,.finance-row{grid-template-columns:1fr}.actions,.finance-controls{justify-content:start}.finance-controls input,.finance-controls .note-input{width:100%}.bar{flex-wrap:wrap}.bar h1{font-size:18px;flex:1;text-align:right}}
+    .offer-datetime-row{grid-template-columns:minmax(0,1fr)}
+    .offer-datetime-row>.field{min-width:0}
+    .offer-datetime-row input[type="datetime-local"]{width:100%;min-width:0;max-width:100%}
     body{background:radial-gradient(ellipse at 50% -18%,#1b2b4a 0,transparent 45%),linear-gradient(180deg,#080e1d 0%,#060b17 50%,#080d19 100%)}
     body:before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse at 8% 30%,rgba(41,152,255,.07),transparent 30%),radial-gradient(ellipse at 92% 70%,rgba(245,192,74,.06),transparent 30%);pointer-events:none}
     header{position:sticky;top:0;z-index:10;background:rgba(7,12,25,.82);backdrop-filter:blur(16px);box-shadow:0 10px 32px rgba(0,0,0,.2)}
@@ -328,7 +331,7 @@
                   <div class="row"><div class="field"><label for="offer-benefit-count">Display count</label><input id="offer-benefit-count" type="number" min="0" max="100000000" value="0"></div><div class="field"><label for="offer-benefit-minimum">Show only above minimum</label><input id="offer-benefit-minimum" type="number" min="1" max="100000000" value="10"></div></div>
                 </div>
               </section>
-              <div class="row"><div class="field"><label for="offer-starts-at">Starts at</label><input id="offer-starts-at" type="datetime-local" required></div><div class="field"><label for="offer-ends-at">Ends at</label><input id="offer-ends-at" type="datetime-local" required></div></div>
+              <div class="row offer-datetime-row"><div class="field"><label for="offer-starts-at">Starts at</label><input id="offer-starts-at" type="datetime-local" required></div><div class="field"><label for="offer-ends-at">Ends at</label><input id="offer-ends-at" type="datetime-local" required></div></div>
               <label class="check" for="offer-enabled"><input id="offer-enabled" type="checkbox" checked> Offer is enabled</label>
               <button id="offer-save" class="btn gold" type="submit">Create offer</button>
               <button id="offer-cancel" class="btn ghost hidden" type="button">Cancel edit</button>
@@ -832,7 +835,8 @@
       $('used-key-list').innerHTML=filtered.length?filtered.map(item=>{
         const editable=['available','hidden'].includes(item.status);
         const visible=item.status==='available';
-        const status=item.status==='available'?'Available':item.status==='hidden'?'Hidden':item.status;
+        const expired=Number(item.remaining_days)<=0&&editable;
+        const status=expired?'Expired':item.status==='available'?'Available':item.status==='hidden'?'Hidden':item.status;
         return `<article class="product-row"><div><strong>${escapeHtml(item.software_name)}</strong><small>Key #${escapeHtml(item.id)} · ${escapeHtml(item.license_key)}</small><small>₹${money(item.price)} · ${Number(item.validity_days)} day(s) validity · ${Number(item.remaining_days)} day(s) remaining</small><small>${escapeHtml(item.download_link)}</small></div><span class="pill">${escapeHtml(status)}</span><div class="product-row-actions"><button class="btn ghost" type="button" data-edit-used-key="${item.id}" ${editable?'':'disabled'}>Edit</button><button class="btn ghost" type="button" data-toggle-used-key="${item.id}" ${editable?'':'disabled'}>${visible?'Hide':'Show'}</button><button class="btn danger" type="button" data-delete-used-key="${item.id}" ${editable?'':'disabled'}>Delete</button></div></article>`;
       }).join(''):'<div class="empty">No used keys in inventory.</div>';
       revealAdmin($('used-key-list'));

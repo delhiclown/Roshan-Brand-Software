@@ -5,6 +5,10 @@ const path = require('node:path');
 
 const migrationPath = path.join(__dirname, '..', 'supabase', 'used-keys-validity-days-migration.sql');
 const migration = fs.readFileSync(migrationPath, 'utf8');
+const autoValidityMigration = fs.readFileSync(
+  path.join(__dirname, '..', 'supabase', 'used-keys-auto-validity-migration.sql'),
+  'utf8'
+);
 const adminHtml = fs.readFileSync(path.join(__dirname, '..', 'public', 'admin.html'), 'utf8');
 const customerHtml = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
 
@@ -40,4 +44,18 @@ test('Used Key validity starts on completion and owner orders receive live links
   assert.match(migration, /left join public\.product_download_links as dl on dl\.product_id = o\.product_id/i);
   assert.match(migration, /'Remaining validity: '/);
   assert.match(customerHtml, /order\.delivery_note/);
+});
+
+test('Used Keys automatic expiry uses IST 11 AM and backfills existing inventory', () => {
+  assert.match(autoValidityMigration, /add column if not exists expiry_at timestamptz/i);
+  assert.match(autoValidityMigration, /where k\.expiry_at is null/i);
+  assert.match(autoValidityMigration, /time '11:00'\)\s+at time zone 'Asia\/Kolkata'/i);
+  assert.match(autoValidityMigration, /private\.used_key_remaining_days\(k\.expiry_at, clock_timestamp\(\)\)/i);
+  assert.match(autoValidityMigration, /ceil\(extract\(epoch from \(p_expiry_at - p_now\)\) \/ 86400\)/i);
+  assert.match(autoValidityMigration, /k\.expiry_at > v_now/i);
+  assert.match(autoValidityMigration, /new\.used_key_remaining_days := v_remaining_days/i);
+  assert.match(customerHtml, /const expired=Number\(item\.remaining_days\)<=0/);
+  assert.match(customerHtml, /\$\{expired\?'disabled':''\}\>\$\{expired\?'Expired':'Buy Now'\}/);
+  assert.match(adminHtml, /const expired=Number\(item\.remaining_days\)<=0&&editable/);
+  assert.match(adminHtml, /const status=expired\?'Expired'/);
 });

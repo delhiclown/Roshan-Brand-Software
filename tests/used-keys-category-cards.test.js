@@ -39,7 +39,8 @@ test('homepage collection and category grids render all six requested cards in o
 
 test('Used Keys card count is based on live available inventory and refreshed in the background', () => {
   assert.match(homepage, /rpc\('list_available_used_keys'\)/);
-  assert.match(homepage, /state\.usedKeys\.length===1\?'key':'keys'/);
+  assert.match(homepage, /availableCount===1\?'key':'keys'/);
+  assert.match(homepage, /state\.usedKeys\.filter\(item=>Number\(item\.remaining_days\)>0\)/);
   assert.match(homepage, /data-used-keys-count/);
   assert.match(homepage, /element\.textContent=usedKeysCountLabel\(\)/);
   assert.match(homepage, /state\.usedKeys=Array\.isArray\(data\)\?data:\[\];[\s\S]*?updateUsedKeysCountBadges\(\)/);
