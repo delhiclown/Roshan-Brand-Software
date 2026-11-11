@@ -26,6 +26,7 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icons/icon-192.png" sizes="192x192">
   <link rel="stylesheet" href="/pwa.css">
+  <script src="/community-links.js"></script>
   <script src="/pwa.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -479,6 +480,30 @@
     footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-size:12px;text-align:center}
     .footer-brand{display:inline-flex;align-items:center;justify-content:center;gap:9px}
     .footer-brand-name{color:var(--gold);font-family:Orbitron,sans-serif;font-weight:700;letter-spacing:.03em}
+    .community-section{padding:42px 0 34px}
+    .community-heading{margin:0 auto 22px;text-align:center}
+    .community-heading h2{margin:0 0 7px;font-size:clamp(24px,3vw,32px);letter-spacing:-.035em}
+    .community-heading p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+    .community-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+    .community-card{--community-accent:#20c979;display:flex;min-width:0;flex-direction:column;align-items:center;gap:14px;padding:20px;border:1px solid color-mix(in srgb,var(--community-accent) 32%,var(--line));border-radius:18px;background:linear-gradient(145deg,rgba(16,26,48,.94),rgba(8,15,32,.92));box-shadow:0 12px 30px rgba(0,0,0,.2),0 0 22px color-mix(in srgb,var(--community-accent) 8%,transparent);text-align:center}
+    .community-card.telegram-channel{--community-accent:#2998ff}
+    .community-card-head{display:flex;align-items:center;justify-content:center;gap:9px;min-height:28px}
+    .community-card-icon{width:24px;height:24px;flex:none;color:var(--community-accent)}
+    .community-card h3{margin:0;font-size:16px;line-height:1.35}
+    .community-qr-tile{display:grid;width:145.78px;height:145.78px;place-items:center;padding:0;overflow:hidden;border-radius:10px;background:#f5f7fa;box-shadow:0 0 22px color-mix(in srgb,var(--community-accent) 17%,transparent)}
+    .community-qr{display:block;width:100%;height:100%}
+    .community-join{display:flex;width:min(240px,100%);min-height:48px;align-items:center;justify-content:center;border:1px solid color-mix(in srgb,var(--community-accent) 42%,var(--line));border-radius:12px;background:rgba(16,26,48,.92);color:var(--text);font-size:13px;font-weight:700;text-decoration:none;transition:transform .18s,border-color .18s,box-shadow .18s}
+    .community-join:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--community-accent) 75%,white);box-shadow:0 8px 20px color-mix(in srgb,var(--community-accent) 13%,transparent)}
+    :root[data-theme="light"] .community-card{background:linear-gradient(145deg,#fff,#f3f6fc)}
+    :root[data-theme="light"] .community-join{background:#fff}
+    @media(max-width:768px){
+      .community-section{padding:34px 0 28px}
+      .community-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+      .community-card{padding:18px}
+      .community-qr-tile{width:138.49px;height:138.49px}
+      .community-join{width:100%;min-height:48px}
+      body.community-section-visible .floating{visibility:hidden}
+    }
     #notice{display:flex;align-items:center;justify-content:center;gap:11px}
     #notice .rb-logo{--logo-size:34px}
     .floating{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:11px;z-index:5}
@@ -1164,6 +1189,40 @@
       <div class="coupon-banner hidden" id="coupon-banner" aria-live="polite"></div>
       <p class="spin-legacy-coupon-note hidden" id="legacy-coupon-notice" role="status">Old coupons are no longer valid. Please spin again.</p>
     </section>
+    <section class="community-section" id="community-section" aria-labelledby="community-title">
+      <div class="wrap">
+        <div class="community-heading">
+          <h2 id="community-title">Join our community</h2>
+          <p>Scan the QR or tap Join</p>
+        </div>
+        <div class="community-grid">
+          <article class="community-card whatsapp-group">
+            <div class="community-card-head">
+              <svg class="community-card-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2a9.9 9.9 0 0 0-8.5 15l-1.3 4.7 4.8-1.25A9.95 9.95 0 1 0 12.04 2Zm0 18.1c-1.5 0-2.96-.4-4.23-1.16l-.3-.18-2.85.74.76-2.77-.2-.3a8.2 8.2 0 1 1 6.82 3.67Zm4.5-6.15c-.25-.13-1.48-.73-1.71-.82-.23-.08-.4-.12-.56.13-.17.25-.65.82-.8.98-.14.17-.29.19-.53.06-.25-.12-1.04-.38-1.98-1.2-.73-.65-1.22-1.46-1.36-1.7-.15-.25-.02-.38.11-.5.12-.12.25-.29.37-.43.13-.15.17-.25.25-.42.08-.17.04-.32-.02-.44-.07-.12-.56-1.35-.77-1.85-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.71 4.3 3.8.6.27 1.08.42 1.45.54.61.19 1.17.16 1.61.1.49-.07 1.48-.6 1.69-1.19.2-.59.2-1.1.14-1.2-.06-.1-.23-.16-.48-.29Z"/></svg>
+              <h3>WhatsApp Group</h3>
+            </div>
+            <div class="community-qr-tile"><img class="community-qr" src="/qr/whatsapp-group.svg" width="160" height="160" loading="lazy" alt="QR code to join our WhatsApp group"></div>
+            <a class="community-join" data-community-link="whatsappGroup" target="_blank" rel="noopener noreferrer">Join</a>
+          </article>
+          <article class="community-card whatsapp-channel">
+            <div class="community-card-head">
+              <svg class="community-card-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2a9.9 9.9 0 0 0-8.5 15l-1.3 4.7 4.8-1.25A9.95 9.95 0 1 0 12.04 2Zm0 18.1c-1.5 0-2.96-.4-4.23-1.16l-.3-.18-2.85.74.76-2.77-.2-.3a8.2 8.2 0 1 1 6.82 3.67Zm4.5-6.15c-.25-.13-1.48-.73-1.71-.82-.23-.08-.4-.12-.56.13-.17.25-.65.82-.8.98-.14.17-.29.19-.53.06-.25-.12-1.04-.38-1.98-1.2-.73-.65-1.22-1.46-1.36-1.7-.15-.25-.02-.38.11-.5.12-.12.25-.29.37-.43.13-.15.17-.25.25-.42.08-.17.04-.32-.02-.44-.07-.12-.56-1.35-.77-1.85-.2-.49-.4-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.71 4.3 3.8.6.27 1.08.42 1.45.54.61.19 1.17.16 1.61.1.49-.07 1.48-.6 1.69-1.19.2-.59.2-1.1.14-1.2-.06-.1-.23-.16-.48-.29Z"/></svg>
+              <h3>WhatsApp Channel</h3>
+            </div>
+            <div class="community-qr-tile"><img class="community-qr" src="/qr/whatsapp-channel.svg" width="160" height="160" loading="lazy" alt="QR code to join our WhatsApp channel"></div>
+            <a class="community-join" data-community-link="whatsappChannel" target="_blank" rel="noopener noreferrer">Join</a>
+          </article>
+          <article class="community-card telegram-channel">
+            <div class="community-card-head">
+              <svg class="community-card-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.7 4.3 18.5 19c-.24 1.04-.86 1.29-1.75.8l-4.84-3.57-2.33 2.24c-.26.26-.48.48-.98.48l.35-4.92 8.95-8.09c.39-.35-.08-.55-.61-.2L6.23 12.78l-4.75-1.49c-1.03-.32-1.05-1.03.22-1.52L20.27 2.3c.85-.32 1.6.21 1.43 2Z"/></svg>
+              <h3>Telegram Channel</h3>
+            </div>
+            <div class="community-qr-tile"><img class="community-qr" src="/qr/telegram-channel.svg" width="160" height="160" loading="lazy" alt="QR code to join our Telegram channel"></div>
+            <a class="community-join" data-community-link="telegramChannel" target="_blank" rel="noopener noreferrer">Join</a>
+          </article>
+        </div>
+      </div>
+    </section>
     <div class="notice hidden" id="notice" role="status" aria-live="polite"><span id="notice-logo" class="rb-logo-slot hidden" data-logo-size="rb-logo-loader" aria-hidden="true"></span><span id="notice-message"></span><button class="back hidden" id="retry-products" type="button" style="margin:10px auto 0">Retry</button></div>
   </main>
   <footer><div class="wrap"><div class="pwa-install-controls"><button class="pwa-install-button" id="pwa-install-button" type="button" hidden>Install App</button><p class="pwa-ios-help" id="pwa-ios-help" hidden>On iPhone or iPad: Share &gt; Add to Home Screen</p></div><span class="footer-brand"><span id="footer-brand-logo" class="rb-logo-slot" data-logo-size="rb-logo-footer" aria-hidden="true"></span><span>© <span id="year"></span> <span id="footer-title" class="footer-brand-name">Roshan Brand</span>. All rights reserved.</span></span></div></footer>
@@ -1183,6 +1242,11 @@
     ];
     const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, usedKeys:[], usedKeysError:null, usedKeysLoading:true, demoKeys:[], demoKeysError:null, rentalProducts:[], rentalProductsError:null, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, pendingAuthRequest:null, authMode:'signin', offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
     const $ = id => document.getElementById(id);
+    document.querySelectorAll('[data-community-link]').forEach(link=>{
+      const url=window.RoshanCommunityLinks[link.dataset.communityLink];
+      if(!url)throw new Error(`Missing community link: ${link.dataset.communityLink}`);
+      link.href=url;
+    });
     const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     const money = value => new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(Number(value)||0);
     const digits = value => String(value||'').replace(/\D/g,'');
@@ -1192,6 +1256,17 @@
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     let revealObserver = null;
     let vpsSectionObserver = null;
+    const communitySection=$('community-section');
+    if(communitySection){
+      const updateCommunityVisibility=()=>{
+        const bounds=communitySection.getBoundingClientRect();
+        const isVisibleOnPhone=window.matchMedia('(max-width: 768px)').matches&&bounds.top<window.innerHeight&&bounds.bottom>0;
+        document.body.classList.toggle('community-section-visible',isVisibleOnPhone);
+      };
+      window.addEventListener('scroll',updateCommunityVisibility,{passive:true});
+      window.addEventListener('resize',updateCommunityVisibility);
+      updateCommunityVisibility();
+    }
     if('IntersectionObserver' in window && !reducedMotion){
       revealObserver = new IntersectionObserver(entries=>{
         entries.forEach(entry=>{

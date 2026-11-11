@@ -1,4 +1,4 @@
-const CACHE_NAME = 'roshan-static-v3';
+const CACHE_NAME = 'roshan-static-v5';
 const OFFLINE_URL = '/offline.html';
 const STATIC_FILE_PATTERN = /\.(?:css|png|jpe?g|gif|webp|svg|ico|woff2?|json)$/i;
 const NETWORK_ONLY_PATH_PATTERN = /^\/(?:api(?:\/|$)|admin(?:\.html)?(?:\/|$)|login(?:\/|$)|auth(?:\/|$)|checkout(?:\/|$)|orders?(?:\/|$)|payment(?:\/|$))/i;
