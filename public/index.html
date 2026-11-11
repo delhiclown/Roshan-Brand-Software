@@ -243,6 +243,15 @@
     .hero-category[data-hero-category="vps"]{border-color:rgba(59,130,246,.48)}
     .hero-category .hero-category-art{position:absolute;inset:0 0 0 auto;width:61%;overflow:hidden;pointer-events:none;z-index:0;mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.26) 15%,#000 46%)}
     .hero-category-art img{display:block;width:100%;height:100%;object-fit:contain;object-position:right center}
+    .hero-category[data-collection="used-keys"] .hero-category-art{background:#060b17}
+    .hero-category[data-collection="used-keys"] .hero-category-art img{object-fit:contain;object-position:right center}
+    .hero-category[data-collection="used-keys"] .hero-category-icon,.hero-category[data-collection="used-keys"] .hero-category-copy,.hero-category[data-collection="used-keys"] .hero-category-arrow{position:relative;z-index:1}
+    .hero-category[data-collection="demo-keys"] .hero-category-art{background:#060b17}
+    .hero-category[data-collection="demo-keys"] .hero-category-art img{object-fit:contain;object-position:right center}
+    .hero-category[data-collection="demo-keys"] .hero-category-icon,.hero-category[data-collection="demo-keys"] .hero-category-copy,.hero-category[data-collection="demo-keys"] .hero-category-arrow{position:relative;z-index:1}
+    .hero-category[data-collection="rental-software"] .hero-category-art{background:#060b17}
+    .hero-category[data-collection="rental-software"] .hero-category-art img{object-fit:contain;object-position:right center}
+    .hero-category[data-collection="rental-software"] .hero-category-icon,.hero-category[data-collection="rental-software"] .hero-category-copy,.hero-category[data-collection="rental-software"] .hero-category-arrow{position:relative;z-index:1}
     .hero-category[data-hero-category="vps"] .hero-category-art img,.hero-category[data-hero-category="residential"] .hero-category-art img{object-fit:cover;object-position:center}
     .hero-category[data-hero-category="software"] .hero-category-art img{object-fit:cover;object-position:center}
     .hero-category[data-hero-category="residential"] .hero-category-art{mask-image:none}
@@ -285,6 +294,9 @@
     .category-banner.loaded{animation:none;background:#0a1226}
     .category-banner-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1);transition:opacity .3s ease,transform .45s ease}
     .category[data-card-tone="software"] .category-banner-image,.category[data-card-tone="vps"] .category-banner-image,.category[data-card-tone="residential"] .category-banner-image{object-fit:cover;object-position:center}
+    .category[data-collection="used-keys"] .category-banner-image{object-fit:contain;background:#060b17}
+    .category[data-collection="demo-keys"] .category-banner-image{object-fit:contain;background:#060b17}
+    .category[data-collection="rental-software"] .category-banner-image{object-fit:contain;background:#060b17}
     .category[data-card-tone="proxy"] .category-banner-image{object-fit:contain;background:#0a1226}
     .category-banner-image.loaded{opacity:1}
     .category[data-card-tone="vps"] .category-banner.loaded{background:#101b28}
@@ -1308,7 +1320,7 @@
           : category.id==='rental-software' ? '1 day rentals'
           : category.id==='demo-keys' ? 'Free demo keys'
           : state.productsLoading && !state.products.length ? 'Explore collection' : `${productCount} ${productCount === 1 ? 'product' : 'products'}`;
-        const categoryArt=category.id==='software'?'<span class="hero-category-art" aria-hidden="true"><img src="/categories/software-laptop-8k.webp" alt="" decoding="async"></span>':category.id==='vps'||category.id==='proxy'||category.id==='residential'?`<span class="hero-category-art" aria-hidden="true"><img src="${category.id==='vps'?'/categories/vps-datacenter.png':category.id==='proxy'?'/categories/proxy-logo-navy.png':'/assets/residential-proxies-banner-v3.svg?v=20261107'}" alt="" decoding="async"></span>`:'';
+        const categoryArt=category.id==='used-keys'?'<span class="hero-category-art" aria-hidden="true"><img src="/categories/used-keys-banner.png" alt="" decoding="async"></span>':category.id==='demo-keys'?'<span class="hero-category-art" aria-hidden="true"><img src="/categories/demo-keys-banner.png" alt="" decoding="async"></span>':category.id==='rental-software'?'<span class="hero-category-art" aria-hidden="true"><img src="/categories/rental-software-banner.png" alt="" decoding="async"></span>':category.id==='software'?'<span class="hero-category-art" aria-hidden="true"><img src="/categories/software-laptop-8k.webp" alt="" decoding="async"></span>':category.id==='vps'||category.id==='proxy'||category.id==='residential'?`<span class="hero-category-art" aria-hidden="true"><img src="${category.id==='vps'?'/categories/vps-datacenter.png':category.id==='proxy'?'/categories/proxy-logo-navy.png':'/assets/residential-proxies-banner-v3.svg?v=20261107'}" alt="" decoding="async"></span>`:'';
         const special=category.id==='used-keys'||category.id==='rental-software'||category.id==='demo-keys';
         const tone=category.id==='used-keys'||category.id==='rental-software'||category.id==='demo-keys'?'software':category.id;
         return `<button class="hero-category" data-card-tone="${tone}" type="button" ${special?`data-collection="${category.id}"`:`data-hero-category="${category.id}"`}>${categoryArt}<span class="hero-category-icon">${category.icon}</span><span class="hero-category-copy"><strong class="title-premium">${category.title}</strong><small class="badge-premium" ${category.id==='used-keys'?'data-used-keys-count':''}>${countLabel}</small></span><span class="hero-category-arrow" aria-hidden="true">↗</span></button>`;
@@ -1321,7 +1333,7 @@
           : category.id==='demo-keys' ? 'Free demo keys'
           : state.productsLoading && !state.products.length ? 'Loading…' : `${productCount} ${productCount === 1 ? 'item' : 'items'}`;
         const countBadge = state.productsError ? '' : `<span class="count badge-premium">${countLabel}</span>`;
-        const bannerImage = category.id === 'vps' ? '/categories/vps-datacenter.png' : category.id === 'residential' ? '/assets/residential-proxies-banner-v3.svg?v=20261107' : category.id === 'proxy' ? '/categories/proxy-logo-navy.png' : category.id === 'software' ? '/categories/software-laptop-8k.webp' : '';
+        const bannerImage = category.id === 'used-keys' ? '/categories/used-keys-banner.png' : category.id === 'demo-keys' ? '/categories/demo-keys-banner.png' : category.id === 'rental-software' ? '/categories/rental-software-banner.png' : category.id === 'vps' ? '/categories/vps-datacenter.png' : category.id === 'residential' ? '/assets/residential-proxies-banner-v3.svg?v=20261107' : category.id === 'proxy' ? '/categories/proxy-logo-navy.png' : category.id === 'software' ? '/categories/software-laptop-8k.webp' : '';
         const icon=categoryBannerIcons[category.id]||categoryBannerIcons['used-keys'];
         const special=category.id==='used-keys'||category.id==='rental-software'||category.id==='demo-keys';
         const tone=category.id==='used-keys'||category.id==='rental-software'||category.id==='demo-keys'?'software':category.id;
@@ -1346,7 +1358,8 @@
       grid.innerHTML=state.demoKeys.length?state.demoKeys.map(item=>{
         const image=safeHttpUrl(item.image_url)||USED_KEY_FALLBACK_IMAGE;
         const validity=Number(item.validity_days)>0?`<p class="desc-premium">${Number(item.validity_days)} days demo</p>`:'<p class="desc-premium">Demo key</p>';
-        return `<article class="product" data-card-tone="software"><div class="product-image-wrap"><img class="product-image" src="${escapeHtml(image)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div><span class="used-key-badge">DEMO KEY</span><h3 class="title-premium">${escapeHtml(item.software_name)}</h3>${validity}<div class="product-foot"><div><strong>Free</strong></div><button class="buy" type="button" data-claim-demo="${escapeHtml(item.product_id)}">Free Demo Key</button></div><button class="back" type="button" data-buy-demo-product="${escapeHtml(item.product_id)}">Paid key kharido</button></article>`;
+        const paidProductLink=Number(item.price)>0?`<button class="back" type="button" data-buy-demo-product="${escapeHtml(item.product_id)}">Paid key kharido</button>`:'';
+        return `<article class="product" data-card-tone="software"><div class="product-image-wrap"><img class="product-image" src="${escapeHtml(image)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div><span class="used-key-badge">DEMO KEY</span><h3 class="title-premium">${escapeHtml(item.software_name)}</h3>${validity}<div class="product-foot"><div><strong>Free</strong></div><button class="buy" type="button" data-claim-demo="${escapeHtml(item.product_id)}">Free Demo Key</button></div>${paidProductLink}</article>`;
       }).join(''):'<div class="empty">No demo keys are available right now.</div>';
       revealPage(grid);
     }
@@ -1635,7 +1648,7 @@
       document.getElementById(sectionId)?.scrollIntoView({behavior:'smooth',block:'start'});
     }
 
-    const USED_KEY_FALLBACK_IMAGE='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 640 360%22%3E%3Crect width=%22640%22 height=%22360%22 fill=%22%230a1226%22/%3E%3Cpath d=%22M0 300 180 140l110 105 85-80 265 195v0H0Z%22 fill=%22%23101d36%22/%3E%3Ccircle cx=%22320%22 cy=%22155%22 r=%2254%22 fill=%22%23f5c04a%22 fill-opacity=%22.18%22/%3E%3Cpath d=%22M298 155h44m-22-22v44%22 stroke=%22%23f5c04a%22 stroke-width=%2212%22 stroke-linecap=%22round%22/%3E%3C/svg%3E';
+    const USED_KEY_FALLBACK_IMAGE='/assets/demo-key-artwork.png';
     function renderUsedKeys(){
       const grid=$('used-keys-grid');
       if(state.usedKeysError){
@@ -3539,7 +3552,7 @@
     async function refreshStore(){
       setProductsLoading(!state.products.length);
       const [products,settings,spinPrizes] = await Promise.all([
-        state.client.from('products').select('id,category,name,description,image_url,price,selling_price,original_price,rating,review_count,sold_count,show_stats,unit,in_stock,sort_order,pinned,plan_section,os_type,ip_series,data_size,specs,ip_count,validity,badge,stock_status,price_prefix,details')
+        state.client.from('products').select('id,category,name,description,image_url,price,selling_price,original_price,rating,review_count,sold_count,show_stats,unit,in_stock,sort_order,pinned,plan_section,os_type,ip_series,data_size,specs,ip_count,validity,badge,stock_status,price_prefix,details,demo_only').eq('demo_only',false)
           .order('sort_order',{ascending:true}).order('created_at',{ascending:true}),
         state.client.from('settings').select('site_title,whatsapp_number,telegram_link,upi_id,upi_payee_name,upi_qr_image_url,enable_wallet_payments,enable_upi_qr,enable_upi_app').eq('id',true).maybeSingle(),
         state.client.rpc('public_spin_prizes')

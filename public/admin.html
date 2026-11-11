@@ -399,6 +399,9 @@
           <section class="panel" style="margin:0"><h3>Add or update demo key</h3>
             <form id="demo-key-form">
               <div class="field"><label for="demo-key-product">Software</label><select id="demo-key-product" required></select></div>
+              <div class="field hidden" id="demo-key-custom-name-field"><label for="demo-key-custom-name">Custom software name</label><input id="demo-key-custom-name" maxlength="120" placeholder="e.g. Medical"></div>
+              <div class="field hidden" id="demo-key-custom-image-field"><label for="demo-key-custom-image">Software photo</label><input id="demo-key-custom-image" type="file" accept="image/jpeg,image/png,image/webp,image/gif"><img id="demo-key-image-preview" class="hidden" alt="Custom software photo preview" style="width:100%;max-height:180px;object-fit:contain;border:1px solid var(--line);border-radius:10px;background:#080f20"></div>
+              <div class="field"><label for="demo-key-download-url">Software download link</label><input id="demo-key-download-url" type="url" maxlength="2048" placeholder="https://..." required></div>
               <div class="field"><label for="demo-key-value">Demo key</label><textarea id="demo-key-value" maxlength="4000" required></textarea></div>
               <div class="field"><label for="demo-key-days">Demo days (optional)</label><input id="demo-key-days" type="number" min="1" max="36500" step="1" placeholder="Leave empty for no day label"></div>
               <button class="btn gold" type="submit">Save demo key</button><div class="error" id="demo-key-error" aria-live="polite"></div>
@@ -479,6 +482,7 @@
     const DEFAULT_SPIN_PRIZES=[{code:'SAVE20',label:'20%',type:'percent',value:20,color:'#e11d48',maxDiscountAmount:500,weight:15},{code:'SAVE50',label:'50%',type:'percent',value:50,color:'#2f3fb8',maxDiscountAmount:500,weight:10},{code:'SAVE100',label:'100%',type:'percent',value:100,color:'#f5c04a',maxDiscountAmount:500,weight:4},{code:'BONUS100',label:'100%',type:'percent',value:100,color:'#e11d48',maxDiscountAmount:500,weight:1},{code:'TRY_AGAIN',label:'TRY AGAIN',type:'tryAgain',value:0,color:'#2a2f3a',maxDiscountAmount:0,weight:45},{code:'SAVE10',label:'10%',type:'percent',value:10,color:'#2f3fb8',maxDiscountAmount:500,weight:25}];
     const state={client:null,category:'software',products:[],editing:null,editingDownloadUrl:null,downloadLinkLoaded:true,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null,paymentQrImageUrl:'',offers:[],offerProducts:[],offerReports:[],spinPrizes:DEFAULT_SPIN_PRIZES,coupons:[],usedKeyProducts:[],usedKeys:[],demoKeyProducts:[],demoKeys:[],rentalProducts:[],rentalAccounts:[],orderRequestStatus:'new',orderRequestPage:1,orderRequestPageSize:20,orderRequestCount:0,orderRequestCounts:{new:0,completed:0,rejected:0,all:0},selectedOrderRequest:null};
     let productPreviewUrl=null;
+    let demoImagePreviewUrl=null;
     let paymentQrPreviewUrl=null;
     const $=id=>document.getElementById(id);
     const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -676,7 +680,7 @@
       $('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.remove('hidden');$('demo-keys-panel').classList.add('hidden');$('rental-panel').classList.add('hidden');
       $('page-title').textContent='Used Keys';renderTabs();$('used-key-list').innerHTML='<div class="empty">Loading inventory…</div>';
       try{
-        const {data,error}=await state.client.from('products').select('id,name').eq('category','software').order('name');
+        const {data,error}=await state.client.from('products').select('id,name').eq('category','software').eq('demo_only',false).order('name');
         if(error)throw error;
         state.usedKeyProducts=data||[];
         $('used-key-product').innerHTML=state.usedKeyProducts.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`).join('');
@@ -691,13 +695,19 @@
       $('settings-panel').classList.add('hidden');$('finance-panel').classList.add('hidden');$('order-requests-panel').classList.add('hidden');$('used-keys-panel').classList.add('hidden');$('demo-keys-panel').classList.remove('hidden');$('rental-panel').classList.add('hidden');
       $('page-title').textContent='Demo Keys';renderTabs();$('demo-key-list').innerHTML='<div class="empty">Loading demo keys…</div>';
       try{
-        const {data:products,error:productError}=await state.client.from('products').select('id,name').eq('category','software').order('name');
+        const {data:products,error:productError}=await state.client.from('products').select('id,name').eq('category','software').eq('demo_only',false).order('name');
         if(productError)throw productError;
         state.demoKeyProducts=products||[];
-        $('demo-key-product').innerHTML=state.demoKeyProducts.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`).join('');
-        if(!state.demoKeyProducts.length)$('demo-key-product').innerHTML='<option value="">Add Software products first</option>';
+        $('demo-key-product').innerHTML=state.demoKeyProducts.map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`).join('')+'<option value="__custom__">Custom</option>';
+        syncDemoKeyCustomName();
         await renderDemoKeyInventory();
       }catch(error){$('demo-key-list').innerHTML=`<div class="empty">Could not load Demo Keys: ${escapeHtml(error.message)}</div>`}
+    }
+    function syncDemoKeyCustomName(){
+      const isCustom=$('demo-key-product').value==='__custom__';
+      $('demo-key-custom-name-field').classList.toggle('hidden',!isCustom);
+      $('demo-key-custom-image-field').classList.toggle('hidden',!isCustom);
+      $('demo-key-custom-name').required=isCustom;
     }
     async function renderDemoKeyInventory(){
       const {data,error}=await state.client.rpc('admin_list_demo_keys');
@@ -708,20 +718,31 @@
     async function saveDemoKey(event){
       event.preventDefault();
       const productId=Number($('demo-key-product').value);
+      const isCustom=$('demo-key-product').value==='__custom__';
+      const softwareName=$('demo-key-custom-name').value.trim();
+      const downloadUrl=$('demo-key-download-url').value.trim();
       const licenseKey=$('demo-key-value').value.trim();
       const daysText=$('demo-key-days').value.trim();
       const days=daysText?Number(daysText):null;
       $('demo-key-error').textContent='';
-      if(!Number.isSafeInteger(productId)||productId<=0){$('demo-key-error').textContent='Choose a software product.';return}
+      if(!isCustom&&(!Number.isSafeInteger(productId)||productId<=0)){$('demo-key-error').textContent='Choose a software product.';return}
+      if(isCustom&&(!softwareName||softwareName.length>120)){$('demo-key-error').textContent='Enter a custom software name up to 120 characters.';return}
+      if(downloadUrl){try{const url=new URL(downloadUrl);if(!['http:','https:'].includes(url.protocol))throw new Error();}catch{$('demo-key-error').textContent='Enter a valid HTTP or HTTPS download link.';return}}
       if(!licenseKey||licenseKey.length>4000){$('demo-key-error').textContent='Enter a demo key up to 4,000 characters.';return}
       if(days!==null&&(!Number.isInteger(days)||days<1||days>36500)){$('demo-key-error').textContent='Demo days must be between 1 and 36,500.';return}
       const button=$('demo-key-form').querySelector('[type="submit"]');
       button.disabled=true;
       try{
-        const {data,error}=await state.client.rpc('admin_save_demo_key',{p_product_id:productId,p_license_key:licenseKey,p_validity_days:days});
+        const imageFile=isCustom?$('demo-key-custom-image').files[0]:null;
+        const imageUrl=imageFile?await uploadProductImage(imageFile,'software'):null;
+        const {data,error}=isCustom
+          ?await state.client.rpc('admin_save_custom_demo_key',{p_software_name:softwareName,p_download_url:downloadUrl,p_license_key:licenseKey,p_validity_days:days,p_image_url:imageUrl})
+          :await state.client.rpc('admin_save_demo_key_with_link',{p_product_id:productId,p_download_url:downloadUrl,p_license_key:licenseKey,p_validity_days:days});
         if(error)throw error;
         if(!data?.ok)throw new Error(data?.message||'Could not save demo key.');
-        $('demo-key-value').value='';$('demo-key-days').value='';
+        $('demo-key-form').reset();syncDemoKeyCustomName();
+        if(demoImagePreviewUrl){URL.revokeObjectURL(demoImagePreviewUrl);demoImagePreviewUrl=null}
+        $('demo-key-image-preview').removeAttribute('src');$('demo-key-image-preview').classList.add('hidden');
         await renderDemoKeyInventory();
       }catch(error){$('demo-key-error').textContent=error.message||'Could not save demo key.'}
       finally{button.disabled=false}
@@ -733,7 +754,7 @@
       $('page-title').textContent='Rental Software';renderTabs();
       $('rental-inventory-list').innerHTML='<div class="empty">Loading rental inventory…</div>';
       try{
-        const {data:products,error}=await state.client.from('products').select('id,name').eq('category','software').order('name');
+        const {data:products,error}=await state.client.from('products').select('id,name').eq('category','software').eq('demo_only',false).order('name');
         if(error)throw error;
         const options=(products||[]).map(item=>`<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`).join('');
         $('rental-product').innerHTML=options||'<option value="">Add Software products first</option>';
@@ -926,7 +947,7 @@
     async function renderOffers(){
       const [offersResult,productsResult]=await Promise.all([
         state.client.from('offers').select('id,title,description,collection,product_id,starts_at,ends_at,enabled,claim_enabled,paid_quantity,free_quantity,benefit_count_enabled,benefit_count,benefit_count_minimum,created_at').order('created_at',{ascending:false}),
-        state.client.from('products').select('id,name,category,price').order('category').order('name')
+        state.client.from('products').select('id,name,category,price').eq('demo_only',false).order('category').order('name')
       ]);
       if(offersResult.error)throw offersResult.error;
       if(productsResult.error)throw productsResult.error;
@@ -1119,7 +1140,7 @@
       }
     }
     async function renderProducts(){
-      const result=await state.client.from('products').select('*').eq('category',state.category).order('pinned',{ascending:false}).order('sort_order').order('created_at');
+      const result=await state.client.from('products').select('*').eq('category',state.category).eq('demo_only',false).order('pinned',{ascending:false}).order('sort_order').order('created_at');
       if(result.error){$('product-list').innerHTML=`<div class="empty">${escapeHtml(result.error.message)}</div>`;return}
       state.products=result.data||[];
       $('product-list').innerHTML=state.products.length?state.products.map((product,index)=>`
@@ -1266,11 +1287,11 @@
         }catch(error){setError('product-error',`Could not load this product's download link: ${error.message}`)}
       }
     }
-    async function uploadProductImage(file){
+    async function uploadProductImage(file,category=state.category){
       const extensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
       if(!extensions[file.type])throw new Error('Choose a JPG, PNG, WebP, or GIF image.');
       if(file.size>5*1024*1024)throw new Error('Product images must be 5 MB or smaller.');
-      const path=`${state.category}/${crypto.randomUUID()}.${extensions[file.type]}`;
+      const path=`${category}/${crypto.randomUUID()}.${extensions[file.type]}`;
       const {error}=await state.client.storage.from('product-images').upload(path,file,{contentType:file.type,cacheControl:'3600',upsert:false});
       if(error)throw error;
       const {data}=state.client.storage.from('product-images').getPublicUrl(path);
@@ -1857,6 +1878,19 @@
     $('product-form').addEventListener('submit',saveProduct);
     $('used-key-form').addEventListener('submit',saveUsedKey);
     $('used-key-bulk-add').addEventListener('click',bulkAddUsedKeys);
+    $('demo-key-product').addEventListener('change',syncDemoKeyCustomName);
+    $('demo-key-custom-image').addEventListener('change',()=>{
+      if(demoImagePreviewUrl){URL.revokeObjectURL(demoImagePreviewUrl);demoImagePreviewUrl=null}
+      const file=$('demo-key-custom-image').files[0];
+      if(file){
+        demoImagePreviewUrl=URL.createObjectURL(file);
+        $('demo-key-image-preview').src=demoImagePreviewUrl;
+        $('demo-key-image-preview').classList.remove('hidden');
+      }else{
+        $('demo-key-image-preview').removeAttribute('src');
+        $('demo-key-image-preview').classList.add('hidden');
+      }
+    });
     $('used-key-cancel').addEventListener('click',resetUsedKeyForm);
     $('used-keys-refresh').addEventListener('click',()=>renderUsedKeyInventory().catch(error=>notify(`Could not load Used Keys: ${error.message}`)));
     $('used-key-list').addEventListener('click',event=>handleUsedKeyAction(event).catch(error=>notify(`Could not update Used Keys: ${error.message}`)));

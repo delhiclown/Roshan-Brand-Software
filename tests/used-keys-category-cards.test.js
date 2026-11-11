@@ -22,6 +22,18 @@ test('homepage collection and category grids render all six requested cards in o
   assert.match(homepage, /'rental-software':'rental-software-view'/);
   assert.match(homepage, /'demo-keys':'demo-keys-view'/);
   assert.match(homepage, /grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(homepage, /category\.id==='used-keys'\?'<span class="hero-category-art"/);
+  assert.match(homepage, /src="\/categories\/used-keys-banner\.png"/);
+  assert.match(homepage, /category\.id === 'used-keys' \? '\/categories\/used-keys-banner\.png'/);
+  assert.match(homepage, /\.category\[data-collection="used-keys"\] \.category-banner-image\{object-fit:contain;background:#060b17\}/);
+  assert.match(homepage, /category\.id==='demo-keys'\?'<span class="hero-category-art"/);
+  assert.match(homepage, /src="\/categories\/demo-keys-banner\.png"/);
+  assert.match(homepage, /category\.id === 'demo-keys' \? '\/categories\/demo-keys-banner\.png'/);
+  assert.match(homepage, /\.category\[data-collection="demo-keys"\] \.category-banner-image\{object-fit:contain;background:#060b17\}/);
+  assert.match(homepage, /category\.id==='rental-software'\?'<span class="hero-category-art"/);
+  assert.match(homepage, /src="\/categories\/rental-software-banner\.png"/);
+  assert.match(homepage, /category\.id === 'rental-software' \? '\/categories\/rental-software-banner\.png'/);
+  assert.match(homepage, /\.category\[data-collection="rental-software"\] \.category-banner-image\{object-fit:contain;background:#060b17\}/);
   assert.match(homepage, /@media\(max-width:639\.98px\)\{[\s\S]*?\.hero-category-grid,\.category-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 });
 

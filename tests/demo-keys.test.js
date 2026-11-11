@@ -8,6 +8,7 @@ const root = path.join(__dirname, '..');
 const homepage = fs.readFileSync(path.join(root, 'public', 'index.html'), 'utf8');
 const adminHtml = fs.readFileSync(path.join(root, 'public', 'admin.html'), 'utf8');
 const migration = fs.readFileSync(path.join(root, 'supabase', 'demo-keys-migration.sql'), 'utf8');
+const customDemoMigration = fs.readFileSync(path.join(root, 'supabase', 'demo-custom-software-migration.sql'), 'utf8');
 const notifyOrder = fs.readFileSync(path.join(root, 'api', 'notify-order.js'), 'utf8');
 
 test('customers can claim a Google Gmail demo and view it with the software download in My Orders', () => {
@@ -42,13 +43,35 @@ test('rental flow uses exact server amount, UTR verification and admin-only acco
   assert.match(migration, /if not public\.is_store_admin\(\) then raise exception 'Admin access required'; end if;/);
 });
 
-test('admin has a separate demo-key inventory form without photo upload', () => {
+test('admin has a separate demo-key inventory form with custom software and photo upload', () => {
   assert.match(adminHtml, /id="demo-keys-panel"/);
   assert.match(adminHtml, /id="demo-key-product"/);
+  assert.match(adminHtml, /<option value="__custom__">Custom<\/option>/);
+  assert.match(adminHtml, /id="demo-key-custom-name"/);
+  assert.match(adminHtml, /id="demo-key-custom-image" type="file"/);
+  assert.match(adminHtml, /id="demo-key-image-preview"/);
+  assert.match(adminHtml, /id="demo-key-download-url" type="url"/);
   assert.match(adminHtml, /id="demo-key-value"/);
   assert.match(adminHtml, /id="demo-key-days"/);
-  assert.match(adminHtml, /rpc\('admin_save_demo_key'/);
+  assert.match(adminHtml, /rpc\('admin_save_demo_key_with_link'/);
+  assert.match(adminHtml, /rpc\('admin_save_custom_demo_key'/);
   assert.match(adminHtml, /rpc\('admin_list_demo_keys'\)/);
+});
+
+test('custom demo software has its own download link and stays out of the paid storefront', () => {
+  assert.match(customDemoMigration, /add column if not exists demo_only boolean not null default false/);
+  assert.match(customDemoMigration, /create or replace function public\.admin_save_demo_key_with_link/);
+  assert.match(customDemoMigration, /create or replace function public\.admin_save_custom_demo_key/);
+  assert.match(customDemoMigration, /p_image_url text default null/);
+  assert.match(adminHtml, /p_image_url:imageUrl/);
+  assert.match(customDemoMigration, /set image_url = p_image_url/);
+  assert.match(homepage, /const USED_KEY_FALLBACK_IMAGE=['"]\/assets\/demo-key-artwork\.png['"]/);
+  assert.match(homepage, /safeHttpUrl\(item\.image_url\)\|\|USED_KEY_FALLBACK_IMAGE/);
+  assert.match(homepage, /Number\(item\.price\)>0\?`<button class="back"/);
+  assert.match(customDemoMigration, /insert into public\.product_download_links/);
+  assert.match(customDemoMigration, /'software', btrim\(p_software_name\), 'Demo-only software', 0, 0, true/);
+  assert.match(customDemoMigration, /if not public\.is_store_admin\(\) then raise exception 'Admin access required'; end if;/);
+  assert.match(homepage, /details,demo_only'\)\.eq\('demo_only',false\)/);
 });
 
 test('new Software products already support uploaded photos, selling price, and saved download links', () => {
