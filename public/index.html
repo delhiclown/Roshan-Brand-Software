@@ -1964,11 +1964,10 @@
       const whatsappLink = number ? `https://wa.me/${number}` : fallbackWhatsappLink;
       const links = [];
       links.push(`<a class="float-link whatsapp" href="${escapeHtml(whatsappLink)}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" title="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M20.47 3.37A11.8 11.8 0 0 0 3.8 18.41L2 22l3.7-1.04A11.8 11.8 0 1 0 20.47 3.37ZM12 19.5c-1.98 0-3.88-.54-5.49-1.47l-.39-.23-2.2.62.6-2.13-.25-.39A9.5 9.5 0 1 1 12 19.5Zm5.41-7.06c-.29-.15-1.72-.85-1.99-.95-.27-.1-.46-.15-.66.15-.2.3-.76.95-.93 1.14-.17.2-.34.22-.63.07-.29-.15-1.22-.46-2.32-1.47-.86-.76-1.44-1.7-1.61-1.98-.17-.29-.02-.44.13-.58.13-.13.29-.34.44-.51.15-.17.2-.29.3-.48.1-.19.05-.36-.02-.51-.08-.15-.66-1.6-.9-2.2-.24-.58-.48-.5-.66-.51l-.56-.01c-.19 0-.51.07-.78.36-.27.29-1.03 1-1.03 2.43 0 1.43 1.06 2.82 1.21 3.01.15.2 2.08 3.17 5.05 4.44.7.3 1.25.48 1.67.61.71.22 1.36.19 1.87.11.57-.09 1.72-.7 1.96-1.38.24-.68.24-1.27.17-1.39-.07-.12-.27-.2-.57-.35Z"/></svg></a>`);
-      const telegram = String(state.settings.telegram_link||'').trim();
-      const telegramUrl = telegram || 'https://t.me/Roshanadmin';
+      const telegramUrl = 'https://t.me/Roshanadminn';
       if(/^https:\/\/t\.me\//i.test(telegramUrl) || /^@?[A-Za-z0-9_]{3,}$/i.test(telegramUrl) || /^t\.me\//i.test(telegramUrl)) {
         const finalTelegramUrl = /^https?:\/\//i.test(telegramUrl) ? telegramUrl : `https://t.me/${telegramUrl.replace(/^@/, '')}`;
-        links.push(`<a class="float-link telegram" href="${escapeHtml(finalTelegramUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Telegram" title="Telegram"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M21.2 5.1c.4-1.5-1.1-2.1-2.6-1.6L3.6 10.2c-1.7.7-1.7 1.8 0 2.4l4 1.3 1.8 5.3c.3 1 .9 1 1.5.5l2.7-2.6 4.4 3.1c1.5 1.1 2.6.5 3-1.4l2.4-11.7Zm-3.8 3.4-8.7 5.4c-.4.3-.8.3-1-.1l-.6-2.1 10.3-3.2Zm-6.5 7.3.2-1.6 1.5 1.1-1.7 1.5Z"/></svg></a>`);
+        links.push(`<a class="float-link telegram" href="${escapeHtml(finalTelegramUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Telegram support @Roshanadminn" title="Telegram support @Roshanadminn"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M21.2 5.1c.4-1.5-1.1-2.1-2.6-1.6L3.6 10.2c-1.7.7-1.7 1.8 0 2.4l4 1.3 1.8 5.3c.3 1 .9 1 1.5.5l2.7-2.6 4.4 3.1c1.5 1.1 2.6.5 3-1.4l2.4-11.7Zm-3.8 3.4-8.7 5.4c-.4.3-.8.3-1-.1l-.6-2.1 10.3-3.2Zm-6.5 7.3.2-1.6 1.5 1.1-1.7 1.5Z"/></svg></a>`);
       }
       $('floating-links').innerHTML = links.join('');
       renderWheelLabels();
