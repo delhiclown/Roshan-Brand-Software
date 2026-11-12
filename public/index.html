@@ -1746,9 +1746,9 @@
         return `<article class="product used-key-card" data-card-tone="software">
         <div class="product-image-wrap"><img class="product-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div>
         <span class="used-key-badge">USED KEY</span><h3 class="title-premium">${escapeHtml(item.software_name)}</h3>
-        <p class="desc-premium">${expired?'Expired':`Remaining: ${Number(item.remaining_days)} days`}</p>
+        <p class="desc-premium">${expired?'EXPIRED':`Remaining: ${Number(item.remaining_days)} days`}</p>
         <div class="product-foot"><div><strong>₹${money(item.price)}</strong><small class="used-key-original">₹${money(item.regular_price)} / 30 days</small></div>
-          <button class="buy" type="button" data-buy-used-key="${escapeHtml(item.id)}" ${expired?'disabled':''}>${expired?'Expired':'Buy Now'}</button></div>
+          <button class="buy" type="button" data-buy-used-key="${escapeHtml(item.id)}" ${expired?'disabled':''}>${expired?'EXPIRED':'Buy Now'}</button></div>
         <p class="used-key-note">Ye used key hai, sirf bachi hui validity milegi.</p>
       </article>`;
       }).join(''):'<div class="empty">No used keys are available right now. Please check back soon.</div>';
