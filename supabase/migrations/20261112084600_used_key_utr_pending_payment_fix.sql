@@ -77,6 +77,7 @@ create or replace function public.admin_recover_ocean_pro_used_key_payment_utr(
   p_order_id bigint,
   p_used_key_id bigint,
   p_utr text,
+  p_expected_key text,
   p_reason text
 )
 returns jsonb
@@ -87,6 +88,7 @@ as $function$
 declare
   v_order public.orders%rowtype;
   v_key private.used_key_inventory%rowtype;
+  v_encryption_key text;
   v_verified_amount constant numeric(12, 2) := 399.00;
   v_utr text := btrim(coalesce(p_utr, ''));
   v_now timestamptz := clock_timestamp();
@@ -103,6 +105,9 @@ begin
   end if;
   if v_utr !~ '^[0-9]{12}$' then
     raise exception 'Enter a valid 12-digit UTR.';
+  end if;
+  if length(btrim(coalesce(p_expected_key, ''))) = 0 then
+    raise exception 'Expected Used Key is required.';
   end if;
 
   select * into v_order
@@ -141,6 +146,16 @@ begin
      or v_key.product_id <> v_order.product_id
      or v_key.license_key_fingerprint is distinct from v_order.used_key_fingerprint then
     raise exception 'Used Key is reserved, unavailable, or no longer matches this order.';
+  end if;
+
+  select encryption_key into v_encryption_key
+  from private.order_delivery_secrets
+  where id = true;
+
+  if v_encryption_key is null
+     or v_key.license_key_fingerprint is distinct from
+       extensions.hmac(btrim(p_expected_key), v_encryption_key, 'sha256') then
+    raise exception 'Used Key does not match the supplied expected key.';
   end if;
 
   if exists (
@@ -199,9 +214,9 @@ begin
 end;
 $function$;
 
-revoke all on function public.admin_recover_ocean_pro_used_key_payment_utr(bigint, bigint, text, text)
+revoke all on function public.admin_recover_ocean_pro_used_key_payment_utr(bigint, bigint, text, text, text)
   from public, anon, authenticated;
-grant execute on function public.admin_recover_ocean_pro_used_key_payment_utr(bigint, bigint, text, text)
+grant execute on function public.admin_recover_ocean_pro_used_key_payment_utr(bigint, bigint, text, text, text)
   to authenticated;
 
 commit;
