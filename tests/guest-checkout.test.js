@@ -53,9 +53,12 @@ test('guest device, phone, and IP values require safe formats', () => {
   assert.equal(validateWhatsApp(''), '');
   assert.equal(validateWhatsApp('+91 98765 43210'), '9876543210');
   assert.equal(validateWhatsApp('09876543210'), '9876543210');
-  assert.equal(validateWhatsApp('9876543210'), '9876543210');
+  for (const phone of ['9876543210', '8876543210', '7876543210', '6876543210']) {
+    assert.equal(validateWhatsApp(phone), phone);
+  }
   assert.throws(() => validateWhatsApp('987654321'), /10-digit Indian mobile/i);
   assert.throws(() => validateWhatsApp('5876543210'), /10-digit Indian mobile/i);
+  assert.throws(() => validateWhatsApp('98765432100'), /10-digit Indian mobile/i);
   assert.throws(() => validateWhatsApp('abc9876543210'), /10-digit Indian mobile/i);
 
   const previousVercel = process.env.VERCEL;
@@ -69,12 +72,17 @@ test('guest device, phone, and IP values require safe formats', () => {
 
 test('guest identity hashes are secret-keyed and do not expose the input', () => {
   const previousSecret = process.env.GUEST_HASH_SECRET;
-  process.env.GUEST_HASH_SECRET = 'test-secret-with-more-than-32-characters';
-  const hash = hashGuestValue('customer@example.com');
-  assert.match(hash, /^[0-9a-f]{64}$/);
-  assert.notEqual(hash, 'customer@example.com');
-  if (previousSecret === undefined) delete process.env.GUEST_HASH_SECRET;
-  else process.env.GUEST_HASH_SECRET = previousSecret;
+  try {
+    delete process.env.GUEST_HASH_SECRET;
+    assert.throws(() => hashGuestValue('customer@example.com'), /privacy settings are not configured/i);
+    process.env.GUEST_HASH_SECRET = 'test-secret-with-more-than-32-characters';
+    const hash = hashGuestValue('customer@example.com');
+    assert.match(hash, /^[0-9a-f]{64}$/);
+    assert.notEqual(hash, 'customer@example.com');
+  } finally {
+    if (previousSecret === undefined) delete process.env.GUEST_HASH_SECRET;
+    else process.env.GUEST_HASH_SECRET = previousSecret;
+  }
 });
 
 test('guest checkout endpoint rejects non-POST requests without contacting Supabase', async () => {

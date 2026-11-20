@@ -49,7 +49,16 @@ test('Software admin supports three editable prices, MRPs, and enable switches',
     assert.match(admin, new RegExp(`id="plan-${plan}-price"`));
     assert.match(admin, new RegExp(`id="plan-${plan}-mrp"`));
     assert.match(admin, new RegExp(`id="plan-${plan}-enabled"`));
+    const priceInput = admin.match(new RegExp(`<input id="plan-${plan}-price"[^>]*>`))[0];
+    const mrpInput = admin.match(new RegExp(`<input id="plan-${plan}-mrp"[^>]*>`))[0];
+    assert.match(priceInput, /type="number".*step="0.01"/);
+    assert.match(mrpInput, /type="number".*step="0.01"/);
+    assert.doesNotMatch(priceInput, /maxlength|max=/);
+    assert.doesNotMatch(mrpInput, /maxlength|max=/);
   }
+  assert.match(admin, /#software-plan-fields input\[type=number\]\{min-width:8em\}/);
+  assert.match(admin, /@media\(max-width:1000px\)\{#software-plan-fields \.pnr-plan-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)\}\}/);
+  assert.match(admin, /@media\(max-width:520px\)\{#software-plan-fields \.pnr-plan-grid\{grid-template-columns:1fr\}\}/);
   assert.match(admin, /product\[`plan_\$\{plan\}_pnr_price`\]/);
   assert.match(admin, /product\[`plan_\$\{plan\}_pnr_enabled`\]/);
   assert.match(admin, /Starting from ₹\$\{money\(softwarePlanStartingPrice\(product\)\)\}/);

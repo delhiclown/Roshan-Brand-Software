@@ -1414,7 +1414,7 @@
     function usedKeysCountLabel(){
       if(state.usedKeysLoading)return 'Loading keys…';
       if(state.usedKeysError)return 'Keys unavailable';
-      const availableCount=state.usedKeys.filter(item=>Number(item.remaining_days)>0).length;
+      const availableCount=state.usedKeys.filter(item=>item.in_stock!==false&&Number(item.remaining_days)>0).length;
       return `${availableCount} available ${availableCount===1?'key':'keys'}`;
     }
 
@@ -1474,9 +1474,11 @@
       if(state.demoKeysError){grid.innerHTML=`<div class="empty">${escapeHtml(state.demoKeysError)}</div>`;return}
       grid.innerHTML=state.demoKeys.length?state.demoKeys.map(item=>{
         const image=safeHttpUrl(item.image_url)||USED_KEY_FALLBACK_IMAGE;
+        const available=item.in_stock!==false;
+        const productAvailable=item.product_in_stock!==false;
         const validity=Number(item.validity_days)>0?`<p class="desc-premium">${Number(item.validity_days)} days demo</p>`:'<p class="desc-premium">Demo key</p>';
-        const paidProductLink=Number(item.price)>0?`<button class="back" type="button" data-buy-demo-product="${escapeHtml(item.product_id)}">Paid key kharido</button>`:'';
-        return `<article class="product" data-card-tone="software"><div class="product-image-wrap"><img class="product-image" src="${escapeHtml(image)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div><span class="used-key-badge">DEMO KEY</span><h3 class="title-premium">${escapeHtml(item.software_name)}</h3>${validity}<div class="product-foot"><div><strong>Free</strong></div><button class="buy" type="button" data-claim-demo="${escapeHtml(item.product_id)}">Free Demo Key</button></div>${paidProductLink}</article>`;
+        const paidProductLink=Number(item.price)>0?`<button class="back" type="button" data-buy-demo-product="${escapeHtml(item.product_id)}" ${productAvailable?'':'disabled'}>${productAvailable?'Paid key kharido':'Out of stock'}</button>`:'';
+        return `<article class="product" data-card-tone="software"><div class="product-image-wrap"><img class="product-image" src="${escapeHtml(image)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div><span class="used-key-badge">DEMO KEY</span>${available?'':'<span class="used-key-badge">OUT OF STOCK</span>'}<h3 class="title-premium">${escapeHtml(item.software_name)}</h3>${validity}<div class="product-foot"><div><strong>Free</strong></div><button class="buy" type="button" data-claim-demo="${escapeHtml(item.product_id)}" ${available?'':'disabled'}>${available?'Free Demo Key':'Out of stock'}</button></div>${paidProductLink}</article>`;
       }).join(''):'<div class="empty">No demo keys are available right now.</div>';
       revealPage(grid);
     }
@@ -1497,8 +1499,27 @@
     }
 
     function continueAsGuest(){
+      const resumeProduct=state.authIntent==='product';
+      const pendingProductId=resumeProduct?sessionStorage.getItem('wallet_pending_product'):'';
+      const pendingSoftwarePlan=resumeProduct?sessionStorage.getItem('wallet_pending_software_plan'):'';
       state.guestMode=true;
       closeAuthPage();
+      if(pendingProductId){
+        const product=state.products.find(item=>String(item.id)===pendingProductId);
+        if(!product||!product.in_stock){
+          showGuestCheckoutError(new Error('This product is no longer available.'));
+          return;
+        }
+        if(normalizeCategory(product.category)==='software'
+          &&!availableSoftwarePlans(product).some(plan=>plan.code===pendingSoftwarePlan)){
+          showGuestCheckoutError(new Error('The selected plan is no longer available. Please choose a plan again.'));
+          return;
+        }
+        buyProduct(pendingProductId,pendingSoftwarePlan||null).catch(error=>{
+          showGuestCheckoutError(error);
+        });
+        return;
+      }
       showNotice('Guest checkout is ready. Choose any product to continue.');
       $('categories-view').scrollIntoView({behavior:'smooth',block:'start'});
     }
@@ -1535,10 +1556,19 @@
       return result;
     }
 
+    function showGuestCheckoutError(error){
+      console.error('Could not start guest checkout:',error);
+      state.guestCheckout=null;
+      $('modal-title').textContent='Guest checkout';
+      $('wallet-dialog').classList.add('checkout-dialog');
+      $('modal-body').innerHTML=`<p class="modal-error" role="alert">${escapeHtml(error.message||'Could not start guest checkout. Please try again.')}</p>`;
+      openModal();
+    }
+
     function openGuestCheckout(type,product){
       if(type!=='demo'&&(!window.QRCode||state.settings.enable_upi_qr!==true
         ||!String(state.settings.upi_id||'').trim()||!String(state.settings.upi_payee_name||'').trim())){
-        showNotice('Guest UPI QR checkout is currently unavailable. Please contact the store.');
+        showGuestCheckoutError(new Error('Guest UPI QR checkout is currently unavailable. Please contact the store.'));
         return;
       }
       state.guestCheckout={type,product};
@@ -1550,13 +1580,8 @@
       const guestWhatsApp=$('guest-whatsapp');
       const guestWhatsAppSubmit=$('guest-checkout-submit');
       const normalizeGuestWhatsApp=value=>{
-        let digits=String(value||'').replace(/\D/g,'');
-        if(digits.length>10){
-          if(digits.startsWith('91')&&digits.length>=12)digits=digits.slice(2);
-          else if(digits.startsWith('0')&&digits.length>=11)digits=digits.slice(1);
-          else digits=digits.slice(-10);
-        }
-        return digits.slice(0,10);
+        const digits=String(value||'').replace(/\D/g,'');
+        return digits.length>10?digits.slice(-10):digits;
       };
       const validateGuestWhatsApp=()=>{
         const whatsapp=normalizeGuestWhatsApp(guestWhatsApp.value);
@@ -1750,7 +1775,9 @@
       grid.innerHTML=state.rentalProducts.length?state.rentalProducts.map(item=>{
         const image=safeHttpUrl(item.image_url)||USED_KEY_FALLBACK_IMAGE;
         const available=Number(item.available_count)||0;
-        return `<article class="product" data-card-tone="software"><div class="product-image-wrap"><img class="product-image" src="${escapeHtml(image)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div><span class="used-key-badge">1 DAY RENTAL</span><h3 class="title-premium">${escapeHtml(item.software_name)}</h3><p class="desc-premium">${available?'Available':'Currently unavailable'}</p><div class="product-foot"><div><strong>₹${money(item.daily_rate)}</strong><small class="used-key-original">for 1 day</small></div><button class="buy" type="button" data-rent-product="${escapeHtml(item.product_id)}" ${available?'':'disabled'}>${available?'Rent for 1 day':'Unavailable'}</button></div></article>`;
+        const inStock=item.in_stock!==false;
+        const canRent=inStock&&available>0;
+        return `<article class="product" data-card-tone="software"><div class="product-image-wrap"><img class="product-image" src="${escapeHtml(image)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div><span class="used-key-badge">1 DAY RENTAL</span><h3 class="title-premium">${escapeHtml(item.software_name)}</h3><p class="desc-premium">${!inStock?'Out of stock':available?'Available':'Currently unavailable'}</p><div class="product-foot"><div><strong>₹${money(item.daily_rate)}</strong><small class="used-key-original">for 1 day</small></div><button class="buy" type="button" data-rent-product="${escapeHtml(item.product_id)}" ${canRent?'':'disabled'}>${!inStock?'Out of stock':canRent?'Rent for 1 day':'Unavailable'}</button></div></article>`;
       }).join(''):'<div class="empty">No rental software is available right now.</div>';
       revealPage(grid);
     }
@@ -2084,7 +2111,7 @@
       const query=state.vpsSearch.trim().toLowerCase();
       const matchesSearch=product=>!query||[product.name,product.ip_series,product.data_size,product.specs,product.ip_count,product.validity,product.plan_section,product.badge,product.details,product.description].some(value=>String(value||'').toLowerCase().includes(query));
       const searched=allProducts.filter(matchesSearch);
-      const available=product=>product.stock_status?product.stock_status==='available':product.in_stock!==false;
+      const available=product=>product.in_stock!==false&&(product.stock_status==null||product.stock_status==='available');
       const filters=isVps
         ?[['all','All',searched.length],['Linux','Linux',searched.filter(product=>normalizedOs(product)==='Linux').length],['Windows','Windows',searched.filter(product=>normalizedOs(product)==='Windows').length]]
         :[['all','All',searched.length],['available','Available',searched.filter(available).length],['out_of_stock','Out of stock',searched.filter(product=>!available(product)).length]];
@@ -2216,12 +2243,14 @@
       grid.innerHTML=usedKeys.length?usedKeys.map(item=>{
         const imageUrl=safeHttpUrl(item.image_url)||USED_KEY_FALLBACK_IMAGE;
         const expired=Number(item.remaining_days)<=0;
+        const inStock=item.in_stock!==false;
+        const canBuy=inStock&&!expired;
         return `<article class="product used-key-card" data-card-tone="software">
         <div class="product-image-wrap"><img class="product-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div>
-        <span class="used-key-badge">USED KEY</span><h3 class="title-premium">${escapeHtml(item.software_name)}</h3>
+        <span class="used-key-badge">USED KEY</span>${inStock?'':'<span class="used-key-badge">OUT OF STOCK</span>'}<h3 class="title-premium">${escapeHtml(item.software_name)}</h3>
         <p class="desc-premium">${expired?'EXPIRED':`Remaining: ${Number(item.remaining_days)} days`}</p>
         <div class="product-foot"><div><strong>₹${money(item.price)}</strong><small class="used-key-original">₹${money(item.regular_price)} / 30 days</small></div>
-          <button class="buy" type="button" data-buy-used-key="${escapeHtml(item.id)}" ${expired?'disabled':''}>${expired?'EXPIRED':'Buy Now'}</button></div>
+          <button class="buy" type="button" data-buy-used-key="${escapeHtml(item.id)}" ${canBuy?'':'disabled'}>${!inStock?'Out of stock':expired?'EXPIRED':'Buy Now'}</button></div>
         <p class="used-key-note">Ye used key hai, sirf bachi hui validity milegi.</p>
       </article>`;
       }).join(''):'<div class="empty">No used keys are available right now. Please check back soon.</div>';
@@ -4290,7 +4319,7 @@
         ...product,
         selling_price:product.selling_price??product.price,
         category:normalizeCategory(product.category),
-        in_stock:product.stock_status?product.stock_status==='available':product.in_stock !== false
+        in_stock:product.in_stock!==false&&(product.stock_status==null||product.stock_status==='available')
       }));
       state.productsLoading=false;
       state.productsError=null;
