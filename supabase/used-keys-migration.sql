@@ -489,7 +489,8 @@ begin
 end;
 $$;
 
-create or replace function public.admin_list_order_requests(
+drop function if exists public.admin_list_order_requests(text, text, integer, integer);
+create function public.admin_list_order_requests(
   p_status text default 'all', p_search text default '', p_page integer default 1, p_page_size integer default 20
 )
 returns table(

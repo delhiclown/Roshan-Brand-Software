@@ -8,8 +8,10 @@ with local_clock as (
 )
 update private.used_key_inventory as k
 set expiry_at =
-  ((local_clock.now_ist::date + greatest(coalesce(k.validity_days, 1), 1)
-      - case when local_clock.now_ist::time < time '11:00' then 1 else 0 end)
+  ((case when local_clock.now_ist::time < time '11:00'
+      then local_clock.now_ist::date
+      else local_clock.now_ist::date + 1
+    end + greatest(k.expires_on - local_clock.now_ist::date, 0) - 1)
       + time '11:00') at time zone 'Asia/Kolkata'
 from local_clock
 where k.expiry_at is null;

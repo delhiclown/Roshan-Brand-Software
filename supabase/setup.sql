@@ -744,6 +744,9 @@ begin
   if v_order.payment_status <> 'paid' then
     return jsonb_build_object('ok', false, 'message', 'Only paid orders can be refunded to a wallet.');
   end if;
+  if v_order.user_id is null then
+    return jsonb_build_object('ok', false, 'message', 'Guest orders cannot be refunded to a wallet. Process the refund outside the wallet.');
+  end if;
   insert into public.wallets (user_id) values (v_order.user_id) on conflict (user_id) do nothing;
   select balance into v_balance from public.wallets where user_id = v_order.user_id for update;
   update public.wallets set balance = balance + v_order.price, updated_at = now()

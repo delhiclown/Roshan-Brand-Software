@@ -391,14 +391,14 @@ set search_path = ''
 as $$
 begin
   if not public.is_store_admin() then raise exception 'Admin access required'; end if;
-  return query select o.id, o.user_id, coalesce(u.email::text, ''), o.product_name,
+  return query select o.id, o.user_id, coalesce(u.email::text, o.guest_email, ''), o.product_name,
       coalesce(o.product_type, p.category, ''), o.price, o.status, o.created_at,
       o.delivery_text, o.delivery_link, o.delivery_note, o.delivered_at,
       o.payment_method, o.payment_status, o.utr, o.coupon_code, o.discount_percent,
       o.original_price, o.reject_reason, o.quantity, o.offer_id, o.offer_claim_id,
       o.is_offer_free, o.expires_at, o.payment_expires_at, o.utr_submitted_at, o.late_payment
     from public.orders o
-    join auth.users u on u.id = o.user_id
+    left join auth.users u on u.id = o.user_id
     left join public.products p on p.id = o.product_id
     where o.status not in ('unpaid', 'pending_payment', 'new')
     order by case when o.status in ('new', 'pending_verification') then 0 else 1 end,
@@ -424,13 +424,15 @@ begin
 end;
 $$;
 
-create or replace function public.admin_list_order_requests(
+drop function if exists public.admin_list_order_requests(text, text, integer, integer);
+create function public.admin_list_order_requests(
   p_status text default 'all', p_search text default '', p_page integer default 1, p_page_size integer default 20
 )
 returns table(
   id bigint, user_id uuid, customer text, product_id bigint, product_name text,
-  product_type text, amount numeric, utr_number text, payment_submitted_at timestamptz,
-  created_at timestamptz, status text, total_count bigint
+  product_type text, used_key_id bigint, used_key_remaining_days integer, amount numeric, utr_number text,
+  payment_submitted_at timestamptz, created_at timestamptz, status text, total_count bigint,
+  software_plan_label text
 )
 language plpgsql
 security definer
@@ -447,22 +449,34 @@ begin
   end if;
   return query
     with filtered as (
-      select o.id, o.user_id, coalesce(u.email::text, 'Customer') customer,
-        o.product_id, o.product_name, coalesce(o.product_type, p.category, '') product_type,
-        o.amount, o.utr_number, o.payment_submitted_at, o.created_at, o.status
-      from public.orders o
-      join auth.users u on u.id = o.user_id
-      left join public.products p on p.id = o.product_id
-      where o.status in ('new', 'completed', 'rejected')
-        and o.utr_number is not null
-        and coalesce(o.product_type, p.category, '') in ('software', 'vps')
+      select o.id, o.user_id, coalesce(u.email::text, o.guest_email, 'Customer') customer,
+        o.product_id,
+        case when o.used_key_id is not null then coalesce(p.name, o.product_name) else o.product_name end product_name,
+        case when o.used_key_id is not null then 'used_key' else coalesce(o.product_type, p.category, '') end product_type,
+        o.used_key_id,
+        o.used_key_remaining_days,
+        o.amount, o.utr_number, o.payment_submitted_at, o.created_at, o.status,
+        o.software_plan_label
+      from public.orders as o
+      left join auth.users as u on u.id = o.user_id
+      left join public.products as p on p.id = o.product_id
+      where (
+        (o.status in ('new', 'completed', 'rejected') and o.utr_number is not null
+          and coalesce(o.product_type, p.category, '') in ('software', 'vps'))
+        or (o.status in ('new', 'completed', 'rejected') and o.utr_number is not null
+          and coalesce(o.product_type, p.category, '') = 'rental')
+        or (o.status in ('new', 'completed', 'rejected') and o.offer_claim_id is not null)
+      )
         and (p_status = 'all' or o.status = p_status)
         and (v_search = '' or o.id::text ilike '%' || v_search || '%'
-          or coalesce(u.email::text, '') ilike '%' || v_search || '%'
-          or coalesce(o.utr_number, '') ilike '%' || v_search || '%')
+          or coalesce(u.email::text, o.guest_email, '') ilike '%' || v_search || '%'
+          or coalesce(o.utr_number, '') ilike '%' || v_search || '%'
+          or coalesce(o.used_key_id::text, '') ilike '%' || v_search || '%')
     )
-    select f.*, count(*) over()
-    from filtered f
+    select f.id, f.user_id, f.customer, f.product_id, f.product_name, f.product_type,
+      f.used_key_id, f.used_key_remaining_days, f.amount, f.utr_number,
+      f.payment_submitted_at, f.created_at, f.status, count(*) over(), f.software_plan_label
+    from filtered as f
     order by case f.status when 'new' then 0 when 'completed' then 1 else 2 end,
       f.payment_submitted_at desc nulls last, f.created_at desc
     offset (p_page - 1) * p_page_size limit p_page_size;
