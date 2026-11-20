@@ -1579,16 +1579,18 @@
       $('guest-checkout-form').addEventListener('submit',submitGuestCheckout);
       const guestWhatsApp=$('guest-whatsapp');
       const guestWhatsAppSubmit=$('guest-checkout-submit');
+      guestWhatsAppSubmit.dataset.submitting='false';
       const normalizeGuestWhatsApp=value=>{
         const digits=String(value||'').replace(/\D/g,'');
         return digits.length>10?digits.slice(-10):digits;
       };
       const validateGuestWhatsApp=()=>{
         const whatsapp=normalizeGuestWhatsApp(guestWhatsApp.value);
+        const isSubmitting=guestWhatsAppSubmit.dataset.submitting==='true';
         guestWhatsApp.value=whatsapp;
         if(!whatsapp){
           $('guest-checkout-error').textContent='';
-          guestWhatsAppSubmit.disabled=false;
+          guestWhatsAppSubmit.disabled=isSubmitting;
           return true;
         }
         if(!/^[6-9][0-9]{9}$/.test(whatsapp)){
@@ -1597,7 +1599,7 @@
           return false;
         }
         $('guest-checkout-error').textContent='';
-        guestWhatsAppSubmit.disabled=false;
+        guestWhatsAppSubmit.disabled=isSubmitting;
         return true;
       };
       guestWhatsApp.addEventListener('input',validateGuestWhatsApp);
@@ -1615,9 +1617,10 @@
       const checkout=state.guestCheckout;
       if(!checkout)return;
       const button=$('guest-checkout-submit');
+      if(button.dataset.submitting==='true')return;
       const email=$('guest-email').value.trim();
       const whatsappInput=$('guest-whatsapp');
-      const digits=String(whatsappInput.value||'').replace(/\D/g,'').slice(0,10);
+      const digits=String(whatsappInput.value||'').replace(/\D/g,'').slice(-10);
       whatsappInput.value=digits;
       if(digits&&!/^[6-9][0-9]{9}$/.test(digits)){
         $('guest-checkout-error').textContent='Enter a valid 10-digit Indian mobile number.';
@@ -1632,6 +1635,7 @@
         return;
       }
       button.disabled=true;
+      button.dataset.submitting='true';
       $('guest-checkout-error').textContent='';
       try{
         const deviceId=getGuestDeviceId();
@@ -1665,7 +1669,11 @@
         if(errorNode)errorNode.textContent=error.message||'Could not start guest checkout. Please try again.';
         else showNotice(error.message||'Could not start guest checkout. Please try again.');
       }finally{
-        if(button.isConnected)button.disabled=false;
+        if(button.isConnected){
+          button.dataset.submitting='false';
+          const currentPhone=String(whatsappInput.value||'').replace(/\D/g,'').slice(-10);
+          button.disabled=Boolean(currentPhone&&!/^[6-9][0-9]{9}$/.test(currentPhone));
+        }
       }
     }
 
@@ -3026,6 +3034,51 @@
       document.body.style.overflow=$('auth-page').classList.contains('hidden')?'':'hidden';
     }
 
+    function authSubmitLabel(mode){
+      return mode==='reset'?'Update password':mode==='forgot'?'Send reset link':mode==='signup'?'Create account':'Sign in';
+    }
+
+    function setAuthBusy(busy,mode=state.authMode){
+      const submit=$('auth-submit');
+      submit.disabled=busy;
+      submit.textContent=busy
+        ?({signin:'Signing in…',signup:'Creating account…',forgot:'Sending reset link…',reset:'Updating password…'}[mode]||'Please wait…')
+        :authSubmitLabel(state.authMode);
+      $('auth-google').disabled=busy;
+      $('continue-as-guest').disabled=busy;
+      $('auth-forgot').disabled=busy;
+      $('auth-remember').disabled=busy;
+      $('auth-switch-link')?.toggleAttribute('disabled',busy);
+    }
+
+    function authErrorMessage(error,mode){
+      const code=String(error?.code||'').toLowerCase();
+      const message=String(error?.message||'');
+      const normalized=message.toLowerCase();
+      if(code==='email_not_confirmed'||normalized.includes('email not confirmed')){
+        return 'Please confirm your email before signing in. Check your inbox and spam folder for the confirmation link.';
+      }
+      if(code==='invalid_credentials'||code==='user_not_found'||/invalid login credentials|invalid credentials|user not found/.test(normalized)){
+        return 'Email or password is incorrect. If you are new, choose “Create one free” to register.';
+      }
+      if(/already registered|user already exists/.test(normalized)){
+        return 'An account already exists for this email. Sign in or use “Forgot password?”.';
+      }
+      if(/rate.?limit|too many requests|over_email_send_rate_limit|over_request_rate_limit/.test(`${code} ${normalized}`)){
+        return 'Too many attempts. Wait a few minutes, then try again.';
+      }
+      if(/failed to fetch|network|fetch failed|timeout|load failed/.test(`${code} ${normalized}`)){
+        return 'Network error. Check your connection and try again.';
+      }
+      if(code==='signup_disabled'||/signups? (are )?disabled|signups not allowed/.test(normalized)){
+        return 'New email sign-ups are currently disabled. Please contact support.';
+      }
+      if(code==='email_provider_disabled'||/email.*disabled|provider.*disabled|email logins are disabled/.test(normalized)){
+        return 'Email/password sign-in is currently unavailable. Please contact support or use Google sign-in.';
+      }
+      return message||`${mode==='forgot'?'Could not send the reset link':'Authentication failed'}. Please try again.`;
+    }
+
     function setAuthMode(mode){
       state.authMode=mode;
       const signup=mode==='signup';
@@ -3050,7 +3103,7 @@
       $('auth-remember').checked=state.rememberSession;
       $('login-password').autocomplete=signup||reset?'new-password':'current-password';
       $('login-password').placeholder=reset?'Enter a new password':signup?'At least 6 characters':'Enter your password';
-      $('auth-submit').textContent=reset?'Update password':forgot?'Send reset link':signup?'Create account':'Sign in';
+      $('auth-submit').textContent=authSubmitLabel(mode);
       $('auth-switch').innerHTML=signup?'Already have an account? <button class="auth-link" id="auth-switch-link" type="button">Sign in</button>':forgot?'Remembered your password? <button class="auth-link" id="auth-switch-link" type="button">Sign in</button>':'Don&#39;t have an account? <button class="auth-link" id="auth-switch-link" type="button">Create one free</button>';
       $('auth-message').textContent='';
       $('auth-message').classList.remove('success');
@@ -3145,10 +3198,20 @@
         $('login-password').focus();
         return;
       }
-      const submit=$('auth-submit');
-      const google=$('auth-google');
-      submit.disabled=true;
-      google.disabled=true;
+      if(mode!=='forgot'&&password.length<6){
+        setAuthMessage('Use a password with at least 6 characters.');
+        $('login-password').focus();
+        return;
+      }
+      if(mode==='signup'){
+        const fullName=$('login-name').value.trim();
+        if(!fullName||fullName.length>100){
+          setAuthMessage('Enter your name (up to 100 characters).');
+          $('login-name').focus();
+          return;
+        }
+      }
+      setAuthBusy(true,mode);
       setAuthMessage('');
       try{
         if(mode==='forgot'){
@@ -3158,14 +3221,18 @@
           return;
         }
         if(mode==='reset'){
-          if(password.length<6){setAuthMessage('Use a password with at least 6 characters.');return}
           const {error}=await state.client.auth.updateUser({password});
           if(error)throw error;
           history.replaceState(null,'',window.location.pathname+window.location.search);
-          setAuthMessage('Your password has been updated.',true);
           const {data,error:sessionError}=await state.client.auth.getSession();
           if(sessionError)throw sessionError;
-          if(data.session)await updateSession(data.session);
+          if(!data.session){
+            setAuthMode('signin');
+            $('login-email').value=email;
+            setAuthMessage('Your password has been updated. Sign in with your new password.',true);
+            return;
+          }
+          await updateSession(data.session);
           closeAuthPage(false);
           if(data.session&&sessionStorage.getItem('wallet_pending_track_order')){
             sessionStorage.removeItem('wallet_pending_track_order');
@@ -3174,9 +3241,7 @@
           return;
         }
         if(mode==='signup'){
-          if(password.length<6){setAuthMessage('Use a password with at least 6 characters.');return}
           const fullName=$('login-name').value.trim();
-          if(!fullName||fullName.length>100){setAuthMessage('Enter your name (up to 100 characters).');return}
           const {data,error}=await state.client.auth.signUp({
             email,password,
             options:{
@@ -3198,20 +3263,18 @@
         }
         setRememberSession($('auth-remember').checked);
         const {data,error}=await state.client.auth.signInWithPassword({email,password});
-        if(error){
-          const message=/invalid login credentials/i.test(error.message)?'Email or password is incorrect.':error.message;
-          setAuthMessage(message);
+        if(error)throw error;
+        if(!data.session){
+          setAuthMessage('Email confirmation is required before sign-in. Check your inbox for the confirmation link.');
           return;
         }
-        if(data.session)await updateSession(data.session);
+        await updateSession(data.session);
         closeAuthPage(false);
       }catch(error){
         console.error('Authentication action failed:',error);
-        const message=/already registered/i.test(error.message||'')?'An account already exists for this email. Sign in instead.':error.message||'Authentication failed. Please try again.';
-        setAuthMessage(message);
+        setAuthMessage(authErrorMessage(error,mode));
       }finally{
-        submit.disabled=false;
-        google.disabled=false;
+        setAuthBusy(false);
       }
     }
 

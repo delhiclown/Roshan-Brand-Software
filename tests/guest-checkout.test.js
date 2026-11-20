@@ -15,6 +15,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const apiSource = fs.readFileSync(path.join(__dirname, '..', 'api', 'guest-checkout.js'), 'utf8');
 const migration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'guest-checkout-migration.sql'), 'utf8');
+const publicIndex = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'public', 'service-worker.js'), 'utf8');
+const envExample = fs.readFileSync(path.join(__dirname, '..', '.env.example'), 'utf8');
+const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
 
 function responseRecorder() {
   return {
@@ -70,11 +74,36 @@ test('guest device, phone, and IP values require safe formats', () => {
   else process.env.VERCEL = previousVercel;
 });
 
-test('guest identity hashes are secret-keyed and do not expose the input', () => {
+test('guest WhatsApp input is digit-only, capped, and normalizes pasted country prefixes', () => {
+  assert.equal((publicIndex.match(/id="guest-whatsapp"/g) || []).length, 1);
+  assert.match(publicIndex, /id="guest-whatsapp"[^>]*inputmode="numeric"[^>]*maxlength="10"/);
+  assert.match(publicIndex, /const normalizeGuestWhatsApp=value=>\{\s*const digits=String\(value\|\|''\)\.replace\(\/\\D\/g,''\);\s*return digits\.length>10\?digits\.slice\(-10\):digits;/);
+  assert.match(publicIndex, /guestWhatsApp\.addEventListener\('paste',event=>\{\s*event\.preventDefault\(\);[\s\S]*normalizeGuestWhatsApp\(pasted\)/);
+  assert.match(publicIndex, /const digits=String\(whatsappInput\.value\|\|''\)\.replace\(\/\\D\/g,''\)\.slice\(-10\)/);
+});
+
+test('service worker does not cache page navigations and advances its cache version', () => {
+  assert.match(serviceWorker, /const CACHE_NAME = 'roshan-static-v6'/);
+  assert.match(serviceWorker, /if \(request\.mode === 'navigate'\) \{\s*if \(url\.pathname === '\/' \|\| url\.pathname === '\/index\.html'\) return;/);
+});
+
+test('guest hash secret is documented without exposing a real value', () => {
+  assert.match(envExample, /^GUEST_HASH_SECRET=replace-with-at-least-32-random-characters$/m);
+  assert.match(readme, /`GUEST_HASH_SECRET`[\s\S]*at least 32 characters[\s\S]*server logs the configuration reason[\s\S]*Checkout is temporarily unavailable/);
+  assert.doesNotMatch(readme, /Guest checkout privacy settings are not configured/);
+});
+
+test('guest identity hashes reject a missing or too-short secret without exposing it', () => {
   const previousSecret = process.env.GUEST_HASH_SECRET;
   try {
     delete process.env.GUEST_HASH_SECRET;
-    assert.throws(() => hashGuestValue('customer@example.com'), /privacy settings are not configured/i);
+    assert.throws(() => hashGuestValue('customer@example.com'), error => {
+      assert.equal(error.code, 'GUEST_HASH_SECRET_NOT_CONFIGURED');
+      assert.match(error.message, /GUEST_HASH_SECRET is missing or shorter than 32 characters/);
+      return true;
+    });
+    process.env.GUEST_HASH_SECRET = 'short';
+    assert.throws(() => hashGuestValue('customer@example.com'), /GUEST_HASH_SECRET is missing or shorter than 32 characters/);
     process.env.GUEST_HASH_SECRET = 'test-secret-with-more-than-32-characters';
     const hash = hashGuestValue('customer@example.com');
     assert.match(hash, /^[0-9a-f]{64}$/);
@@ -82,6 +111,69 @@ test('guest identity hashes are secret-keyed and do not expose the input', () =>
   } finally {
     if (previousSecret === undefined) delete process.env.GUEST_HASH_SECRET;
     else process.env.GUEST_HASH_SECRET = previousSecret;
+  }
+});
+
+test('guest checkout hides missing-secret details from customers and logs the cause', async () => {
+  const previousSecret = process.env.GUEST_HASH_SECRET;
+  const originalError = console.error;
+  const logged = [];
+  delete process.env.GUEST_HASH_SECRET;
+  console.error = (...args) => logged.push(args);
+  try {
+    const res = responseRecorder();
+    await guestCheckout({
+      method: 'POST',
+      headers: {},
+      socket: { remoteAddress: '127.0.0.2' },
+      body: { action: 'submit_utr', order_id: 1, access_token: 'A'.repeat(43), utr: '123456789012' }
+    }, res);
+    assert.equal(res.statusCode, 503);
+    assert.equal(res.body.error, 'Checkout is temporarily unavailable. Please contact support.');
+    assert.match(String(logged[0]?.[1]?.message), /GUEST_HASH_SECRET is missing or shorter than 32 characters/);
+  } finally {
+    console.error = originalError;
+    if (previousSecret === undefined) delete process.env.GUEST_HASH_SECRET;
+    else process.env.GUEST_HASH_SECRET = previousSecret;
+  }
+});
+
+test('guest checkout shows a support message when its database function is missing', async () => {
+  const env = {
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    GUEST_HASH_SECRET: process.env.GUEST_HASH_SECRET
+  };
+  const originalFetch = global.fetch;
+  const originalError = console.error;
+  const logged = [];
+  process.env.SUPABASE_URL = 'https://unit-test.invalid';
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'unit-test-service-key';
+  process.env.GUEST_HASH_SECRET = 'test-secret-with-more-than-32-characters';
+  global.fetch = async () => ({
+    ok: false,
+    status: 404,
+    json: async () => ({ code: 'PGRST202', message: 'Could not find the function public.guest_submit_order_utr.' })
+  });
+  console.error = (...args) => logged.push(args);
+  try {
+    const res = responseRecorder();
+    await guestCheckout({
+      method: 'POST',
+      headers: {},
+      socket: { remoteAddress: '127.0.0.3' },
+      body: { action: 'submit_utr', order_id: 1, access_token: 'A'.repeat(43), utr: '123456789012' }
+    }, res);
+    assert.equal(res.statusCode, 503);
+    assert.equal(res.body.error, 'Checkout is temporarily unavailable. Please contact support.');
+    assert.match(String(logged[0]?.[1]?.message), /Could not find the function/);
+  } finally {
+    global.fetch = originalFetch;
+    console.error = originalError;
+    for (const [key, value] of Object.entries(env)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
   }
 });
 
