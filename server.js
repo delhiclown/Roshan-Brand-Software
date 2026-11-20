@@ -2,6 +2,7 @@ require('dotenv').config({ path: '.env.local' });
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const { validateWhatsApp } = require('./lib/guest-checkout-utils');
 
 const app = express();
 const publicDirectory = path.join(__dirname, 'public');
@@ -16,7 +17,17 @@ app.get('/api/config', (req, res) => {
   });
 });
 
-app.post('/api/guest-checkout', (req, res) => require('./api/guest-checkout')(req, res));
+app.post('/api/guest-checkout', (req, res) => {
+  const action = String(req.body?.action || '');
+  if (action === 'create_order' || action === 'claim_demo') {
+    try {
+      req.body.whatsapp = validateWhatsApp(req.body.whatsapp);
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+  return require('./api/guest-checkout')(req, res);
+});
 app.post('/api/guest-order-email', (req, res) => require('./api/guest-order-email')(req, res));
 app.post('/api/notify-order', (req, res) => require('./api/notify-order')(req, res));
 app.all('/api/channel-stats', (req, res) => require('./api/channel-stats')(req, res));

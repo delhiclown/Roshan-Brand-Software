@@ -51,8 +51,12 @@ test('guest device, phone, and IP values require safe formats', () => {
   assert.equal(validateDeviceId('4f2b77ab-27c9-4c8f-a01f-99792e3e8b26'), '4f2b77ab-27c9-4c8f-a01f-99792e3e8b26');
   assert.throws(() => validateDeviceId('not-a-device'), /verify this device/i);
   assert.equal(validateWhatsApp(''), '');
-  assert.equal(validateWhatsApp('+91 98765 43210'), '+91 98765 43210');
-  assert.throws(() => validateWhatsApp('abc'), /valid whatsapp/i);
+  assert.equal(validateWhatsApp('+91 98765 43210'), '9876543210');
+  assert.equal(validateWhatsApp('09876543210'), '9876543210');
+  assert.equal(validateWhatsApp('9876543210'), '9876543210');
+  assert.throws(() => validateWhatsApp('987654321'), /10-digit Indian mobile/i);
+  assert.throws(() => validateWhatsApp('5876543210'), /10-digit Indian mobile/i);
+  assert.throws(() => validateWhatsApp('abc9876543210'), /10-digit Indian mobile/i);
 
   const previousVercel = process.env.VERCEL;
   delete process.env.VERCEL;

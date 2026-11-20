@@ -1545,8 +1545,43 @@
       $('modal-title').textContent=type==='demo'?'Claim a free demo key':'Guest checkout';
       $('wallet-dialog').classList.add('checkout-dialog');
       openModal();
-      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(product.name||product.software_name)}</strong>${product.software_plan_label?`<p class="checkout-note">Plan: ${escapeHtml(product.software_plan_label)} · ₹${money(product.software_plan_price)}</p>`:''}<p class="checkout-note">${type==='demo'?'One demo claim per email, device, and IP address per day.':'Pay by UPI and submit the 12-digit UTR for admin verification.'}</p></div><form id="guest-checkout-form"><div class="modal-field"><label for="guest-email">Email address (required)</label><input id="guest-email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com"></div><div class="modal-field"><label for="guest-whatsapp">WhatsApp number (optional)</label><input id="guest-whatsapp" type="tel" autocomplete="tel" maxlength="24" placeholder="+91 98765 43210"></div><div class="modal-error" id="guest-checkout-error" role="status" aria-live="polite"></div><button class="modal-primary" id="guest-checkout-submit" type="submit">${type==='demo'?'Get demo key':'Continue to UPI payment'}</button></form>`;
+      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(product.name||product.software_name)}</strong>${product.software_plan_label?`<p class="checkout-note">Plan: ${escapeHtml(product.software_plan_label)} · ₹${money(product.software_plan_price)}</p>`:''}<p class="checkout-note">${type==='demo'?'One demo claim per email, device, and IP address per day.':'Pay by UPI and submit the 12-digit UTR for admin verification.'}</p></div><form id="guest-checkout-form"><div class="modal-field"><label for="guest-email">Email address (required)</label><input id="guest-email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com"></div><div class="modal-field"><label for="guest-whatsapp">WhatsApp number (optional)</label><input id="guest-whatsapp" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[6-9][0-9]{9}" placeholder="9876543210"></div><div class="modal-error" id="guest-checkout-error" role="status" aria-live="polite"></div><button class="modal-primary" id="guest-checkout-submit" type="submit">${type==='demo'?'Get demo key':'Continue to UPI payment'}</button></form>`;
       $('guest-checkout-form').addEventListener('submit',submitGuestCheckout);
+      const guestWhatsApp=$('guest-whatsapp');
+      const guestWhatsAppSubmit=$('guest-checkout-submit');
+      const normalizeGuestWhatsApp=value=>{
+        let digits=String(value||'').replace(/\D/g,'');
+        if(digits.length>10){
+          if(digits.startsWith('91')&&digits.length>=12)digits=digits.slice(2);
+          else if(digits.startsWith('0')&&digits.length>=11)digits=digits.slice(1);
+          else digits=digits.slice(-10);
+        }
+        return digits.slice(0,10);
+      };
+      const validateGuestWhatsApp=()=>{
+        const whatsapp=normalizeGuestWhatsApp(guestWhatsApp.value);
+        guestWhatsApp.value=whatsapp;
+        if(!whatsapp){
+          $('guest-checkout-error').textContent='';
+          guestWhatsAppSubmit.disabled=false;
+          return true;
+        }
+        if(!/^[6-9][0-9]{9}$/.test(whatsapp)){
+          $('guest-checkout-error').textContent='Enter a valid 10-digit Indian mobile number.';
+          guestWhatsAppSubmit.disabled=true;
+          return false;
+        }
+        $('guest-checkout-error').textContent='';
+        guestWhatsAppSubmit.disabled=false;
+        return true;
+      };
+      guestWhatsApp.addEventListener('input',validateGuestWhatsApp);
+      guestWhatsApp.addEventListener('paste',event=>{
+        event.preventDefault();
+        const pasted=event.clipboardData?.getData('text')||'';
+        guestWhatsApp.value=normalizeGuestWhatsApp(pasted);
+        validateGuestWhatsApp();
+      });
       $('guest-email').focus();
     }
 
@@ -1556,7 +1591,16 @@
       if(!checkout)return;
       const button=$('guest-checkout-submit');
       const email=$('guest-email').value.trim();
-      const whatsapp=$('guest-whatsapp').value.trim();
+      const whatsappInput=$('guest-whatsapp');
+      const digits=String(whatsappInput.value||'').replace(/\D/g,'').slice(0,10);
+      whatsappInput.value=digits;
+      if(digits&&!/^[6-9][0-9]{9}$/.test(digits)){
+        $('guest-checkout-error').textContent='Enter a valid 10-digit Indian mobile number.';
+        button.disabled=true;
+        whatsappInput.focus();
+        return;
+      }
+      const whatsapp=digits;
       if(!$('guest-email').checkValidity()){
         $('guest-checkout-error').textContent='Enter a valid email address.';
         $('guest-email').focus();
