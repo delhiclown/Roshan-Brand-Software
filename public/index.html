@@ -1414,7 +1414,7 @@
     function usedKeysCountLabel(){
       if(state.usedKeysLoading)return 'Loading keys…';
       if(state.usedKeysError)return 'Keys unavailable';
-      const availableCount=state.usedKeys.filter(item=>Number(item.remaining_days)>0).length;
+      const availableCount=state.usedKeys.filter(item=>item.in_stock!==false&&Number(item.remaining_days)>0).length;
       return `${availableCount} available ${availableCount===1?'key':'keys'}`;
     }
 
@@ -1474,9 +1474,11 @@
       if(state.demoKeysError){grid.innerHTML=`<div class="empty">${escapeHtml(state.demoKeysError)}</div>`;return}
       grid.innerHTML=state.demoKeys.length?state.demoKeys.map(item=>{
         const image=safeHttpUrl(item.image_url)||USED_KEY_FALLBACK_IMAGE;
+        const available=item.in_stock!==false;
+        const productAvailable=item.product_in_stock!==false;
         const validity=Number(item.validity_days)>0?`<p class="desc-premium">${Number(item.validity_days)} days demo</p>`:'<p class="desc-premium">Demo key</p>';
-        const paidProductLink=Number(item.price)>0?`<button class="back" type="button" data-buy-demo-product="${escapeHtml(item.product_id)}">Paid key kharido</button>`:'';
-        return `<article class="product" data-card-tone="software"><div class="product-image-wrap"><img class="product-image" src="${escapeHtml(image)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div><span class="used-key-badge">DEMO KEY</span><h3 class="title-premium">${escapeHtml(item.software_name)}</h3>${validity}<div class="product-foot"><div><strong>Free</strong></div><button class="buy" type="button" data-claim-demo="${escapeHtml(item.product_id)}">Free Demo Key</button></div>${paidProductLink}</article>`;
+        const paidProductLink=Number(item.price)>0?`<button class="back" type="button" data-buy-demo-product="${escapeHtml(item.product_id)}" ${productAvailable?'':'disabled'}>${productAvailable?'Paid key kharido':'Out of stock'}</button>`:'';
+        return `<article class="product" data-card-tone="software"><div class="product-image-wrap"><img class="product-image" src="${escapeHtml(image)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div><span class="used-key-badge">DEMO KEY</span>${available?'':'<span class="used-key-badge">OUT OF STOCK</span>'}<h3 class="title-premium">${escapeHtml(item.software_name)}</h3>${validity}<div class="product-foot"><div><strong>Free</strong></div><button class="buy" type="button" data-claim-demo="${escapeHtml(item.product_id)}" ${available?'':'disabled'}>${available?'Free Demo Key':'Out of stock'}</button></div>${paidProductLink}</article>`;
       }).join(''):'<div class="empty">No demo keys are available right now.</div>';
       revealPage(grid);
     }
@@ -1497,8 +1499,27 @@
     }
 
     function continueAsGuest(){
+      const resumeProduct=state.authIntent==='product';
+      const pendingProductId=resumeProduct?sessionStorage.getItem('wallet_pending_product'):'';
+      const pendingSoftwarePlan=resumeProduct?sessionStorage.getItem('wallet_pending_software_plan'):'';
       state.guestMode=true;
       closeAuthPage();
+      if(pendingProductId){
+        const product=state.products.find(item=>String(item.id)===pendingProductId);
+        if(!product||!product.in_stock){
+          showGuestCheckoutError(new Error('This product is no longer available.'));
+          return;
+        }
+        if(normalizeCategory(product.category)==='software'
+          &&!availableSoftwarePlans(product).some(plan=>plan.code===pendingSoftwarePlan)){
+          showGuestCheckoutError(new Error('The selected plan is no longer available. Please choose a plan again.'));
+          return;
+        }
+        buyProduct(pendingProductId,pendingSoftwarePlan||null).catch(error=>{
+          showGuestCheckoutError(error);
+        });
+        return;
+      }
       showNotice('Guest checkout is ready. Choose any product to continue.');
       $('categories-view').scrollIntoView({behavior:'smooth',block:'start'});
     }
@@ -1535,18 +1556,59 @@
       return result;
     }
 
+    function showGuestCheckoutError(error){
+      console.error('Could not start guest checkout:',error);
+      state.guestCheckout=null;
+      $('modal-title').textContent='Guest checkout';
+      $('wallet-dialog').classList.add('checkout-dialog');
+      $('modal-body').innerHTML=`<p class="modal-error" role="alert">${escapeHtml(error.message||'Could not start guest checkout. Please try again.')}</p>`;
+      openModal();
+    }
+
     function openGuestCheckout(type,product){
       if(type!=='demo'&&(!window.QRCode||state.settings.enable_upi_qr!==true
         ||!String(state.settings.upi_id||'').trim()||!String(state.settings.upi_payee_name||'').trim())){
-        showNotice('Guest UPI QR checkout is currently unavailable. Please contact the store.');
+        showGuestCheckoutError(new Error('Guest UPI QR checkout is currently unavailable. Please contact the store.'));
         return;
       }
       state.guestCheckout={type,product};
       $('modal-title').textContent=type==='demo'?'Claim a free demo key':'Guest checkout';
       $('wallet-dialog').classList.add('checkout-dialog');
       openModal();
-      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(product.name||product.software_name)}</strong>${product.software_plan_label?`<p class="checkout-note">Plan: ${escapeHtml(product.software_plan_label)} · ₹${money(product.software_plan_price)}</p>`:''}<p class="checkout-note">${type==='demo'?'One demo claim per email, device, and IP address per day.':'Pay by UPI and submit the 12-digit UTR for admin verification.'}</p></div><form id="guest-checkout-form"><div class="modal-field"><label for="guest-email">Email address (required)</label><input id="guest-email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com"></div><div class="modal-field"><label for="guest-whatsapp">WhatsApp number (optional)</label><input id="guest-whatsapp" type="tel" autocomplete="tel" maxlength="24" placeholder="+91 98765 43210"></div><div class="modal-error" id="guest-checkout-error" role="status" aria-live="polite"></div><button class="modal-primary" id="guest-checkout-submit" type="submit">${type==='demo'?'Get demo key':'Continue to UPI payment'}</button></form>`;
+      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(product.name||product.software_name)}</strong>${product.software_plan_label?`<p class="checkout-note">Plan: ${escapeHtml(product.software_plan_label)} · ₹${money(product.software_plan_price)}</p>`:''}<p class="checkout-note">${type==='demo'?'One demo claim per email, device, and IP address per day.':'Pay by UPI and submit the 12-digit UTR for admin verification.'}</p></div><form id="guest-checkout-form"><div class="modal-field"><label for="guest-email">Email address (required)</label><input id="guest-email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com"></div><div class="modal-field"><label for="guest-whatsapp">WhatsApp number (optional)</label><input id="guest-whatsapp" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[6-9][0-9]{9}" placeholder="9876543210"></div><div class="modal-error" id="guest-checkout-error" role="status" aria-live="polite"></div><button class="modal-primary" id="guest-checkout-submit" type="submit">${type==='demo'?'Get demo key':'Continue to UPI payment'}</button></form>`;
       $('guest-checkout-form').addEventListener('submit',submitGuestCheckout);
+      const guestWhatsApp=$('guest-whatsapp');
+      const guestWhatsAppSubmit=$('guest-checkout-submit');
+      guestWhatsAppSubmit.dataset.submitting='false';
+      const normalizeGuestWhatsApp=value=>{
+        const digits=String(value||'').replace(/\D/g,'');
+        return digits.length>10?digits.slice(-10):digits;
+      };
+      const validateGuestWhatsApp=()=>{
+        const whatsapp=normalizeGuestWhatsApp(guestWhatsApp.value);
+        const isSubmitting=guestWhatsAppSubmit.dataset.submitting==='true';
+        guestWhatsApp.value=whatsapp;
+        if(!whatsapp){
+          $('guest-checkout-error').textContent='';
+          guestWhatsAppSubmit.disabled=isSubmitting;
+          return true;
+        }
+        if(!/^[6-9][0-9]{9}$/.test(whatsapp)){
+          $('guest-checkout-error').textContent='Enter a valid 10-digit Indian mobile number.';
+          guestWhatsAppSubmit.disabled=true;
+          return false;
+        }
+        $('guest-checkout-error').textContent='';
+        guestWhatsAppSubmit.disabled=isSubmitting;
+        return true;
+      };
+      guestWhatsApp.addEventListener('input',validateGuestWhatsApp);
+      guestWhatsApp.addEventListener('paste',event=>{
+        event.preventDefault();
+        const pasted=event.clipboardData?.getData('text')||'';
+        guestWhatsApp.value=normalizeGuestWhatsApp(pasted);
+        validateGuestWhatsApp();
+      });
       $('guest-email').focus();
     }
 
@@ -1555,14 +1617,25 @@
       const checkout=state.guestCheckout;
       if(!checkout)return;
       const button=$('guest-checkout-submit');
+      if(button.dataset.submitting==='true')return;
       const email=$('guest-email').value.trim();
-      const whatsapp=$('guest-whatsapp').value.trim();
+      const whatsappInput=$('guest-whatsapp');
+      const digits=String(whatsappInput.value||'').replace(/\D/g,'').slice(-10);
+      whatsappInput.value=digits;
+      if(digits&&!/^[6-9][0-9]{9}$/.test(digits)){
+        $('guest-checkout-error').textContent='Enter a valid 10-digit Indian mobile number.';
+        button.disabled=true;
+        whatsappInput.focus();
+        return;
+      }
+      const whatsapp=digits;
       if(!$('guest-email').checkValidity()){
         $('guest-checkout-error').textContent='Enter a valid email address.';
         $('guest-email').focus();
         return;
       }
       button.disabled=true;
+      button.dataset.submitting='true';
       $('guest-checkout-error').textContent='';
       try{
         const deviceId=getGuestDeviceId();
@@ -1596,7 +1669,11 @@
         if(errorNode)errorNode.textContent=error.message||'Could not start guest checkout. Please try again.';
         else showNotice(error.message||'Could not start guest checkout. Please try again.');
       }finally{
-        if(button.isConnected)button.disabled=false;
+        if(button.isConnected){
+          button.dataset.submitting='false';
+          const currentPhone=String(whatsappInput.value||'').replace(/\D/g,'').slice(-10);
+          button.disabled=Boolean(currentPhone&&!/^[6-9][0-9]{9}$/.test(currentPhone));
+        }
       }
     }
 
@@ -1706,7 +1783,9 @@
       grid.innerHTML=state.rentalProducts.length?state.rentalProducts.map(item=>{
         const image=safeHttpUrl(item.image_url)||USED_KEY_FALLBACK_IMAGE;
         const available=Number(item.available_count)||0;
-        return `<article class="product" data-card-tone="software"><div class="product-image-wrap"><img class="product-image" src="${escapeHtml(image)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div><span class="used-key-badge">1 DAY RENTAL</span><h3 class="title-premium">${escapeHtml(item.software_name)}</h3><p class="desc-premium">${available?'Available':'Currently unavailable'}</p><div class="product-foot"><div><strong>₹${money(item.daily_rate)}</strong><small class="used-key-original">for 1 day</small></div><button class="buy" type="button" data-rent-product="${escapeHtml(item.product_id)}" ${available?'':'disabled'}>${available?'Rent for 1 day':'Unavailable'}</button></div></article>`;
+        const inStock=item.in_stock!==false;
+        const canRent=inStock&&available>0;
+        return `<article class="product" data-card-tone="software"><div class="product-image-wrap"><img class="product-image" src="${escapeHtml(image)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div><span class="used-key-badge">1 DAY RENTAL</span><h3 class="title-premium">${escapeHtml(item.software_name)}</h3><p class="desc-premium">${!inStock?'Out of stock':available?'Available':'Currently unavailable'}</p><div class="product-foot"><div><strong>₹${money(item.daily_rate)}</strong><small class="used-key-original">for 1 day</small></div><button class="buy" type="button" data-rent-product="${escapeHtml(item.product_id)}" ${canRent?'':'disabled'}>${!inStock?'Out of stock':canRent?'Rent for 1 day':'Unavailable'}</button></div></article>`;
       }).join(''):'<div class="empty">No rental software is available right now.</div>';
       revealPage(grid);
     }
@@ -2040,7 +2119,7 @@
       const query=state.vpsSearch.trim().toLowerCase();
       const matchesSearch=product=>!query||[product.name,product.ip_series,product.data_size,product.specs,product.ip_count,product.validity,product.plan_section,product.badge,product.details,product.description].some(value=>String(value||'').toLowerCase().includes(query));
       const searched=allProducts.filter(matchesSearch);
-      const available=product=>product.stock_status?product.stock_status==='available':product.in_stock!==false;
+      const available=product=>product.in_stock!==false&&(product.stock_status==null||product.stock_status==='available');
       const filters=isVps
         ?[['all','All',searched.length],['Linux','Linux',searched.filter(product=>normalizedOs(product)==='Linux').length],['Windows','Windows',searched.filter(product=>normalizedOs(product)==='Windows').length]]
         :[['all','All',searched.length],['available','Available',searched.filter(available).length],['out_of_stock','Out of stock',searched.filter(product=>!available(product)).length]];
@@ -2172,12 +2251,14 @@
       grid.innerHTML=usedKeys.length?usedKeys.map(item=>{
         const imageUrl=safeHttpUrl(item.image_url)||USED_KEY_FALLBACK_IMAGE;
         const expired=Number(item.remaining_days)<=0;
+        const inStock=item.in_stock!==false;
+        const canBuy=inStock&&!expired;
         return `<article class="product used-key-card" data-card-tone="software">
         <div class="product-image-wrap"><img class="product-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.software_name)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${USED_KEY_FALLBACK_IMAGE}'"></div>
-        <span class="used-key-badge">USED KEY</span><h3 class="title-premium">${escapeHtml(item.software_name)}</h3>
+        <span class="used-key-badge">USED KEY</span>${inStock?'':'<span class="used-key-badge">OUT OF STOCK</span>'}<h3 class="title-premium">${escapeHtml(item.software_name)}</h3>
         <p class="desc-premium">${expired?'EXPIRED':`Remaining: ${Number(item.remaining_days)} days`}</p>
         <div class="product-foot"><div><strong>₹${money(item.price)}</strong><small class="used-key-original">₹${money(item.regular_price)} / 30 days</small></div>
-          <button class="buy" type="button" data-buy-used-key="${escapeHtml(item.id)}" ${expired?'disabled':''}>${expired?'EXPIRED':'Buy Now'}</button></div>
+          <button class="buy" type="button" data-buy-used-key="${escapeHtml(item.id)}" ${canBuy?'':'disabled'}>${!inStock?'Out of stock':expired?'EXPIRED':'Buy Now'}</button></div>
         <p class="used-key-note">Ye used key hai, sirf bachi hui validity milegi.</p>
       </article>`;
       }).join(''):'<div class="empty">No used keys are available right now. Please check back soon.</div>';
@@ -2953,6 +3034,51 @@
       document.body.style.overflow=$('auth-page').classList.contains('hidden')?'':'hidden';
     }
 
+    function authSubmitLabel(mode){
+      return mode==='reset'?'Update password':mode==='forgot'?'Send reset link':mode==='signup'?'Create account':'Sign in';
+    }
+
+    function setAuthBusy(busy,mode=state.authMode){
+      const submit=$('auth-submit');
+      submit.disabled=busy;
+      submit.textContent=busy
+        ?({signin:'Signing in…',signup:'Creating account…',forgot:'Sending reset link…',reset:'Updating password…'}[mode]||'Please wait…')
+        :authSubmitLabel(state.authMode);
+      $('auth-google').disabled=busy;
+      $('continue-as-guest').disabled=busy;
+      $('auth-forgot').disabled=busy;
+      $('auth-remember').disabled=busy;
+      $('auth-switch-link')?.toggleAttribute('disabled',busy);
+    }
+
+    function authErrorMessage(error,mode){
+      const code=String(error?.code||'').toLowerCase();
+      const message=String(error?.message||'');
+      const normalized=message.toLowerCase();
+      if(code==='email_not_confirmed'||normalized.includes('email not confirmed')){
+        return 'Please confirm your email before signing in. Check your inbox and spam folder for the confirmation link.';
+      }
+      if(code==='invalid_credentials'||code==='user_not_found'||/invalid login credentials|invalid credentials|user not found/.test(normalized)){
+        return 'Email or password is incorrect. If you are new, choose “Create one free” to register.';
+      }
+      if(/already registered|user already exists/.test(normalized)){
+        return 'An account already exists for this email. Sign in or use “Forgot password?”.';
+      }
+      if(/rate.?limit|too many requests|over_email_send_rate_limit|over_request_rate_limit/.test(`${code} ${normalized}`)){
+        return 'Too many attempts. Wait a few minutes, then try again.';
+      }
+      if(/failed to fetch|network|fetch failed|timeout|load failed/.test(`${code} ${normalized}`)){
+        return 'Network error. Check your connection and try again.';
+      }
+      if(code==='signup_disabled'||/signups? (are )?disabled|signups not allowed/.test(normalized)){
+        return 'New email sign-ups are currently disabled. Please contact support.';
+      }
+      if(code==='email_provider_disabled'||/email.*disabled|provider.*disabled|email logins are disabled/.test(normalized)){
+        return 'Email/password sign-in is currently unavailable. Please contact support or use Google sign-in.';
+      }
+      return message||`${mode==='forgot'?'Could not send the reset link':'Authentication failed'}. Please try again.`;
+    }
+
     function setAuthMode(mode){
       state.authMode=mode;
       const signup=mode==='signup';
@@ -2977,7 +3103,7 @@
       $('auth-remember').checked=state.rememberSession;
       $('login-password').autocomplete=signup||reset?'new-password':'current-password';
       $('login-password').placeholder=reset?'Enter a new password':signup?'At least 6 characters':'Enter your password';
-      $('auth-submit').textContent=reset?'Update password':forgot?'Send reset link':signup?'Create account':'Sign in';
+      $('auth-submit').textContent=authSubmitLabel(mode);
       $('auth-switch').innerHTML=signup?'Already have an account? <button class="auth-link" id="auth-switch-link" type="button">Sign in</button>':forgot?'Remembered your password? <button class="auth-link" id="auth-switch-link" type="button">Sign in</button>':'Don&#39;t have an account? <button class="auth-link" id="auth-switch-link" type="button">Create one free</button>';
       $('auth-message').textContent='';
       $('auth-message').classList.remove('success');
@@ -3072,10 +3198,20 @@
         $('login-password').focus();
         return;
       }
-      const submit=$('auth-submit');
-      const google=$('auth-google');
-      submit.disabled=true;
-      google.disabled=true;
+      if(mode!=='forgot'&&password.length<6){
+        setAuthMessage('Use a password with at least 6 characters.');
+        $('login-password').focus();
+        return;
+      }
+      if(mode==='signup'){
+        const fullName=$('login-name').value.trim();
+        if(!fullName||fullName.length>100){
+          setAuthMessage('Enter your name (up to 100 characters).');
+          $('login-name').focus();
+          return;
+        }
+      }
+      setAuthBusy(true,mode);
       setAuthMessage('');
       try{
         if(mode==='forgot'){
@@ -3085,14 +3221,18 @@
           return;
         }
         if(mode==='reset'){
-          if(password.length<6){setAuthMessage('Use a password with at least 6 characters.');return}
           const {error}=await state.client.auth.updateUser({password});
           if(error)throw error;
           history.replaceState(null,'',window.location.pathname+window.location.search);
-          setAuthMessage('Your password has been updated.',true);
           const {data,error:sessionError}=await state.client.auth.getSession();
           if(sessionError)throw sessionError;
-          if(data.session)await updateSession(data.session);
+          if(!data.session){
+            setAuthMode('signin');
+            $('login-email').value=email;
+            setAuthMessage('Your password has been updated. Sign in with your new password.',true);
+            return;
+          }
+          await updateSession(data.session);
           closeAuthPage(false);
           if(data.session&&sessionStorage.getItem('wallet_pending_track_order')){
             sessionStorage.removeItem('wallet_pending_track_order');
@@ -3101,9 +3241,7 @@
           return;
         }
         if(mode==='signup'){
-          if(password.length<6){setAuthMessage('Use a password with at least 6 characters.');return}
           const fullName=$('login-name').value.trim();
-          if(!fullName||fullName.length>100){setAuthMessage('Enter your name (up to 100 characters).');return}
           const {data,error}=await state.client.auth.signUp({
             email,password,
             options:{
@@ -3125,20 +3263,18 @@
         }
         setRememberSession($('auth-remember').checked);
         const {data,error}=await state.client.auth.signInWithPassword({email,password});
-        if(error){
-          const message=/invalid login credentials/i.test(error.message)?'Email or password is incorrect.':error.message;
-          setAuthMessage(message);
+        if(error)throw error;
+        if(!data.session){
+          setAuthMessage('Email confirmation is required before sign-in. Check your inbox for the confirmation link.');
           return;
         }
-        if(data.session)await updateSession(data.session);
+        await updateSession(data.session);
         closeAuthPage(false);
       }catch(error){
         console.error('Authentication action failed:',error);
-        const message=/already registered/i.test(error.message||'')?'An account already exists for this email. Sign in instead.':error.message||'Authentication failed. Please try again.';
-        setAuthMessage(message);
+        setAuthMessage(authErrorMessage(error,mode));
       }finally{
-        submit.disabled=false;
-        google.disabled=false;
+        setAuthBusy(false);
       }
     }
 
@@ -4246,7 +4382,7 @@
         ...product,
         selling_price:product.selling_price??product.price,
         category:normalizeCategory(product.category),
-        in_stock:product.stock_status?product.stock_status==='available':product.in_stock !== false
+        in_stock:product.in_stock!==false&&(product.stock_status==null||product.stock_status==='available')
       }));
       state.productsLoading=false;
       state.productsError=null;

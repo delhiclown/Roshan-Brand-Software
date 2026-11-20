@@ -67,7 +67,7 @@ Do not run both alternatives as part of a fresh install: they install overlappin
 
 Configure these server-only values in `.env` for local use and in each Vercel environment:
 
-- `GUEST_HASH_SECRET`: a randomly generated secret with at least 32 characters. It is used to HMAC email, device, and IP identifiers before storing demo-abuse records.
+- `GUEST_HASH_SECRET`: a randomly generated secret with at least 32 characters. It is used to HMAC email, device, and IP identifiers before storing demo-abuse records. If it is missing or too short, the server logs the configuration reason and customers see “Checkout is temporarily unavailable. Please contact support.”
 - `RESEND_API_KEY`: an API key from Resend.
 - `RESEND_FROM_EMAIL`: a sender address verified in Resend, for example `Roshan Brand <orders@your-verified-domain.example>`.
 - `SUPABASE_SERVICE_ROLE_KEY`: required by the guest API and must remain server-only.
@@ -107,6 +107,10 @@ The order table stores one product name and a quantity per order, so an alert in
 3. Start another checkout and do not submit a UTR. Confirm it remains unpaid and no Telegram alert arrives.
 4. For a failure check, temporarily use an invalid bot token and submit a fresh valid UTR. Confirm the order still succeeds for the customer and a Telegram failure appears in the Vercel function logs. Restore the correct token afterward; the same order will not be retried automatically.
 
+### Inventory stock toggles
+
+After the Used Keys, Demo Keys, Rental, and one guest-checkout route above, run [`supabase/inventory-stock-toggle-migration.sql`](./supabase/inventory-stock-toggle-migration.sql). It may be applied before optional channel or Telegram migrations. It adds independent stock flags for Used and Demo keys, admin-only stock controls for those inventories, out-of-stock status in customer listings, and a database trigger that rechecks current stock when a UTR is submitted. Product stock continues to use `products.in_stock` and `products.stock_status` with the existing admin-only RLS policy. New key inventory defaults to in stock. Do not execute this migration against a project until its prerequisites have been installed.
+
 All order mutations and private delivery reads go through authenticated Supabase RPCs, with `auth.uid()` ownership checks and `is_store_admin()` checks; direct client access to `order_delivery` and the encryption key is revoked. The browser uses Supabase bearer-token authorization rather than cookie authentication, so cross-site form requests cannot attach the customer/admin JWT (CSRF). SQL parameters are bound by PostgREST, database functions validate UTRs, URLs, numeric fields and lengths, and rendered customer/admin values are HTML-escaped.
 
 ### Order-request test checklist
@@ -144,8 +148,9 @@ For a fresh database, run the root-level SQL files below in the listed order fro
 14. [`supabase/demo-custom-software-migration.sql`](./supabase/demo-custom-software-migration.sql).
 15. [`supabase/software-pnr-plans-migration.sql`](./supabase/software-pnr-plans-migration.sql).
 16. Guest checkout: run either [`supabase/guest-checkout-migration.sql`](./supabase/guest-checkout-migration.sql) once, or run the split scripts [`supabase/guest-checkout-1-tables-trigger.sql`](./supabase/guest-checkout-1-tables-trigger.sql), [`supabase/guest-checkout-2-guest-functions.sql`](./supabase/guest-checkout-2-guest-functions.sql), [`supabase/guest-checkout-3-admin-functions.sql`](./supabase/guest-checkout-3-admin-functions.sql), and [`supabase/guest-checkout-4-reject-refund-grants.sql`](./supabase/guest-checkout-4-reject-refund-grants.sql) in that order. Never run both alternatives.
-17. [`supabase/channel-settings-migration.sql`](./supabase/channel-settings-migration.sql).
-18. [`supabase/telegram-order-alerts-migration.sql`](./supabase/telegram-order-alerts-migration.sql) — requires order requests.
+17. [`supabase/inventory-stock-toggle-migration.sql`](./supabase/inventory-stock-toggle-migration.sql) — run after one guest-checkout route.
+18. [`supabase/channel-settings-migration.sql`](./supabase/channel-settings-migration.sql).
+19. [`supabase/telegram-order-alerts-migration.sql`](./supabase/telegram-order-alerts-migration.sql) — requires order requests.
 
 [`supabase/product-pricing-stats-migration.sql`](./supabase/product-pricing-stats-migration.sql) is only needed for an existing database that does not already have those columns; fresh installs get them from `setup.sql`. [`supabase/migrations/20261112084600_used_key_utr_pending_payment_fix.sql`](./supabase/migrations/20261112084600_used_key_utr_pending_payment_fix.sql) is a targeted Used Key payment-recovery fix, not a standard fresh-install migration; apply it only when that specific recovery applies to the production data. Files in `supabase/backup/`, `supabase/scratch-run/`, and `supabase/tests/` are backup, test, or assembly scripts and are not part of this production execution list.
 

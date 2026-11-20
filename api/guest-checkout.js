@@ -62,7 +62,10 @@ async function callRpc(functionName, parameters) {
   }
   if (!response.ok) {
     const message = String(result?.message || result?.hint || `Database request failed with HTTP ${response.status}.`).slice(0, 400);
-    throw new Error(message);
+    const error = new Error(message);
+    if (result?.code) error.code = String(result.code);
+    error.status = response.status;
+    throw error;
   }
   return result;
 }
@@ -184,7 +187,15 @@ module.exports = async function guestCheckout(req, res) {
     return sendJson(res, 400, { error: 'Unknown guest checkout action.' });
   } catch (error) {
     console.error('Guest checkout request failed:', error);
-    const status = /not configured/i.test(error.message) ? 503 : 400;
-    return sendJson(res, status, { error: error.message || 'Guest checkout failed. Please try again.' });
+    const message = String(error?.message || '');
+    const missingDatabaseFunction = ['PGRST202', '42883'].includes(String(error?.code || ''))
+      || /could not find the function|function .* does not exist/i.test(message);
+    const configurationFailure = error?.code === 'GUEST_HASH_SECRET_NOT_CONFIGURED'
+      || /guest checkout database access is not configured/i.test(message);
+    if (missingDatabaseFunction || configurationFailure) {
+      return sendJson(res, 503, { error: 'Checkout is temporarily unavailable. Please contact support.' });
+    }
+    const status = /not configured/i.test(message) ? 503 : 400;
+    return sendJson(res, status, { error: message || 'Guest checkout failed. Please try again.' });
   }
 };

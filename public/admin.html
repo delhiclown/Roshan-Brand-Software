@@ -39,6 +39,7 @@
     #login-panel{max-width:430px;margin:8vh auto}.sub{color:var(--muted);font-size:12px;line-height:1.7;margin:4px 0 19px}
     .field{margin-bottom:13px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
     input,textarea,select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#080f20;color:var(--text);outline:none}
+    #software-plan-fields input[type=number]{min-width:8em}
     input:focus,textarea:focus,select:focus{border-color:var(--gold)}textarea{min-height:76px;resize:vertical}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.pnr-plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:600;font-size:12px}
     .gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#191200}.ghost{background:#111b32;border:1px solid var(--line);color:var(--text)}.danger{background:#371922;color:#ffb5bb}.btn:hover{filter:brightness(1.1)}
@@ -54,8 +55,14 @@
     .product-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:13px;padding:13px}
     .product-row strong{display:block;overflow-wrap:anywhere}.product-row small{color:var(--muted);display:block;margin-top:4px}
     .actions{display:flex;align-items:center;justify-content:end;gap:6px;flex-wrap:wrap}.actions .btn{padding:8px 10px}
-    .pill{font-size:10px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;color:var(--muted)}.pill.live{color:#84e4b6;border-color:#23563f}.pill.pinned{color:var(--gold);border-color:#665325}
+    .pill{font-size:10px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;color:var(--muted)}.pill.live{color:#84e4b6;border-color:#23563f}.pill.out{color:#ffb5bb;border-color:#71303b}.pill.pinned{color:var(--gold);border-color:#665325}
+    .stock-out{background:#5b3b0d;color:#ffe0a3;border:1px solid #8a641c}.stock-in{background:#143c2d;color:#a8f0cb;border:1px solid #286747}
+    .stock-message{font-size:11px;color:var(--muted);margin:0 4px}.stock-message.error{color:#ff858e}.stock-badges{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .product-row-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;grid-column:1/-1}.product-row-actions .btn{padding:8px 10px}
     .pill.offer-active{color:#ffe49a;border-color:rgba(245,192,74,.45);background:rgba(245,192,74,.08)}
+    :root[data-theme="light"] .stock-out{color:#805400;background:#fff2d6;border-color:#e4c57e}
+    :root[data-theme="light"] .stock-in{color:#08734d;background:#e8f7ef;border-color:#b4dfc6}
+    :root[data-theme="light"] .pill.out{color:#9e2637;border-color:#efc7ce;background:#fdebee}
     :root[data-theme="light"] .pill.offer-active{color:#70500c;border-color:#e4d3a7;background:#fff8e6}
     .offer-claim-settings{padding:12px;border:1px solid var(--line);border-radius:12px;margin:12px 0}
     .channel-settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -108,6 +115,8 @@
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.page-enter{animation:none}.reveal{opacity:1;transform:none;transition:none}*,*:before,*:after{transition-duration:.01ms!important}}
     @media(max-width:780px){.admin-grid{grid-template-columns:1fr}.offer-operations-grid,.channel-settings-grid{grid-template-columns:1fr}.row,.pnr-plan-grid{grid-template-columns:1fr 1fr}}
     @media(max-width:520px){.wrap{width:calc(100% - 26px)}main{padding-top:22px}.panel{padding:16px}.row{grid-template-columns:1fr}.product-row,.finance-row{grid-template-columns:1fr}.actions,.finance-controls{justify-content:start}.finance-controls input,.finance-controls .note-input{width:100%}.bar{flex-wrap:wrap}.bar h1{font-size:18px;flex:1;text-align:right}}
+    @media(max-width:1000px){#software-plan-fields .pnr-plan-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:520px){#software-plan-fields .pnr-plan-grid{grid-template-columns:1fr}}
     .offer-datetime-row{grid-template-columns:minmax(0,1fr)}
     .offer-datetime-row>.field{min-width:0}
     .offer-datetime-row input[type="datetime-local"]{width:100%;min-width:0;max-width:100%}
@@ -581,7 +590,7 @@
     const isVpsCategory=category=>category==='vps'||category==='windows-vps';
     const isProxyCategory=category=>category==='proxy'||category==='residential';
     const isPlanCategory=category=>isVpsCategory(category)||isProxyCategory(category);
-    const productIsAvailable=product=>product.stock_status?product.stock_status==='available':product.in_stock!==false;
+    const productIsAvailable=product=>product.in_stock!==false&&(product.stock_status==null||product.stock_status==='available');
     function softwarePlanStartingPrice(product){
       const prices=[
         ['plan_2_pnr_price','plan_2_pnr_enabled'],
@@ -782,7 +791,7 @@
       const {data,error}=await state.client.rpc('admin_list_demo_keys');
       if(error)throw error;
       state.demoKeys=Array.isArray(data)?data:[];
-      $('demo-key-list').innerHTML=state.demoKeys.length?state.demoKeys.map(item=>`<div class="product-row"><strong>${escapeHtml(item.software_name)}</strong><span>${Number(item.validity_days)>0?`${Number(item.validity_days)} days demo`:'Demo key'}</span><span>${Number(item.claim_count)||0} claim(s)</span></div>`).join(''):'<div class="empty">No demo keys configured.</div>';
+      $('demo-key-list').innerHTML=state.demoKeys.length?state.demoKeys.map(item=>`<div class="product-row"><div><strong>${escapeHtml(item.software_name)}</strong><small>${Number(item.validity_days)>0?`${Number(item.validity_days)} days demo`:'Demo key'} · ${Number(item.claim_count)||0} claim(s)</small></div><div class="stock-badges"><span class="pill ${item.in_stock?'live':'out'}" data-stock-badge>${item.in_stock?'AVAILABLE':'OUT OF STOCK'}</span></div><div class="product-row-actions"><button class="btn ${item.in_stock?'stock-out':'stock-in'}" type="button" data-stock-toggle data-demo-stock="${item.product_id}" data-next-stock="${item.in_stock?'out_of_stock':'available'}">${item.in_stock?'Mark out of stock':'Mark in stock'}</button><small class="stock-message" data-stock-message aria-live="polite"></small></div></div>`).join(''):'<div class="empty">No demo keys configured.</div>';
     }
     async function saveDemoKey(event){
       event.preventDefault();
@@ -839,7 +848,7 @@
       if(productsResult.error)throw productsResult.error;
       if(requestsResult.error)throw requestsResult.error;
       state.rentalProducts=Array.isArray(productsResult.data)?productsResult.data:[];
-      $('rental-inventory-list').innerHTML=state.rentalProducts.length?state.rentalProducts.map(item=>`<div class="product-row"><strong>${escapeHtml(item.software_name)}</strong><span>₹${money(item.daily_rate)} / day</span><span>${Number(item.available_count)} available · ${Number(item.active_count)} rented</span></div>`).join(''):'<div class="empty">No rental products configured.</div>';
+      $('rental-inventory-list').innerHTML=state.rentalProducts.length?state.rentalProducts.map(item=>`<div class="product-row"><div><strong>${escapeHtml(item.software_name)}</strong><small>₹${money(item.daily_rate)} / day · ${Number(item.available_count)} available · ${Number(item.active_count)} rented</small></div><span class="pill ${item.in_stock?'live':'out'}" data-stock-badge>${item.in_stock?'AVAILABLE':'OUT OF STOCK'}</span><div class="product-row-actions"><button class="btn ${item.in_stock?'stock-out':'stock-in'}" type="button" data-stock-toggle data-stock="${item.product_id}" data-next-stock="${item.in_stock?'out_of_stock':'available'}">${item.in_stock?'Mark out of stock':'Mark in stock'}</button><small class="stock-message" data-stock-message aria-live="polite"></small></div></div>`).join(''):'<div class="empty">No rental products configured.</div>';
       const requests=Array.isArray(requestsResult.data)?requestsResult.data:[];
       $('rental-request-list').innerHTML=requests.length?requests.map(item=>`<article class="product-row"><div><strong>Order #${escapeHtml(item.order_id)} · ${escapeHtml(item.software_name)}</strong><small>${escapeHtml(item.customer_email)} · ₹${money(item.amount)} / one day${item.guest_order?' · Guest':''}</small><small>${item.status==='new'?`UTR: ${escapeHtml(item.utr_number)} · ${escapeHtml(item.created_at)}`:'Payment verified · delivery email pending'}</small>${item.status==='new'?`<input data-rental-reason="${escapeHtml(item.order_id)}" maxlength="1000" value="Payment could not be verified" aria-label="Rejection reason for rental order ${escapeHtml(item.order_id)}">`:''}</div><div class="product-row-actions">${item.status==='new'?`<button class="btn gold" type="button" data-rental-review="approve" data-rental-order="${escapeHtml(item.order_id)}" data-rental-guest="${item.guest_order?'true':'false'}">Verify &amp; assign</button><button class="btn danger" type="button" data-rental-review="reject" data-rental-order="${escapeHtml(item.order_id)}">Reject</button>`:item.guest_order&&!item.email_sent?`<button class="btn ghost" type="button" data-rental-review="email" data-rental-order="${escapeHtml(item.order_id)}" data-rental-guest="true">Retry delivery email</button>`:''}</div></article>`).join(''):'<div class="empty">No rental payment requests.</div>';
     }
@@ -919,7 +928,9 @@
         const remaining=Number(item.remaining_days);
         const status=expired?'EXPIRED':item.status==='available'?'Available':item.status==='hidden'?'Hidden':item.status;
         const remainingLabel=remaining<=0?'EXPIRED':`${remaining} day(s) remaining`;
-        return `<article class="product-row"><div><strong>${escapeHtml(item.software_name)}</strong><small>Key #${escapeHtml(item.id)} · ${escapeHtml(item.license_key)}</small><small>₹${money(item.price)} · ${Number(item.validity_days)} day(s) validity · ${remainingLabel}</small><small>${escapeHtml(item.download_link)}</small></div><span class="pill">${escapeHtml(status)}</span><div class="product-row-actions"><button class="btn ghost" type="button" data-edit-used-key="${item.id}" ${editable?'':'disabled'}>Edit</button><button class="btn ghost" type="button" data-toggle-used-key="${item.id}" ${editable?'':'disabled'}>${visible?'Hide':'Show'}</button><button class="btn danger" type="button" data-delete-used-key="${item.id}" ${editable?'':'disabled'}>Delete</button></div></article>`;
+        const inStock=item.in_stock!==false;
+        const canToggleStock=item.status!=='sold';
+        return `<article class="product-row"><div><strong>${escapeHtml(item.software_name)}</strong><small>Key #${escapeHtml(item.id)} · ${escapeHtml(item.license_key)}</small><small>₹${money(item.price)} · ${Number(item.validity_days)} day(s) validity · ${remainingLabel}</small><small>${escapeHtml(item.download_link)}</small></div><div class="stock-badges"><span class="pill">${escapeHtml(status)}</span><span class="pill ${inStock?'live':'out'}" data-stock-badge>${inStock?'AVAILABLE':'OUT OF STOCK'}</span></div><div class="product-row-actions"><button class="btn ghost" type="button" data-edit-used-key="${item.id}" ${editable?'':'disabled'}>Edit</button><button class="btn ghost" type="button" data-toggle-used-key="${item.id}" ${editable?'':'disabled'}>${visible?'Hide':'Show'}</button><button class="btn ${inStock?'stock-out':'stock-in'}" type="button" data-stock-toggle data-used-key-stock="${item.id}" data-next-stock="${inStock?'out_of_stock':'available'}" ${canToggleStock?'':'disabled'}>${inStock?'Mark out of stock':'Mark in stock'}</button><button class="btn danger" type="button" data-delete-used-key="${item.id}" ${editable?'':'disabled'}>Delete</button><small class="stock-message" data-stock-message aria-live="polite"></small></div></article>`;
       }).join(''):'<div class="empty">No used keys in inventory.</div>';
       revealAdmin($('used-key-list'));
     }
@@ -974,11 +985,13 @@
       finally{button.disabled=false}
     }
     async function handleUsedKeyAction(event){
-      const button=event.target instanceof Element?event.target.closest('[data-edit-used-key],[data-toggle-used-key],[data-delete-used-key]'):null;
+      const button=event.target instanceof Element?event.target.closest('[data-stock-toggle][data-used-key-stock],[data-edit-used-key],[data-toggle-used-key],[data-delete-used-key]'):null;
       if(!button||!$('used-key-list').contains(button))return;
-      const item=state.usedKeys.find(key=>String(key.id)===button.dataset.editUsedKey||String(key.id)===button.dataset.toggleUsedKey||String(key.id)===button.dataset.deleteUsedKey);
+      const item=state.usedKeys.find(key=>String(key.id)===button.dataset.usedKeyStock||String(key.id)===button.dataset.editUsedKey||String(key.id)===button.dataset.toggleUsedKey||String(key.id)===button.dataset.deleteUsedKey);
       if(!item)return;
-      if(button.matches('[data-edit-used-key]')){
+      if(button.matches('[data-stock-toggle][data-used-key-stock]')){
+        await setInventoryStock(button,item,'admin_set_used_key_stock',next=>({p_id:Number(item.id),p_in_stock:next}));
+      }else if(button.matches('[data-edit-used-key]')){
         $('used-key-id').value=String(item.id);$('used-key-product').value=String(item.product_id);
         $('used-key-visible').value=String(item.status==='available');
         $('used-key-license').value=item.license_key;
@@ -1235,8 +1248,8 @@
           :`₹${money(product.price)}${product.unit?` / ${escapeHtml(product.unit)}`:''}`;
         return `
         <article class="product-row">
-          <div><strong>${escapeHtml(product.name)}</strong><small>${priceLabel} · ${escapeHtml(product.description||'No description')}${isPlanCategory(state.category)?` · ${escapeHtml(product.plan_section||'Plans')}${product.os_type?` · ${escapeHtml(product.os_type)}`:''}${product.ip_series?` · ${escapeHtml(product.ip_series)}`:''}${product.data_size?` · ${escapeHtml(product.data_size)}`:''}${product.ip_count?` · ${escapeHtml(product.ip_count)}`:''}${product.validity?` · ${escapeHtml(product.validity)}`:''}`:''}</small><div style="display:flex;gap:6px;margin-top:8px"><span class="pill ${productIsAvailable(product)?'live':''}">${productIsAvailable(product)?'Available':'Out of stock'}</span>${product.pinned?'<span class="pill pinned">Pinned</span>':''}</div></div>
-          <div class="actions">${isPlanCategory(state.category)?`<button class="btn ${productIsAvailable(product)?'danger':'gold'}" data-stock="${product.id}" data-next-stock="${productIsAvailable(product)?'out_of_stock':'available'}">${productIsAvailable(product)?'Mark out of stock':'Mark available'}</button>`:''}<button class="btn ghost" data-up="${index}" aria-label="Move up" ${index===0?'disabled':''}>↑</button><button class="btn ghost" data-down="${index}" aria-label="Move down" ${index===state.products.length-1?'disabled':''}>↓</button><button class="btn ghost" data-pin="${product.id}">${product.pinned?'Unpin':'Pin'}</button><button class="btn ghost" data-edit="${product.id}">Edit</button><button class="btn danger" data-delete="${product.id}">Delete</button></div>
+          <div><strong>${escapeHtml(product.name)}</strong><small>${priceLabel} · ${escapeHtml(product.description||'No description')}${isPlanCategory(state.category)?` · ${escapeHtml(product.plan_section||'Plans')}${product.os_type?` · ${escapeHtml(product.os_type)}`:''}${product.ip_series?` · ${escapeHtml(product.ip_series)}`:''}${product.data_size?` · ${escapeHtml(product.data_size)}`:''}${product.ip_count?` · ${escapeHtml(product.ip_count)}`:''}${product.validity?` · ${escapeHtml(product.validity)}`:''}`:''}</small><div class="stock-badges" style="margin-top:8px"><span class="pill ${productIsAvailable(product)?'live':'out'}" data-stock-badge>${productIsAvailable(product)?'AVAILABLE':'OUT OF STOCK'}</span>${product.pinned?'<span class="pill pinned">Pinned</span>':''}</div></div>
+          <div class="actions"><button class="btn ghost" data-up="${index}" aria-label="Move up" ${index===0?'disabled':''}>↑</button><button class="btn ghost" data-down="${index}" aria-label="Move down" ${index===state.products.length-1?'disabled':''}>↓</button><button class="btn ghost" data-pin="${product.id}">${product.pinned?'Unpin':'Pin'}</button><button class="btn ghost" data-edit="${product.id}">Edit</button><button class="btn ${productIsAvailable(product)?'stock-out':'stock-in'}" type="button" data-stock-toggle data-stock="${product.id}" data-next-stock="${productIsAvailable(product)?'out_of_stock':'available'}">${productIsAvailable(product)?'Mark out of stock':'Mark in stock'}</button><button class="btn danger" data-delete="${product.id}">Delete</button><small class="stock-message" data-stock-message aria-live="polite"></small></div>
         </article>`;
       }).join(''):'<div class="empty">No products in this category yet.</div>';
       $('product-list').querySelectorAll('[data-edit]').forEach(button=>button.addEventListener('click',()=>editProduct(button.dataset.edit)));
@@ -1244,7 +1257,7 @@
       $('product-list').querySelectorAll('[data-pin]').forEach(button=>button.addEventListener('click',()=>togglePin(button.dataset.pin)));
       $('product-list').querySelectorAll('[data-up]').forEach(button=>button.addEventListener('click',()=>moveProduct(Number(button.dataset.up),-1)));
       $('product-list').querySelectorAll('[data-down]').forEach(button=>button.addEventListener('click',()=>moveProduct(Number(button.dataset.down),1)));
-      $('product-list').querySelectorAll('[data-stock]').forEach(button=>button.addEventListener('click',()=>setProductStock(button.dataset.stock,button.dataset.nextStock)));
+      $('product-list').querySelectorAll('[data-stock-toggle][data-stock]').forEach(button=>button.addEventListener('click',()=>setProductStock(button.dataset.stock,button.dataset.nextStock,button).catch(error=>notify(`Could not update stock status: ${error.message}`))));
       revealAdmin($('product-list'));
     }
     async function loadSpinPrizeConfig(){
@@ -1445,7 +1458,8 @@
       if(!ratingInput||!Number.isFinite(rating)||rating<0||rating>5){setError('product-error','Rating must be a number from 0 to 5.');return}
       if(!reviewCountInput||!Number.isInteger(reviewCount)||reviewCount<0){setError('product-error','Total reviews must be a whole number (0 or more).');return}
       if(!soldCountInput||!Number.isInteger(soldCount)||soldCount<0){setError('product-error','Sold count must be a whole number (0 or more).');return}
-      const product={name:$('product-name').value.trim(),description:isPlanCategory(state.category)?(existing?.description||''):$('description').value.trim(),price:sellingPrice,selling_price:sellingPrice,original_price:originalPrice,rating,review_count:reviewCount,sold_count:soldCount,show_stats:$('show-stats').checked,unit:$('unit').value.trim()||null,in_stock:isPlanCategory(state.category)?$('stock-status').value==='available':$('in-stock').checked,image_url:isPlanCategory(state.category)?(existing?.image_url||null):$('image-url').value||null};
+      const inStock=isPlanCategory(state.category)?$('stock-status').value==='available':$('in-stock').checked;
+      const product={name:$('product-name').value.trim(),description:isPlanCategory(state.category)?(existing?.description||''):$('description').value.trim(),price:sellingPrice,selling_price:sellingPrice,original_price:originalPrice,rating,review_count:reviewCount,sold_count:soldCount,show_stats:$('show-stats').checked,unit:$('unit').value.trim()||null,in_stock:inStock,stock_status:inStock?'available':'out_of_stock',image_url:isPlanCategory(state.category)?(existing?.image_url||null):$('image-url').value||null};
       if(isSoftware){
         for(const {plan,price,mrp,enabled} of softwarePlans){
           product[`plan_${plan}_pnr_price`]=price;
@@ -1467,7 +1481,7 @@
         product.ip_count=isProxyCategory(state.category)?$('ip-count').value.trim()||null:null;
         product.validity=isProxyCategory(state.category)?$('validity').value.trim()||null:null;
         product.badge=$('product-badge').value.trim()||null;
-        product.stock_status=$('stock-status').value;
+        product.stock_status=inStock?'available':'out_of_stock';
         product.price_prefix=$('price-prefix').value.trim()||'From';
         product.details=$('product-details').value.trim()||null;
       }
@@ -1515,12 +1529,71 @@
       if(result.error){notify(result.error.message);return}
       await renderProducts();
     }
-    async function setProductStock(id,status){
-      if(!['available','out_of_stock'].includes(status))return;
-      const result=await state.client.from('products').update({stock_status:status,in_stock:status==='available'}).eq('id',id);
-      if(result.error){notify(`Could not update stock status: ${result.error.message}`);return}
-      await renderProducts();
-      notify(status==='available'?'Product marked available.':'Product marked out of stock.');
+    function updateStockToggle(card,inStock,message,isError=false){
+      if(!card)return;
+      const badge=card.querySelector('[data-stock-badge]');
+      if(badge){badge.textContent=inStock?'AVAILABLE':'OUT OF STOCK';badge.classList.toggle('live',inStock);badge.classList.toggle('out',!inStock)}
+      const button=card.querySelector('[data-stock-toggle]');
+      if(button){
+        button.textContent=inStock?'Mark out of stock':'Mark in stock';
+        button.dataset.nextStock=inStock?'out_of_stock':'available';
+        button.classList.toggle('stock-out',inStock);
+        button.classList.toggle('stock-in',!inStock);
+      }
+      const statusMessage=card.querySelector('[data-stock-message]');
+      if(statusMessage){
+        statusMessage.textContent=message||'';
+        statusMessage.classList.toggle('error',isError);
+        statusMessage.classList.toggle('success',Boolean(message)&&!isError);
+      }
+    }
+    async function setProductStock(id,status,button){
+      if(!['available','out_of_stock'].includes(status)||!button)return;
+      const matchedItems=[
+        ...state.products.filter(product=>String(product.id)===String(id)),
+        ...state.rentalProducts.filter(product=>String(product.product_id)===String(id))
+      ];
+      const item=matchedItems[0];
+      if(!item)throw new Error('Product stock could not be found.');
+      const previous=productIsAvailable(item);
+      const next=status==='available';
+      const card=button.closest('.product-row');
+      button.disabled=true;
+      matchedItems.forEach(product=>{product.in_stock=next;product.stock_status=status});
+      updateStockToggle(card,next,'Saving stock…');
+      try{
+        const {data,error}=await state.client.from('products')
+          .update({stock_status:status,in_stock:next}).eq('id',id).select('id').maybeSingle();
+        if(error)throw error;
+        if(!data)throw new Error('No product was updated. Check admin access and try again.');
+        updateStockToggle(card,next,'Stock updated.');
+      }catch(error){
+        matchedItems.forEach(product=>{product.in_stock=previous;product.stock_status=previous?'available':'out_of_stock'});
+        updateStockToggle(card,previous,error.message||'Could not update stock status.',true);
+        throw error;
+      }finally{
+        if(button.isConnected)button.disabled=false;
+      }
+    }
+    async function setInventoryStock(button,item,rpc,params){
+      const card=button.closest('.product-row');
+      const previous=item.in_stock!==false;
+      const next=button.dataset.nextStock==='available';
+      button.disabled=true;
+      item.in_stock=next;
+      updateStockToggle(card,next,'Saving stock…');
+      try{
+        const {data,error}=await state.client.rpc(rpc,params(next));
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Could not update stock status.');
+        updateStockToggle(card,next,'Stock updated.');
+      }catch(error){
+        item.in_stock=previous;
+        updateStockToggle(card,previous,error.message||'Could not update stock status.',true);
+        throw error;
+      }finally{
+        if(button.isConnected)button.disabled=false;
+      }
     }
     async function moveProduct(index,direction){
       const next=index+direction;if(next<0||next>=state.products.length)return;
@@ -2146,9 +2219,23 @@
     $('used-key-filter-product').addEventListener('change',()=>renderFilteredUsedKeys());
     $('used-key-search').addEventListener('input',()=>renderFilteredUsedKeys());
     $('demo-key-form').addEventListener('submit',saveDemoKey);
+    $('demo-key-list').addEventListener('click',event=>{
+      const button=event.target instanceof Element?event.target.closest('[data-stock-toggle][data-demo-stock]'):null;
+      if(!button||!$('demo-key-list').contains(button))return;
+      const item=state.demoKeys.find(key=>String(key.product_id)===button.dataset.demoStock);
+      if(!item)return;
+      setInventoryStock(button,item,'admin_set_demo_key_stock',next=>({p_product_id:Number(item.product_id),p_in_stock:next}))
+        .catch(error=>notify(`Could not update demo-key stock: ${error.message}`));
+    });
     $('demo-keys-refresh').addEventListener('click',()=>renderDemoKeyInventory().catch(error=>notify(`Could not load Demo Keys: ${error.message}`)));
     $('rental-product-form').addEventListener('submit',saveRentalProduct);
     $('rental-accounts-form').addEventListener('submit',addRentalAccounts);
+    $('rental-inventory-list').addEventListener('click',event=>{
+      const button=event.target instanceof Element?event.target.closest('[data-stock-toggle][data-stock]'):null;
+      if(!button||!$('rental-inventory-list').contains(button))return;
+      setProductStock(button.dataset.stock,button.dataset.nextStock,button)
+        .catch(error=>notify(`Could not update stock status: ${error.message}`));
+    });
     $('rental-request-list').addEventListener('click',event=>reviewRentalRequest(event));
     $('rental-refresh').addEventListener('click',()=>renderRentalAdminData().catch(error=>notify(`Could not load Rental Software: ${error.message}`)));
     $('order-requests-refresh').addEventListener('click',()=>refreshOrderRequestCounts().then(renderOrderRequests).catch(error=>{$('order-request-list').innerHTML=`<div class="empty">${escapeHtml(error.message)}</div>`}));

@@ -63,7 +63,8 @@ test('Used Keys automatic expiry uses IST 11 AM and backfills existing inventory
   assert.match(autoValidityMigration, /k\.expiry_at > v_now/i);
   assert.match(autoValidityMigration, /new\.used_key_remaining_days := v_remaining_days/i);
   assert.match(customerHtml, /const expired=Number\(item\.remaining_days\)<=0/);
-  assert.match(customerHtml, /\$\{expired\?'disabled':''\}\>\$\{expired\?'EXPIRED':'Buy Now'\}/);
+  assert.match(customerHtml, /const canBuy=inStock&&!expired/);
+  assert.match(customerHtml, /\$\{canBuy\?'':'disabled'\}\>\$\{!inStock\?'Out of stock':expired\?'EXPIRED':'Buy Now'\}/);
   assert.match(adminHtml, /const expired=Number\(item\.remaining_days\)<=0&&editable/);
   assert.match(adminHtml, /const status=expired\?'EXPIRED'/);
   assert.match(adminHtml, /renderUsedKeyInventory\(\)\.catch\(error=>\{/);
