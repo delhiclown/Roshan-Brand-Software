@@ -9,6 +9,14 @@ const autoValidityMigration = fs.readFileSync(
   path.join(__dirname, '..', 'supabase', 'used-keys-auto-validity-migration.sql'),
   'utf8'
 );
+const soldValidityMigration = fs.readFileSync(
+  path.join(__dirname, '..', 'supabase', 'used-keys-sold-validity-migration.sql'),
+  'utf8'
+);
+const legacyExpiryMigration = fs.readFileSync(
+  path.join(__dirname, '..', 'supabase', 'used-keys-legacy-expiry-cutover-migration.sql'),
+  'utf8'
+);
 const adminHtml = fs.readFileSync(path.join(__dirname, '..', 'public', 'admin.html'), 'utf8');
 const customerHtml = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
 
@@ -55,7 +63,29 @@ test('Used Keys automatic expiry uses IST 11 AM and backfills existing inventory
   assert.match(autoValidityMigration, /k\.expiry_at > v_now/i);
   assert.match(autoValidityMigration, /new\.used_key_remaining_days := v_remaining_days/i);
   assert.match(customerHtml, /const expired=Number\(item\.remaining_days\)<=0/);
-  assert.match(customerHtml, /\$\{expired\?'disabled':''\}\>\$\{expired\?'Expired':'Buy Now'\}/);
+  assert.match(customerHtml, /\$\{expired\?'disabled':''\}\>\$\{expired\?'EXPIRED':'Buy Now'\}/);
   assert.match(adminHtml, /const expired=Number\(item\.remaining_days\)<=0&&editable/);
-  assert.match(adminHtml, /const status=expired\?'Expired'/);
+  assert.match(adminHtml, /const status=expired\?'EXPIRED'/);
+  assert.match(adminHtml, /renderUsedKeyInventory\(\)\.catch\(error=>\{/);
+});
+
+test('Used Keys sold validity is frozen and legacy expiry backfill is idempotent', () => {
+  assert.match(soldValidityMigration, /add column if not exists expiry_at timestamptz/i);
+  assert.match(soldValidityMigration, /add column if not exists sold_validity_days integer/i);
+  assert.match(soldValidityMigration, /where k\.expiry_at is null/i);
+  assert.match(soldValidityMigration, /where k\.status = 'sold' and k\.sold_validity_days is null/i);
+  assert.match(soldValidityMigration, /before update of status on private\.used_key_inventory/i);
+  assert.match(soldValidityMigration, /new\.sold_validity_days\s*:=\s*private\.used_key_remaining_days\(new\.expiry_at, coalesce\(new\.updated_at, clock_timestamp\(\)\)\)/i);
+  assert.match(soldValidityMigration, /coalesce\(k\.sold_validity_days, o\.used_key_remaining_days, k\.validity_days, 0\)/i);
+});
+
+test('legacy Used Keys expiry cutover preserves current remaining days exactly once', () => {
+  assert.match(legacyExpiryMigration, /add column if not exists expiry_at timestamptz/i);
+  assert.match(legacyExpiryMigration, /add column if not exists sold_validity_days integer/i);
+  assert.match(legacyExpiryMigration, /private\.used_key_migration_log/i);
+  assert.match(legacyExpiryMigration, /on conflict \(migration_name\) do nothing/i);
+  assert.match(legacyExpiryMigration, /greatest\(k\.expires_on - v_now_ist::date, 0\)/i);
+  assert.match(legacyExpiryMigration, /time '11:00'\)\s+at time zone 'Asia\/Kolkata'/i);
+  assert.match(legacyExpiryMigration, /where k\.status <> 'sold' or k\.expiry_at is null/i);
+  assert.match(legacyExpiryMigration, /alter column expiry_at set not null/i);
 });

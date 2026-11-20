@@ -71,7 +71,7 @@ test('custom demo software has its own download link and stays out of the paid s
   assert.match(customDemoMigration, /insert into public\.product_download_links/);
   assert.match(customDemoMigration, /'software', btrim\(p_software_name\), 'Demo-only software', 0, 0, true/);
   assert.match(customDemoMigration, /if not public\.is_store_admin\(\) then raise exception 'Admin access required'; end if;/);
-  assert.match(homepage, /details,demo_only'\)\.eq\('demo_only',false\)/);
+  assert.match(homepage, /plan_6_pnr_enabled'\)\.eq\('demo_only',false\)/);
 });
 
 test('new Software products already support uploaded photos, selling price, and saved download links', () => {
