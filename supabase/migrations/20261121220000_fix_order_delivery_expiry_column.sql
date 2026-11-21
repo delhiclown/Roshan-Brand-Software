@@ -113,7 +113,8 @@ begin
   return jsonb_build_object(
     'ok', true, 'id', v_order.id, 'type', 'software',
     'customer', coalesce((select u.email::text from auth.users as u where u.id = v_order.user_id), v_order.guest_email, 'Customer'),
-    'guest_email', v_order.guest_email, 'guest_email_sent_at', v_order.guest_email_sent_at,
+    'guest_email', v_order.guest_email, 'guest_whatsapp', v_order.guest_whatsapp,
+    'guest_email_sent_at', v_order.guest_email_sent_at,
     'product_id', v_order.product_id, 'product_name', coalesce(v_product_name, v_order.product_name),
     'product_type', v_product_type, 'used_key_id', v_order.used_key_id,
     'amount', round(coalesce(v_order.amount, v_order.price), 2),

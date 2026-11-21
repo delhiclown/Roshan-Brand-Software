@@ -142,16 +142,14 @@ module.exports = async function guestCheckout(req, res) {
           p_ip_hash: ipHash
         });
         if (!data?.ok) return sendJson(res, 400, { error: data?.message || 'Could not claim this demo key.' });
+        let emailSent = true;
         try {
           await sendGuestEmail({ to: email, ...demoKeyEmail(data) });
         } catch (error) {
           console.error('Guest demo was claimed but its email could not be sent:', error);
-          return sendJson(res, 502, {
-            error: 'Your demo key is shown on this page, but the email could not be sent. Please save the key and contact support.',
-            demo: data
-          });
+          emailSent = false;
         }
-        return sendJson(res, 200, { ok: true, demo: data });
+        return sendJson(res, 200, { ok: true, demo: { ...data, email_sent: emailSent } });
       }
 
       const type = String(body.type || '');

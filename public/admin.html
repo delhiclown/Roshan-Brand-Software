@@ -1915,6 +1915,7 @@
         const vps=data.product_type==='vps'||data.product_type==='windows-vps';
         $('order-request-payment').innerHTML=[
           ['Customer',data.customer||'Customer'],['Product',data.product_name],['Type',data.used_key_id?'USED KEY':vps?'Windows VPS':'Software'],
+          ...(data.guest_email?[['WhatsApp',data.guest_whatsapp||'—']]:[]),
           ...(data.software_plan_label?[['Software plan',data.software_plan_label]]:[]),
           ...(data.used_key_id?[['Used Key ID',`#${data.used_key_id}`],['Key Name',data.license_key||'—']]:[]),['Amount',`₹${money(data.amount)}`],
           ['UTR Number',data.utr_number||'—'],['Payment time',formatDate(data.payment_time||data.payment_submitted_at)],

@@ -61,21 +61,17 @@ test('email validation normalizes regular addresses and rejects disposable or in
 
 test('guest device, phone, and IP values require safe formats', () => {
   assert.match(publicIndex, /id="guest-email" type="email"[^>]*required/);
-  assert.match(publicIndex, /WhatsApp number \(optional, recommended\)/);
+  assert.match(publicIndex, /WhatsApp number \(required\)/);
   assert.match(apiSource, /const email = await validateEmailAddress\(body\.email\)/);
   assert.match(apiSource, /const whatsapp = validateWhatsApp\(body\.whatsapp\)/);
   assert.equal(validateDeviceId('4f2b77ab-27c9-4c8f-a01f-99792e3e8b26'), '4f2b77ab-27c9-4c8f-a01f-99792e3e8b26');
   assert.throws(() => validateDeviceId('not-a-device'), /verify this device/i);
-  assert.equal(validateWhatsApp(''), '');
-  assert.equal(validateWhatsApp('+91 98765 43210'), '9876543210');
-  assert.equal(validateWhatsApp('09876543210'), '9876543210');
-  for (const phone of ['9876543210', '8876543210', '7876543210', '6876543210']) {
-    assert.equal(validateWhatsApp(phone), phone);
+  assert.equal(validateWhatsApp('9876543210'), '9876543210');
+  assert.equal(validateWhatsApp('+919876543210'), '919876543210');
+  assert.equal(validateWhatsApp('123456789012345'), '123456789012345');
+  for (const phone of ['', '123456789', '1234567890123456', '++1234567890', 'abc1234567890']) {
+    assert.throws(() => validateWhatsApp(phone), /10 to 15 digits/i);
   }
-  assert.throws(() => validateWhatsApp('987654321'), /10-digit Indian mobile/i);
-  assert.throws(() => validateWhatsApp('5876543210'), /10-digit Indian mobile/i);
-  assert.throws(() => validateWhatsApp('98765432100'), /10-digit Indian mobile/i);
-  assert.throws(() => validateWhatsApp('abc9876543210'), /10-digit Indian mobile/i);
 
   const previousVercel = process.env.VERCEL;
   delete process.env.VERCEL;
@@ -86,12 +82,22 @@ test('guest device, phone, and IP values require safe formats', () => {
   else process.env.VERCEL = previousVercel;
 });
 
-test('guest WhatsApp input is digit-only, capped, and normalizes pasted country prefixes', () => {
+test('guest WhatsApp input requires 10 to 15 digits and server validates it too', () => {
   assert.equal((publicIndex.match(/id="guest-whatsapp"/g) || []).length, 1);
-  assert.match(publicIndex, /id="guest-whatsapp"[^>]*inputmode="numeric"[^>]*maxlength="10"/);
-  assert.match(publicIndex, /const normalizeGuestWhatsApp=value=>\{\s*const digits=String\(value\|\|''\)\.replace\(\/\\D\/g,''\);\s*return digits\.length>10\?digits\.slice\(-10\):digits;/);
-  assert.match(publicIndex, /guestWhatsApp\.addEventListener\('paste',event=>\{\s*event\.preventDefault\(\);[\s\S]*normalizeGuestWhatsApp\(pasted\)/);
-  assert.match(publicIndex, /const digits=String\(whatsappInput\.value\|\|''\)\.replace\(\/\\D\/g,''\)\.slice\(-10\)/);
+  assert.match(publicIndex, /id="guest-whatsapp"[^>]*maxlength="16"[^>]*required/);
+  assert.match(publicIndex, /inputmode="tel" autocomplete="tel" maxlength="16" pattern="\\\+\?\[0-9\]\{10,15\}" required/);
+  assert.match(publicIndex, /Enter 10 to 15 digits, with an optional \+/);
+  assert.match(publicIndex, /validateGuestWhatsApp=\(\)=>\{\s*const whatsapp=String\(guestWhatsApp\.value\|\|''\)\.trim\(\)/);
+  assert.match(apiSource, /const whatsapp = validateWhatsApp\(body\.whatsapp\)/);
+  assert.match(publicIndex, /Message us on WhatsApp/);
+  assert.match(publicIndex, /guestWhatsAppButton\(order\)/);
+  assert.match(publicIndex, /if\(!whatsappNumber\)return ''/);
+  assert.match(publicIndex, /Order number: \$\{order\.order_id/);
+  assert.match(publicIndex, /Type: \$\{order\.order_type==='demo'\?'Demo key':'Paid order'\}/);
+  assert.match(publicIndex, /encodeURIComponent\(message\)/);
+  assert.match(publicIndex, /settings\?\.whatsapp_number/);
+  assert.match(apiSource, /email_sent: emailSent/);
+  assert.match(apiSource, /let emailSent = true;[\s\S]*emailSent = false;[\s\S]*sendJson\(res, 200, \{ ok: true, demo: \{ \.\.\.data, email_sent: emailSent \} \}\)/);
 });
 
 test('service worker does not cache page navigations and advances its cache version', () => {
