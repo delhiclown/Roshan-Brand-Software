@@ -13,6 +13,10 @@ const orderRequestFixMigration = fs.readFileSync(
   path.join(root, 'supabase', 'migrations', '20261121190000_fix_order_requests_ambiguous_status.sql'),
   'utf8'
 );
+const orderDeliveryAutofillMigration = fs.readFileSync(
+  path.join(root, 'supabase', 'migrations', '20261121210000_order_delivery_autofill.sql'),
+  'utf8'
+);
 
 test('admin order details prefer saved delivery values and fill catalog defaults', () => {
   assert.match(adminHtml, /request-software-name'\)\.value=data\.software_name\|\|data\.product_name/);
@@ -63,6 +67,49 @@ test('order request table displays RPC errors and renders successful request row
   assert.match(adminHtml, /escapeHtml\(error\.message\)/);
   assert.match(adminHtml, /requests\.map\(order=>/);
   assert.match(adminHtml, /<table class="request-table">/);
+});
+
+test('order delivery defaults are editable and resettable with plan-specific link precedence', () => {
+  for (const field of ['software_name', 'license_key', 'download_link']) {
+    assert.match(adminHtml, new RegExp(`data-request-reset="${field}"`));
+  }
+  assert.match(adminHtml, /Auto-filled from product/);
+  assert.match(adminHtml, /Custom software: enter the download link\./);
+  assert.match(adminHtml, /software_name:order\.product_name\|\|''/);
+  assert.match(adminHtml, /license_key:order\.auto_license_key\|\|''/);
+  assert.match(adminHtml, /download_link:order\.catalog_download_link\|\|''/);
+  assert.match(adminHtml, /auto_key_id:state\.selectedOrderRequest[\s\S]*?request-license-key'\)\.value===String\(state\.selectedOrderRequest\.auto_license_key/);
+  assert.match(adminHtml, /id="plan-2-download-url"/);
+  assert.match(adminHtml, /from\('product_plan_download_links'\)\.upsert/);
+
+  assert.match(orderDeliveryAutofillMigration, /create table if not exists public\.product_plan_download_links/);
+  assert.match(orderDeliveryAutofillMigration, /coalesce\(plan_link\.download_url, product_link\.download_url, ''\)/);
+  assert.match(orderDeliveryAutofillMigration, /k\.software_plan_code = v_order\.software_plan_code/);
+  assert.match(orderDeliveryAutofillMigration, /where k\.product_id = v_order\.product_id/);
+});
+
+test('unused keys are previews only until an atomic skip-locked approval claim', () => {
+  const getRequest = orderDeliveryAutofillMigration.match(
+    /create or replace function public\.admin_get_request\b[\s\S]*?as \$\$([\s\S]*?)\$\$;/i
+  );
+  const completeOrder = orderDeliveryAutofillMigration.match(
+    /create or replace function public\.admin_complete_order\b[\s\S]*?as \$\$([\s\S]*?)\$\$;/i
+  );
+  assert.ok(getRequest);
+  assert.ok(completeOrder);
+  assert.match(getRequest[1], /order by k\.created_at, k\.id\s+limit 1/i);
+  assert.doesNotMatch(getRequest[1], /update private\.used_key_inventory/i);
+  assert.match(completeOrder[1], /for update(?: of k)? skip locked/i);
+  assert.match(completeOrder[1], /set status = 'sold', delivered_order_id = p_order_id/i);
+  assert.doesNotMatch(orderDeliveryAutofillMigration, /k\.in_stock|in_stock\s*=\s*false/i);
+  assert.match(completeOrder[1], /join public\.products as p\s+on p\.id = k\.product_id and p\.in_stock/i);
+  assert.match(completeOrder[1], /update public\.orders as o\s+set status = 'completed'/i);
+  assert.match(completeOrder[1], /license_key_fingerprint = extensions\.hmac\(v_license, v_encryption_key, 'sha256'\)/i);
+  assert.match(orderDeliveryAutofillMigration, /software_plan_code text/);
+  assert.match(adminHtml, /id="used-key-plan" required/);
+  assert.match(adminHtml, /p_software_plan_code:\$\('used-key-plan'\)\.value/);
+  assert.match(orderDeliveryAutofillMigration, /admin_save_used_key_for_plan/);
+  assert.match(orderDeliveryAutofillMigration, /admin_bulk_add_used_keys_for_plan/);
 });
 
 test('guest delivery email uses the software name and delivery values saved on the order', async () => {

@@ -38,6 +38,7 @@
     main{padding:34px 0 70px}.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:17px}
     #login-panel{max-width:430px;margin:8vh auto}.sub{color:var(--muted);font-size:12px;line-height:1.7;margin:4px 0 19px}
     .field{margin-bottom:13px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+    .request-field-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.request-field-head label{margin-bottom:6px}.request-reset{padding:5px 8px;font-size:9px}.request-field-hint{display:block;color:var(--muted);font-size:11px;margin-top:6px}
     .field.needs-manual-download input{border-color:var(--gold);box-shadow:0 0 0 2px rgba(245,192,74,.12)}
     .field .manual-download-hint{display:block;color:var(--gold);font-size:11px;margin-top:6px}
     input,textarea,select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#080f20;color:var(--text);outline:none}
@@ -286,9 +287,9 @@
                 <h3 style="margin-bottom:5px">Software PNR plans</h3>
                 <p class="sub" style="margin:0 0 12px">Set each plan's price and optional MRP. Turn off a plan to hide it from customers; at least one plan must stay enabled.</p>
                 <div class="pnr-plan-grid">
-                  <div class="offer-claim-settings"><strong>2 PNR · 30 days</strong><div class="field" style="margin-top:10px"><label for="plan-2-price">Price (₹)</label><input id="plan-2-price" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-2-mrp">MRP (₹, optional)</label><input id="plan-2-mrp" type="number" min="0.01" step="0.01"></div><label class="check"><input id="plan-2-enabled" type="checkbox" checked> Plan enabled</label></div>
-                  <div class="offer-claim-settings"><strong>4 PNR · 30 days</strong><div class="field" style="margin-top:10px"><label for="plan-4-price">Price (₹)</label><input id="plan-4-price" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-4-mrp">MRP (₹, optional)</label><input id="plan-4-mrp" type="number" min="0.01" step="0.01"></div><label class="check"><input id="plan-4-enabled" type="checkbox" checked> Plan enabled</label></div>
-                  <div class="offer-claim-settings"><strong>6 PNR · 30 days</strong><div class="field" style="margin-top:10px"><label for="plan-6-price">Price (₹)</label><input id="plan-6-price" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-6-mrp">MRP (₹, optional)</label><input id="plan-6-mrp" type="number" min="0.01" step="0.01"></div><label class="check"><input id="plan-6-enabled" type="checkbox" checked> Plan enabled</label></div>
+                  <div class="offer-claim-settings"><strong>2 PNR · 30 days</strong><div class="field" style="margin-top:10px"><label for="plan-2-price">Price (₹)</label><input id="plan-2-price" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-2-mrp">MRP (₹, optional)</label><input id="plan-2-mrp" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-2-download-url">Plan download link (optional)</label><input id="plan-2-download-url" type="url" maxlength="2048" placeholder="Uses product link when blank"></div><label class="check"><input id="plan-2-enabled" type="checkbox" checked> Plan enabled</label></div>
+                  <div class="offer-claim-settings"><strong>4 PNR · 30 days</strong><div class="field" style="margin-top:10px"><label for="plan-4-price">Price (₹)</label><input id="plan-4-price" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-4-mrp">MRP (₹, optional)</label><input id="plan-4-mrp" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-4-download-url">Plan download link (optional)</label><input id="plan-4-download-url" type="url" maxlength="2048" placeholder="Uses product link when blank"></div><label class="check"><input id="plan-4-enabled" type="checkbox" checked> Plan enabled</label></div>
+                  <div class="offer-claim-settings"><strong>6 PNR · 30 days</strong><div class="field" style="margin-top:10px"><label for="plan-6-price">Price (₹)</label><input id="plan-6-price" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-6-mrp">MRP (₹, optional)</label><input id="plan-6-mrp" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-6-download-url">Plan download link (optional)</label><input id="plan-6-download-url" type="url" maxlength="2048" placeholder="Uses product link when blank"></div><label class="check"><input id="plan-6-enabled" type="checkbox" checked> Plan enabled</label></div>
                 </div>
               </section>
               <div class="field"><label for="unit">Optional unit</label><input id="unit" placeholder="month, IP, GB" maxlength="30"></div>
@@ -433,6 +434,7 @@
               <input id="used-key-id" type="hidden">
               <input id="used-key-visible" type="hidden" value="true">
               <div class="field"><label for="used-key-product">Software</label><select id="used-key-product" required></select></div>
+              <div class="field"><label for="used-key-plan">PNR plan</label><select id="used-key-plan" required><option value="">Choose a plan</option><option value="2_pnr_30_days">2 PNR · 30 days</option><option value="4_pnr_30_days">4 PNR · 30 days</option><option value="6_pnr_30_days">6 PNR · 30 days</option></select></div>
               <div class="field"><label for="used-key-license">Key Name / License Key</label><textarea id="used-key-license" maxlength="4000" required></textarea></div>
               <div class="row"><div class="field"><label for="used-key-price">Price (₹)</label><input id="used-key-price" type="number" min="0.01" max="100000" step="0.01" required></div><div class="field"><label for="used-key-days">Days</label><input id="used-key-days" type="number" min="1" max="36500" step="1" required></div></div>
               <button class="btn gold" id="used-key-save" type="submit">Add key</button><button class="btn ghost hidden" id="used-key-cancel" type="button">Cancel edit</button>
@@ -501,9 +503,9 @@
       <div class="order-panel-head"><h2 id="order-request-title">Order request</h2><button class="btn ghost" id="close-order-request" type="button">Close</button></div>
       <div class="order-details" id="order-request-payment"></div>
       <div id="software-delivery-fields">
-        <div class="field"><label for="request-software-name">Software Name</label><input id="request-software-name" maxlength="160"></div>
-        <div class="field"><label for="request-license-key">License Key</label><textarea id="request-license-key" maxlength="4000"></textarea></div>
-        <div class="field" id="request-download-link-field"><label for="request-download-link">Download Link</label><input id="request-download-link" type="url" maxlength="2048"><small class="manual-download-hint hidden" id="request-download-link-hint">Custom software: enter the download link.</small></div>
+        <div class="field"><div class="request-field-head"><label for="request-software-name">Software Name</label><button class="btn ghost request-reset" type="button" data-request-reset="software_name">Reset to default</button></div><input id="request-software-name" maxlength="160"><small class="request-field-hint" id="request-software-name-hint">Auto-filled from product</small></div>
+        <div class="field"><div class="request-field-head"><label for="request-license-key">License Key</label><button class="btn ghost request-reset" type="button" data-request-reset="license_key">Reset to default</button></div><textarea id="request-license-key" maxlength="4000"></textarea><small class="request-field-hint" id="request-license-key-hint"></small></div>
+        <div class="field" id="request-download-link-field"><div class="request-field-head"><label for="request-download-link">Download Link</label><button class="btn ghost request-reset" type="button" data-request-reset="download_link">Reset to default</button></div><input id="request-download-link" type="url" maxlength="2048"><small class="request-field-hint" id="request-download-link-source-hint">Auto-filled from product</small><small class="manual-download-hint hidden" id="request-download-link-hint">Custom software: enter the download link.</small></div>
       </div>
       <div id="vps-delivery-fields" class="hidden">
         <div class="request-form-grid">
@@ -531,7 +533,7 @@
   <script>
     const categories=[{id:'software',title:'Software'},{id:'vps',title:'Windows VPS'},{id:'proxy',title:'Static Proxy'},{id:'residential',title:'Residential Proxies'}];
     const DEFAULT_SPIN_PRIZES=[{code:'SAVE20',label:'20%',type:'percent',value:20,color:'#e11d48',maxDiscountAmount:500,weight:15},{code:'SAVE50',label:'50%',type:'percent',value:50,color:'#2f3fb8',maxDiscountAmount:500,weight:10},{code:'SAVE100',label:'100%',type:'percent',value:100,color:'#f5c04a',maxDiscountAmount:500,weight:4},{code:'BONUS100',label:'100%',type:'percent',value:100,color:'#e11d48',maxDiscountAmount:500,weight:1},{code:'TRY_AGAIN',label:'TRY AGAIN',type:'tryAgain',value:0,color:'#2a2f3a',maxDiscountAmount:0,weight:45},{code:'SAVE10',label:'10%',type:'percent',value:10,color:'#2f3fb8',maxDiscountAmount:500,weight:25}];
-    const state={client:null,category:'software',products:[],editing:null,editingDownloadUrl:null,downloadLinkLoaded:true,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null,paymentQrImageUrl:'',offers:[],offerProducts:[],offerReports:[],spinPrizes:DEFAULT_SPIN_PRIZES,coupons:[],usedKeyProducts:[],usedKeys:[],demoKeyProducts:[],demoKeys:[],rentalProducts:[],rentalAccounts:[],orderRequestStatus:'new',orderRequestPage:1,orderRequestPageSize:20,orderRequestCount:0,orderRequestCounts:{new:0,completed:0,rejected:0,all:0},selectedOrderRequest:null};
+    const state={client:null,category:'software',products:[],editing:null,editingDownloadUrl:null,downloadLinkLoaded:true,editingPlanDownloadLinks:{},planDownloadLinksLoaded:true,activeView:'software',orders:[],orderFilter:'all',selectedOrder:null,paymentQrImageUrl:'',offers:[],offerProducts:[],offerReports:[],spinPrizes:DEFAULT_SPIN_PRIZES,coupons:[],usedKeyProducts:[],usedKeys:[],demoKeyProducts:[],demoKeys:[],rentalProducts:[],rentalAccounts:[],orderRequestStatus:'new',orderRequestPage:1,orderRequestPageSize:20,orderRequestCount:0,orderRequestCounts:{new:0,completed:0,rejected:0,all:0},selectedOrderRequest:null};
     let productPreviewUrl=null;
     let demoImagePreviewUrl=null;
     let paymentQrPreviewUrl=null;
@@ -912,7 +914,7 @@
       finally{if(button.isConnected)button.disabled=false}
     }
     async function renderUsedKeyInventory(){
-      const {data,error}=await state.client.rpc('admin_list_used_keys');
+      const {data,error}=await state.client.rpc('admin_list_used_keys_with_plan');
       if(error)throw error;
       state.usedKeys=data||[];
       renderFilteredUsedKeys();
@@ -931,12 +933,13 @@
         const remainingLabel=remaining<=0?'EXPIRED':`${remaining} day(s) remaining`;
         const inStock=item.in_stock!==false;
         const canToggleStock=item.status!=='sold';
-        return `<article class="product-row"><div><strong>${escapeHtml(item.software_name)}</strong><small>Key #${escapeHtml(item.id)} · ${escapeHtml(item.license_key)}</small><small>₹${money(item.price)} · ${Number(item.validity_days)} day(s) validity · ${remainingLabel}</small><small>${escapeHtml(item.download_link)}</small></div><div class="stock-badges"><span class="pill">${escapeHtml(status)}</span><span class="pill ${inStock?'live':'out'}" data-stock-badge>${inStock?'AVAILABLE':'OUT OF STOCK'}</span></div><div class="product-row-actions"><button class="btn ghost" type="button" data-edit-used-key="${item.id}" ${editable?'':'disabled'}>Edit</button><button class="btn ghost" type="button" data-toggle-used-key="${item.id}" ${editable?'':'disabled'}>${visible?'Hide':'Show'}</button><button class="btn ${inStock?'stock-out':'stock-in'}" type="button" data-stock-toggle data-used-key-stock="${item.id}" data-next-stock="${inStock?'out_of_stock':'available'}" ${canToggleStock?'':'disabled'}>${inStock?'Mark out of stock':'Mark in stock'}</button><button class="btn danger" type="button" data-delete-used-key="${item.id}" ${editable?'':'disabled'}>Delete</button><small class="stock-message" data-stock-message aria-live="polite"></small></div></article>`;
+        const planLabel={'2_pnr_30_days':'2 PNR · 30 days','4_pnr_30_days':'4 PNR · 30 days','6_pnr_30_days':'6 PNR · 30 days'}[item.software_plan_code]||'Plan unassigned';
+        return `<article class="product-row"><div><strong>${escapeHtml(item.software_name)}</strong><small>Key #${escapeHtml(item.id)} · ${escapeHtml(item.license_key)}</small><small>${escapeHtml(planLabel)} · ₹${money(item.price)} · ${Number(item.validity_days)} day(s) validity · ${remainingLabel}</small><small>${escapeHtml(item.download_link)}</small></div><div class="stock-badges"><span class="pill">${escapeHtml(status)}</span><span class="pill ${inStock?'live':'out'}" data-stock-badge>${inStock?'AVAILABLE':'OUT OF STOCK'}</span></div><div class="product-row-actions"><button class="btn ghost" type="button" data-edit-used-key="${item.id}" ${editable?'':'disabled'}>Edit</button><button class="btn ghost" type="button" data-toggle-used-key="${item.id}" ${editable?'':'disabled'}>${visible?'Hide':'Show'}</button><button class="btn ${inStock?'stock-out':'stock-in'}" type="button" data-stock-toggle data-used-key-stock="${item.id}" data-next-stock="${inStock?'out_of_stock':'available'}" ${canToggleStock?'':'disabled'}>${inStock?'Mark out of stock':'Mark in stock'}</button><button class="btn danger" type="button" data-delete-used-key="${item.id}" ${editable?'':'disabled'}>Delete</button><small class="stock-message" data-stock-message aria-live="polite"></small></div></article>`;
       }).join(''):'<div class="empty">No used keys in inventory.</div>';
       revealAdmin($('used-key-list'));
     }
     function resetUsedKeyForm(){
-      $('used-key-form').reset();$('used-key-id').value='';
+      $('used-key-form').reset();$('used-key-id').value='';$('used-key-plan').value='';
       $('used-key-visible').value='true';
       $('used-key-form-title').textContent='Add used key';$('used-key-save').textContent='Add key';
       $('used-key-cancel').classList.add('hidden');$('used-key-error').textContent='';
@@ -946,12 +949,13 @@
       event.preventDefault();$('used-key-error').textContent='';
       const button=$('used-key-save');button.disabled=true;
       try{
-        const {data,error}=await state.client.rpc('admin_save_used_key',{
+        const {data,error}=await state.client.rpc('admin_save_used_key_for_plan',{
           p_id:$('used-key-id').value?Number($('used-key-id').value):null,
           p_product_id:Number($('used-key-product').value),
           p_license_key:$('used-key-license').value,
           p_price:Number($('used-key-price').value),
           p_validity_days:Number($('used-key-days').value),
+          p_software_plan_code:$('used-key-plan').value,
           p_is_visible:$('used-key-visible').value==='true'
         });
         if(error)throw error;
@@ -976,8 +980,8 @@
           }
           return {license_key,price:Number(price),validity_days:Number(days)};
         });
-        const {data,error}=await state.client.rpc('admin_bulk_add_used_keys_with_details',{
-          p_product_id:Number($('used-key-product').value),p_keys:keys
+        const {data,error}=await state.client.rpc('admin_bulk_add_used_keys_for_plan',{
+          p_product_id:Number($('used-key-product').value),p_software_plan_code:$('used-key-plan').value,p_keys:keys
         });
         if(error)throw error;
         if(!data?.ok)throw new Error(data?.message||'Could not add these keys.');
@@ -995,6 +999,7 @@
       }else if(button.matches('[data-edit-used-key]')){
         $('used-key-id').value=String(item.id);$('used-key-product').value=String(item.product_id);
         $('used-key-visible').value=String(item.status==='available');
+        $('used-key-plan').value=item.software_plan_code||'';
         $('used-key-license').value=item.license_key;
         $('used-key-price').value=item.price;$('used-key-days').value=item.validity_days;
         $('used-key-form-title').textContent='Edit used key';$('used-key-save').textContent='Save changes';
@@ -1368,13 +1373,13 @@
       }
     }
     function resetForm(){
-      state.editing=null;state.editingDownloadUrl=null;state.downloadLinkLoaded=true;
+      state.editing=null;state.editingDownloadUrl=null;state.downloadLinkLoaded=true;state.editingPlanDownloadLinks={};state.planDownloadLinksLoaded=true;
       if(productPreviewUrl){URL.revokeObjectURL(productPreviewUrl);productPreviewUrl=null}
       $('product-form').reset();$('in-stock').checked=true;$('show-stats').checked=true;$('product-rating').value='0';$('review-count').value='0';$('sold-count').value='0';$('plan-section').value='Advance';$('custom-section').value='';$('os-type').value='Linux';$('ip-series').value='';$('data-size').value='';$('specs').value='';$('ip-count').value='';$('validity').value='';$('product-badge').value='';$('stock-status').value='available';$('price-prefix').value='From';$('product-details').value='';$('image-url').value='';$('image-preview').removeAttribute('src');$('image-preview').classList.add('hidden');$('form-title').textContent='Add product';$('save-product').textContent='Add product';$('cancel-edit').classList.add('hidden');$('product-form-panel').classList.remove('editing-product');setError('product-error');syncPlanFields();
     }
     async function editProduct(id){
       const product=state.products.find(item=>String(item.id)===String(id));if(!product){setError('product-error','Could not find this product. Refresh the list and try again.');return}
-      state.editing=product.id;state.editingDownloadUrl=null;state.downloadLinkLoaded=isPlanCategory(state.category);
+      state.editing=product.id;state.editingDownloadUrl=null;state.downloadLinkLoaded=isPlanCategory(state.category);state.editingPlanDownloadLinks={};state.planDownloadLinksLoaded=state.category!=='software';
       if(productPreviewUrl){URL.revokeObjectURL(productPreviewUrl);productPreviewUrl=null}
       $('product-name').value=product.name;$('description').value=product.description||'';$('price').value=product.selling_price??product.price;$('original-price').value=product.original_price??'';$('product-rating').value=product.rating??0;$('review-count').value=product.review_count??0;$('sold-count').value=product.sold_count??0;$('show-stats').checked=product.show_stats===true;$('unit').value=product.unit||'';$('in-stock').checked=productIsAvailable(product);$('image-url').value=product.image_url||'';$('remove-image').checked=false;
       ['2','4','6'].forEach(plan=>{
@@ -1384,6 +1389,7 @@
         $(`plan-${plan}-price`).value=product[priceKey]??product.selling_price??product.price??'';
         $(`plan-${plan}-mrp`).value=product[mrpKey]??'';
         $(`plan-${plan}-enabled`).checked=product[enabledKey]!==false;
+        $(`plan-${plan}-download-url`).value='';
       });
       const savedSection=product.plan_section||'Advance';
       const presetSections=['Advance','New Launch','Flex','Custom'];
@@ -1398,6 +1404,16 @@
           if(error)throw error;
           state.editingDownloadUrl=download?.download_url||'';state.downloadLinkLoaded=true;$('download-url').value=state.editingDownloadUrl;
         }catch(error){setError('product-error',`Could not load this product's download link: ${error.message}`)}
+      }
+      if(state.category==='software'){
+        state.planDownloadLinksLoaded=false;
+        try{
+          const {data:planLinks,error}=await state.client.from('product_plan_download_links').select('software_plan_code,download_url').eq('product_id',product.id);
+          if(error)throw error;
+          state.editingPlanDownloadLinks=Object.fromEntries((planLinks||[]).map(item=>[item.software_plan_code,item.download_url]));
+          ['2','4','6'].forEach(plan=>$(`plan-${plan}-download-url`).value=state.editingPlanDownloadLinks[`${plan}_pnr_30_days`]||'');
+          state.planDownloadLinksLoaded=true;
+        }catch(error){setError('product-error',`Could not load this product's plan download links: ${error.message}`)}
       }
     }
     async function uploadProductImage(file,category=state.category){
@@ -1416,9 +1432,18 @@
       const existing=isEditing?state.products.find(item=>String(item.id)===String(state.editing)):null;
       if(isEditing&&!existing){setError('product-error','Could not find this product. Refresh the list and try again.');return}
       if(isEditing&&!state.downloadLinkLoaded){setError('product-error',"Could not load this product's download link. Try again before saving.");return}
+      if(isEditing&&!state.planDownloadLinksLoaded){setError('product-error',"Could not load this product's plan download links. Try again before saving.");return}
       const downloadUrl=isPlanCategory(state.category)?'':$('download-url').value.trim();
       if(downloadUrl){try{const url=new URL(downloadUrl);if(!['http:','https:'].includes(url.protocol))throw new Error();}catch{setError('product-error','Enter a valid HTTP or HTTPS download link.');return}}
       const isSoftware=state.category==='software';
+      const softwarePlanDownloadLinks={};
+      if(isSoftware){
+        for(const plan of ['2','4','6']){
+          const link=$(`plan-${plan}-download-url`).value.trim();
+          if(link){try{const url=new URL(link);if(!['http:','https:'].includes(url.protocol))throw new Error()}catch{setError('product-error',`Enter a valid HTTP or HTTPS download link for the ${plan} PNR plan.`);return}}
+          softwarePlanDownloadLinks[`${plan}_pnr_30_days`]=link;
+        }
+      }
       const sellingPriceInput=$('price').value.trim();
       let sellingPrice=Number(sellingPriceInput);
       const originalPriceInput=$('original-price').value.trim();
@@ -1513,6 +1538,13 @@
             ? await state.client.from('product_download_links').upsert({product_id:productId,download_url:downloadUrl})
             : await state.client.from('product_download_links').delete().eq('product_id',productId);
           if(linkResult.error)throw new Error(`Product ${isEditing?'updated':'saved'}, but its download link could not be saved: ${linkResult.error.message}`);
+        }
+        for(const [softwarePlanCode,planDownloadUrl] of Object.entries(softwarePlanDownloadLinks)){
+          if(isEditing&&planDownloadUrl===(state.editingPlanDownloadLinks[softwarePlanCode]||''))continue;
+          const planLinkResult=planDownloadUrl
+            ? await state.client.from('product_plan_download_links').upsert({product_id:productId,software_plan_code:softwarePlanCode,download_url:planDownloadUrl})
+            : await state.client.from('product_plan_download_links').delete().eq('product_id',productId).eq('software_plan_code',softwarePlanCode);
+          if(planLinkResult.error)throw new Error(`Product ${isEditing?'updated':'saved'}, but its plan download link could not be saved: ${planLinkResult.error.message}`);
         }
         resetForm();await renderProducts();notify(isEditing?'Product updated':'Product saved.');
       }catch(error){setError('product-error',error.message||'Could not save the product. Please try again.')}
@@ -1902,8 +1934,20 @@
         const catalogDownloadLink=String(data.catalog_download_link||'').trim();
         const savedDownloadLink=String(data.download_link||'').trim();
         $('request-software-name').value=data.software_name||data.product_name||'';
-        $('request-license-key').value=data.license_key||'';
+        $('request-license-key').value=data.license_key||data.auto_license_key||'';
         $('request-download-link').value=savedDownloadLink||catalogDownloadLink;
+        $('request-software-name-hint').textContent=data.software_name&&data.software_name!==data.product_name
+          ?'Saved for this order':'Auto-filled from product';
+        $('request-license-key-hint').textContent=data.license_key&&data.license_key!==data.auto_license_key
+          ?'Saved for this order'
+          :data.auto_license_key?'Auto-filled from the matching product and plan key pool'
+            :'No unused key found for this product and plan';
+        $('request-license-key-hint').classList.remove('hidden');
+        $('request-download-link-source-hint').textContent=savedDownloadLink&&savedDownloadLink!==catalogDownloadLink
+          ?'Saved for this order'
+          :catalogDownloadLink?'Auto-filled from product or plan'
+            :savedDownloadLink?'Saved for this order':'';
+        $('request-download-link-source-hint').classList.toggle('hidden',!catalogDownloadLink&&!savedDownloadLink);
         $('request-vps-ip').value=data.vps_ip||'';
         $('request-vps-port').value=data.vps_port||'';
         $('request-vps-username').value=data.vps_username||'';
@@ -1919,8 +1963,9 @@
         $('request-software-name').labels[0].textContent=generalProduct?'Product / service name':'Software Name';
         $('request-license-key').labels[0].textContent=generalProduct?'Delivery details / access':'License Key';
         $('request-software-name').disabled=!editable||fixedUsedKey;$('request-license-key').disabled=!editable||fixedUsedKey;$('request-download-link').disabled=!editable||fixedUsedKey;
+        document.querySelectorAll('[data-request-reset]').forEach(button=>button.disabled=!editable||fixedUsedKey);
         const downloadField=$('request-download-link-field');
-        downloadField.dataset.manualEntryRequired=String(editable&&data.product_type==='software'&&!fixedUsedKey&&!savedDownloadLink&&!catalogDownloadLink);
+        downloadField.dataset.manualEntryRequired=String(editable&&data.product_type==='software'&&!fixedUsedKey&&!catalogDownloadLink);
         updateManualDownloadHint();
         ['request-vps-ip','request-vps-port','request-vps-username','request-vps-password','request-vps-storage'].forEach(inputId=>$(inputId).disabled=!editable);
       }catch(error){
@@ -1932,6 +1977,9 @@
         software_name:$('request-software-name').value.trim(),
         license_key:$('request-license-key').value,
         download_link:$('request-download-link').value.trim(),
+        auto_key_id:state.selectedOrderRequest
+          && $('request-license-key').value===String(state.selectedOrderRequest.auto_license_key||'')
+          ?state.selectedOrderRequest.auto_license_key_id:null,
         vps_ip:$('request-vps-ip').value.trim(),
         vps_port:$('request-vps-port').value.trim(),
         vps_username:$('request-vps-username').value.trim(),
@@ -1944,6 +1992,19 @@
       const show=field.dataset.manualEntryRequired==='true'&&!$('request-download-link').value.trim();
       field.classList.toggle('needs-manual-download',show);
       $('request-download-link-hint').classList.toggle('hidden',!show);
+    }
+    function resetOrderRequestField(field){
+      const order=state.selectedOrderRequest;
+      if(!order)return;
+      const defaults={
+        software_name:order.product_name||'',
+        license_key:order.auto_license_key||'',
+        download_link:order.catalog_download_link||''
+      };
+      const inputId={'software_name':'request-software-name','license_key':'request-license-key','download_link':'request-download-link'}[field];
+      if(!inputId)return;
+      $(inputId).value=defaults[field];
+      if(field==='download_link')updateManualDownloadHint();
     }
     function closeOrderRequest(){
       $('order-request-drawer').classList.remove('open');$('order-request-drawer').setAttribute('aria-hidden','true');
@@ -2314,6 +2375,7 @@
     $('order-request-overlay').addEventListener('click',closeOrderRequest);
     $('save-order-request').addEventListener('click',()=>saveOrderRequest(false));
     $('request-download-link').addEventListener('input',updateManualDownloadHint);
+    document.querySelectorAll('[data-request-reset]').forEach(button=>button.addEventListener('click',()=>resetOrderRequestField(button.dataset.requestReset)));
     $('complete-order-request').addEventListener('click',()=>saveOrderRequest(true));
     $('send-guest-order-email').addEventListener('click',resendGuestOrderEmail);
     $('reject-order-request').addEventListener('click',rejectOrderRequest);
