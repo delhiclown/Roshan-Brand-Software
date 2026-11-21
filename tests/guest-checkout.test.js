@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const {
   getClientIp,
   isDisposableDomain,
@@ -184,6 +185,73 @@ test('guest checkout endpoint rejects non-POST requests without contacting Supab
   assert.equal(res.headers.Allow, 'POST');
   assert.equal(res.body.error, 'Method not allowed.');
   assert.equal(res.headers['Cache-Control'], 'no-store');
+});
+
+test('guest order history only returns orders authorized by each saved access token', async () => {
+  const originalFetch = global.fetch;
+  const previousEnv = {
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    GUEST_HASH_SECRET: process.env.GUEST_HASH_SECRET
+  };
+  const token = 'A'.repeat(43);
+  let rpcRequest;
+  process.env.SUPABASE_URL = 'https://unit-test.invalid';
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'unit-test-service-key';
+  process.env.GUEST_HASH_SECRET = 'test-secret-with-more-than-32-characters';
+  global.fetch = async (url, options) => {
+    rpcRequest = { url, body: JSON.parse(options.body) };
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ ok: true, order_id: 19, status: 'new' })
+    };
+  };
+  try {
+    const res = responseRecorder();
+    await guestCheckout({
+      method: 'POST',
+      headers: {},
+      socket: { remoteAddress: '127.0.0.4' },
+      body: { action: 'get_orders', orders: [{ order_id: 19, access_token: token }] }
+    }, res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.headers['Cache-Control'], 'no-store');
+    assert.match(rpcRequest.url, /\/rpc\/guest_get_order$/);
+    assert.equal(rpcRequest.body.p_order_id, 19);
+    assert.equal(
+      rpcRequest.body.p_access_hash,
+      crypto.createHash('sha256').update(token).digest('hex')
+    );
+    assert.deepEqual(res.body.orders, [{ ok: true, order_id: 19, status: 'new' }]);
+  } finally {
+    global.fetch = originalFetch;
+    for (const [key, value] of Object.entries(previousEnv)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
+test('UTR success closes checkout and guest order credentials persist for My Orders', () => {
+  assert.match(publicIndex, /if\(!\/\^\\d\{12\}\$\/\.test\(utr\)\)/);
+  assert.match(publicIndex, /closeModal\(\);\s*showNotice\('UTR submitted\. Your order is under review\.'\);\s*openOrdersPanel\(\)/);
+  assert.match(publicIndex, /function closeModal\(\)\s*\{\s*stopCheckoutPaymentTimer\(\)/);
+  assert.match(publicIndex, /function stopCheckoutPaymentTimer\(\)\s*\{\s*if\(state\.checkoutTimer!==null\)\{clearInterval\(state\.checkoutTimer\)/);
+  assert.match(publicIndex, /const guestOrderStorageKey='roshan-guest-orders-v1'/);
+  assert.match(publicIndex, /persistGuestOrderCredential\(result\.order\.order_id,result\.access_token\)/);
+  assert.match(publicIndex, /action:'get_orders',orders:credentials/);
+  assert.match(publicIndex, /if\(!state\.user&&!state\.guestMode\)/);
+});
+
+test('checkout does not resume expired saved orders and Try Again creates a fresh payment order', () => {
+  assert.match(publicIndex, /cache:'no-store'/);
+  assert.match(publicIndex, /const activeOrder=\['unpaid','pending_payment'\]\.includes\(data\.status\)\s*&&Number\.isFinite\(expiresAt\)\s*&&expiresAt>checkoutServerNow\((?:state\.checkout|checkout)\)/);
+  assert.match(publicIndex, /data-new-payment[\s\S]*?checkout\.paymentOrder=null;checkout\.paymentOrderSignature=null;checkout\.paymentTimerExpired=false;[\s\S]*?storageKeys\.forEach\(key=>localStorage\.removeItem\(key\)\)[\s\S]*?void ensureCheckoutPaymentOrder\(\)/);
+  assert.match(publicIndex, /p_order_id:\['unpaid','pending_payment'\]\.includes\(checkout\.paymentOrder\?\.status\)&&existingExpiry>checkoutServerNow\(checkout\)/);
+  assert.match(publicIndex, /anchorCheckoutServerTime\(checkout,data\.server_now,data\.order_id\);[\s\S]*?checkout\.paymentOrder=\{\s*order_id:data\.order_id/);
+  assert.match(apiSource, /function sendJson\(res, status, body\)\s*\{\s*res\.setHeader\('Cache-Control', 'no-store'\)/);
+  assert.match(migration, /insert into public\.orders \([\s\S]*?v_now \+ make_interval\(mins => v_timeout\)/);
 });
 
 test('guest Software checkout accepts only the three database plan IDs', () => {

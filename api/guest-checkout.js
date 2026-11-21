@@ -184,6 +184,26 @@ module.exports = async function guestCheckout(req, res) {
       return sendJson(res, 200, { ok: true, order: data });
     }
 
+    if (action === 'get_orders') {
+      if (!Array.isArray(body.orders) || body.orders.length > 25) {
+        return sendJson(res, 400, { error: 'Guest order history request is invalid.' });
+      }
+      const credentials = body.orders.map(item => ({
+        orderId: orderId(item?.order_id),
+        accessHash: hashAccessToken(accessToken(item?.access_token))
+      }));
+      const results = await Promise.all(credentials.map(({ orderId: guestOrderId, accessHash }) =>
+        callRpc('guest_get_order', {
+          p_order_id: guestOrderId,
+          p_access_hash: accessHash
+        })
+      ));
+      return sendJson(res, 200, {
+        ok: true,
+        orders: results.filter(result => result?.ok)
+      });
+    }
+
     return sendJson(res, 400, { error: 'Unknown guest checkout action.' });
   } catch (error) {
     console.error('Guest checkout request failed:', error);

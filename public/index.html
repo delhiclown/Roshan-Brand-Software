@@ -1239,12 +1239,18 @@
       {id:'residential', title:'Residential Proxies', icon:'◎', description:'Residential IP options for your data and browsing needs.'},
       {id:'vps', title:'Windows VPS', icon:'▣', description:'Reliable Windows servers for projects that need room to grow.'}
     ];
-    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, usedKeys:[], usedKeysError:null, usedKeysLoading:true, demoKeys:[], demoKeysError:null, rentalProducts:[], rentalProductsError:null, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, pendingAuthRequest:null, authIntent:'', authMode:'signin', rememberSession:false, guestMode:false, activeGuestOrder:null, guestOrderPoll:null, offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
+    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, checkoutTimer:null, usedKeys:[], usedKeysError:null, usedKeysLoading:true, demoKeys:[], demoKeysError:null, rentalProducts:[], rentalProductsError:null, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, pendingAuthRequest:null, authIntent:'', authMode:'signin', rememberSession:false, guestMode:false, activeGuestOrder:null, guestOrderPoll:null, offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
       const authRememberStorageKey='roshan-remember-me';
       const authSessionExpiryStorageKey='roshan-auth-session-expires-at';
       let authStorageKey='';
       try{state.rememberSession=localStorage.getItem(authRememberStorageKey)==='true'}
       catch(error){console.error('Could not read the Remember me preference:',error)}
+      try{
+        const guestOrders=JSON.parse(localStorage.getItem('roshan-guest-orders-v1')||'[]');
+        state.guestMode=Array.isArray(guestOrders)&&guestOrders.some(item=>
+          Number.isSafeInteger(Number(item?.order_id))&&Number(item.order_id)>0
+          &&/^[A-Za-z0-9_-]{43}$/.test(String(item?.access_token||'')));
+      }catch(error){console.warn('Could not restore guest checkout mode:',error)}
       function createAuthSessionStorage(){
         return {
           getItem:async key=>{
@@ -1541,10 +1547,38 @@
       return id;
     }
 
+    const guestOrderStorageKey='roshan-guest-orders-v1';
+    function readGuestOrderCredentials(){
+      try{
+        const saved=JSON.parse(localStorage.getItem(guestOrderStorageKey)||'[]');
+        if(!Array.isArray(saved))return [];
+        return saved.filter(item=>Number.isSafeInteger(Number(item?.order_id))
+          &&Number(item.order_id)>0
+          &&/^[A-Za-z0-9_-]{43}$/.test(String(item?.access_token||''))).slice(0,25);
+      }catch(error){
+        console.warn('Could not read guest order history from local storage:',error);
+        return [];
+      }
+    }
+    function saveGuestOrderCredentials(credentials){
+      try{localStorage.setItem(guestOrderStorageKey,JSON.stringify(credentials.slice(0,25)))}
+      catch(error){
+        console.warn('Could not persist guest order access on this device:',error);
+        showNotice('This browser could not save guest order history. Keep your order email for reference.');
+      }
+    }
+    function persistGuestOrderCredential(orderId,accessToken){
+      const credential={order_id:Number(orderId),access_token:String(accessToken||'')};
+      const credentials=readGuestOrderCredentials().filter(item=>Number(item.order_id)!==credential.order_id);
+      credentials.unshift(credential);
+      saveGuestOrderCredentials(credentials);
+    }
+
     async function guestCheckoutApi(payload){
       const response=await fetch('/api/guest-checkout',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
+        cache:'no-store',
         body:JSON.stringify(payload)
       });
       const result=await response.json().catch(()=>null);
@@ -1657,6 +1691,7 @@
           order:result.order,
           submitted:false
         };
+        persistGuestOrderCredential(result.order.order_id,result.access_token);
         renderGuestOrderPayment(result.order);
         startGuestOrderPolling();
       }catch(error){
@@ -1719,9 +1754,11 @@
         });
         guestOrder.submitted=true;
         guestOrder.order.status='new';
-        renderGuestOrderStatus();
-        try{await refreshGuestOrder()}
-        catch(error){console.error('UTR was submitted, but the latest guest order status could not be loaded:',error)}
+        clearInterval(state.guestOrderPoll);
+        state.guestOrderPoll=null;
+        closeModal();
+        showNotice('UTR submitted. Your order is under review.');
+        openOrdersPanel();
       }catch(error){
         const errorNode=$('guest-order-error');
         if(errorNode)errorNode.textContent=error.message||'Could not submit the UTR.';
@@ -2811,7 +2848,7 @@
 
     function renderOrdersPanel(){
       const content=$('orders-panel-content');
-      if(!state.user){
+      if(!state.user&&!state.guestMode){
         content.innerHTML='';
         closeOrdersPanel();
         openAuthPage('signin','orders');
@@ -2823,7 +2860,7 @@
       }
       if(state.myOrdersError){
         content.innerHTML=`<div class="orders-error"><p>${escapeHtml(state.myOrdersError)}</p><button class="orders-retry" id="orders-retry" type="button">Retry</button></div>`;
-        $('orders-retry').addEventListener('click',()=>refreshMyOrders());
+        $('orders-retry').addEventListener('click',()=>state.user?refreshMyOrders():refreshGuestOrders());
         return;
       }
       const orders=(state.myOrders||[]).filter(isCustomerVisibleOrder);
@@ -2841,17 +2878,17 @@
             : `<p>Software: <strong>${escapeHtml(order.software_name||order.product_name)}</strong></p>${order.is_demo_key&&Number(order.demo_validity_days)>0?`<p>${Number(order.demo_validity_days)} days demo</p>`:''}${licenseKey?`<div class="orders-key-box"><span class="key-label">KEY NAME - </span><span class="key-value">${escapeHtml(licenseKey)}</span><button class="orders-copy orders-copy-key" type="button" data-copy-license="${escapeHtml(order.id)}" data-copy-kind="key" data-copy-value="${escapeHtml(licenseKey)}" aria-live="polite">Copy Key</button></div>`:''}${link?`<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(order.software_name||order.product_name)}</a>`:''}`}
             ${order.is_rental&&order.rental_active===false?'<p>Rental period ended.</p>':''}
             ${order.is_rental&&order.rental_expires_at?`<p>Rental access until ${escapeHtml(formatDate(order.rental_expires_at))}</p>`:''}${order.delivery_note?`<p>${escapeHtml(order.delivery_note)}</p>`:''}${order.delivery_text?`<pre>${escapeHtml(order.delivery_text)}</pre>`:''}`
-          : `${orderInfo}<p>${order.late_payment?'Payment verification is pending.':order.status==='pending_payment'||order.status==='unpaid'?'Payment is due. Resume checkout to submit your UTR.':order.status==='expired'?'Payment time expired. If you already paid, submit your UTR for manual review.':order.status==='pending_verification'||order.status==='new'?'Payment verification pending.':status.label==='Processing'?'Your order is being processed.':`This order was ${status.label.toLowerCase()}.`}</p>${order.payment_method&&order.payment_method!=='wallet'?`<p>Payment: ${escapeHtml(order.payment_method==='upi_qr'?'Scan QR (UPI)':'UPI app')} · ₹${money(order.price)}</p>`:''}${order.coupon_code?`<p>Coupon ${escapeHtml(order.coupon_code)} · ${escapeHtml(order.discount_percent)}% off · Original ₹${money(order.original_price)} · Final ₹${money(order.price)}</p>`:''}${order.reject_reason?`<p>Reason: ${escapeHtml(order.reject_reason)}</p>`:''}${['pending_payment','unpaid','expired'].includes(order.status)&&order.payment_method!=='wallet'&&!order.offer_claim_id?`<button class="orders-pay-button" type="button" data-resume-payment="${escapeHtml(order.id)}">Submit UTR / Resume Payment</button>`:''}${order.status==='rejected'&&order.payment_method!=='wallet'?`<form class="orders-resubmit-form" data-resubmit-form="${escapeHtml(order.id)}"><label for="resubmit-utr-${escapeHtml(order.id)}">Submit a new 12-digit UTR</label><input id="resubmit-utr-${escapeHtml(order.id)}" data-resubmit-utr="${escapeHtml(order.id)}" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" required><button class="orders-pay-button" type="submit">Resubmit UTR</button><p class="modal-error" data-resubmit-error="${escapeHtml(order.id)}" aria-live="polite"></p></form>`:''}${order.status==='pending_payment'&&order.offer_claim_id?`<button class="orders-pay-button" type="button" data-pay-offer-order="${escapeHtml(order.id)}">Pay now</button><button class="orders-delete-button" type="button" data-delete-offer-order="${escapeHtml(order.id)}">Delete unpaid order</button>`:''}`;
+          : `${orderInfo}<p>${order.late_payment?'Payment verification is pending.':order.status==='pending_payment'||order.status==='unpaid'?'Payment is due. Resume checkout to submit your UTR.':order.status==='expired'?'Payment time expired. If you already paid, submit your UTR for manual review.':order.status==='pending_verification'||order.status==='new'?'Payment verification pending.':status.label==='Processing'?'Your order is being processed.':`This order was ${status.label.toLowerCase()}.`}</p>${order.payment_method&&order.payment_method!=='wallet'?`<p>Payment: ${escapeHtml(order.payment_method==='upi_qr'?'Scan QR (UPI)':'UPI app')} · ₹${money(order.price)}</p>`:''}${order.coupon_code?`<p>Coupon ${escapeHtml(order.coupon_code)} · ${escapeHtml(order.discount_percent)}% off · Original ₹${money(order.original_price)} · Final ₹${money(order.price)}</p>`:''}${order.reject_reason?`<p>Reason: ${escapeHtml(order.reject_reason)}</p>`:''}${!order.is_guest_order&&['pending_payment','unpaid','expired'].includes(order.status)&&order.payment_method!=='wallet'&&!order.offer_claim_id?`<button class="orders-pay-button" type="button" data-resume-payment="${escapeHtml(order.id)}">Submit UTR / Resume Payment</button>`:''}${order.status==='rejected'&&order.payment_method!=='wallet'&&!order.is_guest_order?`<form class="orders-resubmit-form" data-resubmit-form="${escapeHtml(order.id)}"><label for="resubmit-utr-${escapeHtml(order.id)}">Submit a new 12-digit UTR</label><input id="resubmit-utr-${escapeHtml(order.id)}" data-resubmit-utr="${escapeHtml(order.id)}" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" required><button class="orders-pay-button" type="submit">Resubmit UTR</button><p class="modal-error" data-resubmit-error="${escapeHtml(order.id)}" aria-live="polite"></p></form>`:''}${order.status==='pending_payment'&&order.offer_claim_id?`<button class="orders-pay-button" type="button" data-pay-offer-order="${escapeHtml(order.id)}">Pay now</button><button class="orders-delete-button" type="button" data-delete-offer-order="${escapeHtml(order.id)}">Delete unpaid order</button>`:''}`;
         const itemName=order.is_offer_free?`Free · ${order.product_name}`:order.product_name;
         return `<article class="orders-item"><button class="orders-item-trigger" type="button" data-orders-item="${escapeHtml(order.id)}" aria-expanded="false"><span class="orders-item-main"><strong>${escapeHtml(order.is_demo_key?'Demo · '+order.product_name:order.is_rental?'Rental · '+order.product_name:itemName)}</strong><small>${order.is_demo_key?'Free demo key · ':`${Number(order.quantity)||1} item(s) · ₹${money(order.price)} · `}${formatDate(order.created_at)}</small></span><span class="orders-status ${status.className}">${status.label}</span></button><div class="orders-item-detail hidden" data-orders-detail="${escapeHtml(order.id)}">${delivery}</div></article>`;
       }).join('')}</div>` : '';
-      const claims=state.myOfferClaims||[];
+      const claims=state.user?state.myOfferClaims||[]:[];
       const claimsMarkup=claims.length?`<div class="orders-list" style="margin-top:16px"><div style="padding:8px 0 4px;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.04em">OFFER CLAIMS</div>${claims.map(claim=>{
         const label=claim.status==='pending'?'Claim under review':claim.status==='approved'?'Approved · payment order created':claim.status==='transferred'?'Free software transferred':claim.status==='expired'?'Claim expired':'Rejected';
         const statusClass=claim.status==='rejected'||claim.status==='expired'?'rejected':claim.status==='transferred'?'delivered':'processing';
         return `<article class="orders-item"><div class="orders-item-trigger" style="cursor:default"><span class="orders-item-main"><strong>${escapeHtml(claim.offer_title)}</strong><small>${escapeHtml(claim.product_name)} · ${formatDate(claim.created_at)}${claim.payment_order_id?` · Order #${escapeHtml(claim.payment_order_id)}`:''}${claim.rejection_reason?` · Reason: ${escapeHtml(claim.rejection_reason)}`:''}</small></span><span class="orders-status ${statusClass}">${label}</span></div>${claim.status==='rejected'?`<button class="orders-pay-button" type="button" data-resubmit-offer-claim="${escapeHtml(claim.id)}">Resubmit screenshot</button>`:''}</article>`;
       }).join('')}</div>`:'';
-      const couponsMarkup=coupons.length ? `<div class="orders-list" style="margin-top:18px"><div style="padding:8px 0 4px;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.04em">MY COUPONS</div>${coupons.map(coupon=>{
+      const couponsMarkup=state.user&&coupons.length ? `<div class="orders-list" style="margin-top:18px"><div style="padding:8px 0 4px;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.04em">MY COUPONS</div>${coupons.map(coupon=>{
         const expiry=coupon.expiresAt ? formatDate(coupon.expiresAt) : 'No expiry';
         const status=String(coupon.status||'unused');
         return `<article class="orders-item"><div class="orders-item-trigger" style="cursor:default;border-bottom:0"><span class="orders-item-main"><strong>${escapeHtml(coupon.label || 'Coupon')} OFF · ${escapeHtml(status)}</strong><small>${escapeHtml(coupon.code)} · Expires ${escapeHtml(expiry)}${coupon.used_order_id?` · Order #${escapeHtml(coupon.used_order_id)}`:''}</small></span>${status==='unused'?`<button class="orders-copy" type="button" data-copy-coupon="${escapeHtml(coupon.code)}">Copy</button>`:''}</div></article>`;
@@ -2982,6 +3019,45 @@
       }
     }
 
+    async function refreshGuestOrders(){
+      state.myOrdersLoading=state.myOrders===null;
+      state.myOrdersError=null;
+      if(state.ordersPanelOpen)renderOrdersPanel();
+      try{
+        const credentials=readGuestOrderCredentials();
+        if(!credentials.length){
+          state.myOrders=[];
+          return;
+        }
+        const result=await guestCheckoutApi({action:'get_orders',orders:credentials});
+        const credentialsById=new Map(credentials.map(item=>[String(item.order_id),item]));
+        const orders=Array.isArray(result.orders)?result.orders:[];
+        const retained=[];
+        state.myOrders=orders.map(order=>{
+          const credential=credentialsById.get(String(order.order_id));
+          if(!credential)return null;
+          retained.push(credential);
+          return {
+            ...order,
+            id:Number(order.order_id),
+            price:Number(order.amount),
+            quantity:1,
+            payment_method:'upi_qr',
+            is_guest_order:true
+          };
+        }).filter(Boolean);
+        saveGuestOrderCredentials(retained);
+        state.myOrdersError=null;
+      }catch(error){
+        console.error('Could not load guest order history:',error);
+        state.myOrdersError='Guest orders could not be loaded. Please try again.';
+      }finally{
+        state.myOrdersLoading=false;
+        renderHeader();
+        if(state.ordersPanelOpen)renderOrdersPanel();
+      }
+    }
+
     async function notifyOrderRequest(orderId){
       try{
         const {data,error}=await state.client.auth.getSession();
@@ -3004,14 +3080,16 @@
         if(!state.guestMode){openAuthPage('signin','orders');return}
         closeMobileMenu();
         $('profile-menu')?.classList.add('hidden');
+        state.myOrders=null;
+        state.myOrdersError=null;
         state.ordersPanelOpen=true;
         $('orders-panel').classList.remove('hidden');
         $('orders-panel').setAttribute('aria-hidden','false');
         $('orders-trigger')?.setAttribute('aria-expanded','true');
-        $('orders-panel-content').innerHTML='<div class="orders-empty"><p>Guest users cannot access wallet or order history. Login karo to use these features. Your current guest delivery is shown in checkout and sent to your email.</p><button class="orders-pay-button" id="guest-orders-login" type="button">Login karo</button></div>';
         $('orders-view-all').parentElement.classList.add('hidden');
         document.body.style.overflow='hidden';
-        $('guest-orders-login').addEventListener('click',()=>{closeOrdersPanel();openAuthPage('signin','orders')});
+        renderOrdersPanel();
+        void refreshGuestOrders();
         return;
       }
       closeMobileMenu();
@@ -3484,7 +3562,18 @@
     }
 
     function openModal(){ $('wallet-modal').classList.add('open');document.body.style.overflow='hidden'; }
-    function closeModal(){ window.dispatchEvent(new CustomEvent('software-plan-close'));$('wallet-modal').classList.remove('open');$('wallet-dialog').classList.remove('checkout-dialog');document.body.style.overflow='';state.checkout=null;sessionStorage.removeItem('active_upi_product');sessionStorage.removeItem('active_upi_software_plan'); }
+    function closeModal(){
+      stopCheckoutPaymentTimer();
+      clearInterval(state.guestOrderPoll);state.guestOrderPoll=null;state.activeGuestOrder=null;
+      window.dispatchEvent(new CustomEvent('software-plan-close'));
+      $('wallet-modal').classList.remove('open');$('wallet-dialog').classList.remove('checkout-dialog');
+      document.body.style.overflow=state.ordersPanelOpen?'hidden':'';
+      state.checkout=null;
+      try{
+        sessionStorage.removeItem('active_upi_product');sessionStorage.removeItem('active_upi_software_plan');
+        sessionStorage.removeItem('active_upi_used_key');
+      }catch(error){console.warn('Could not clear the active checkout session:',error)}
+    }
     function transactionLabel(type){return ({topup:'Wallet top-up',purchase:'Purchase',refund:'Refund',admin_credit:'Balance added',admin_debit:'Balance deducted'})[type]||type}
     function formatDate(value){return new Date(value).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'})}
     const copyFeedbackTimers=new WeakMap();
@@ -3825,6 +3914,12 @@
       const message='Time left to pay — order fails automatically after 10 minutes if UTR is not submitted';
       return `<div class="payment-countdown ${remaining<120000?'urgent':''}" data-payment-timer data-payment-expiry="${escapeHtml(order.payment_expires_at)}" data-server-offset="${Number(checkout.serverTimeOffsetMs)||0}" data-grace-minutes="${Number(checkout.graceMinutes??5)}" role="timer"><span>${message}</span><time>${formatPaymentCountdown(remaining)}</time></div>`;
     }
+    function startCheckoutPaymentTimer(){
+      if(state.checkoutTimer===null)state.checkoutTimer=window.setInterval(updateCheckoutPaymentTimer,1000);
+    }
+    function stopCheckoutPaymentTimer(){
+      if(state.checkoutTimer!==null){clearInterval(state.checkoutTimer);state.checkoutTimer=null}
+    }
     function updateCheckoutPaymentTimer(){
       const timer=document.querySelector('[data-payment-timer]');
       const checkout=state.checkout;
@@ -3877,7 +3972,7 @@
             p_payment_method:checkout.method
           })
           :await state.client.rpc('prepare_product_payment',{
-            p_order_id:checkout.paymentOrder?.status==='unpaid'&&existingExpiry>checkoutServerNow(checkout)
+            p_order_id:['unpaid','pending_payment'].includes(checkout.paymentOrder?.status)&&existingExpiry>checkoutServerNow(checkout)
               ?checkout.paymentOrder.order_id:null,
             p_product_id:checkout.product.id,
             p_coupon_code:checkout.coupon?.code||null,
@@ -3929,6 +4024,7 @@
     function renderCheckout(){
       const checkout=state.checkout;
       if(!checkout)return;
+      startCheckoutPaymentTimer();
       const product=checkout.product;
       const upiId=String(state.settings.upi_id||'').trim();
       const payee=String(state.settings.upi_payee_name||'').trim();
@@ -4036,11 +4132,13 @@
       $('modal-body').querySelector('[data-new-payment]')?.addEventListener('click',()=>{
         checkout.method=checkout.usedKey?'upi_qr':checkoutDefaultMethod(methods,state.balance,Number(product.price),isCheckoutMobile());
         checkout.paymentOrder=null;checkout.paymentOrderSignature=null;checkout.paymentTimerExpired=false;checkout.utr='';checkout.paymentError='';
-        try{localStorage.removeItem(checkout.usedKey
+        const storageKeys=[checkout.usedKey
           ?`pending-used-key:${state.user.id}:${checkout.usedKey.id}`
-          :checkoutStorageKey(state.user.id,checkout))}
+          :checkoutStorageKey(state.user.id,checkout)];
+        if(!checkout.usedKey&&checkout.softwarePlanCode)storageKeys.push(`pending-payment:${state.user.id}:${product.id}`);
+        try{storageKeys.forEach(key=>localStorage.removeItem(key))}
         catch(error){console.warn('Could not clear the expired payment order from local storage:',error)}
-        renderCheckout();
+        void ensureCheckoutPaymentOrder();
       });
       $('modal-body').querySelector('[data-retry-payment]')?.addEventListener('click',()=>{
         checkout.paymentError='';
@@ -4157,7 +4255,10 @@
           if(data?.ok&&matchingPlan){
             anchorCheckoutServerTime(state.checkout,data.server_now,data.order_id);
             const expiresAt=parseServerTimestamp(data.payment_expires_at);
-            if(['unpaid','pending_payment','expired'].includes(data.status)&&Number.isFinite(expiresAt)){
+            const activeOrder=['unpaid','pending_payment'].includes(data.status)
+              &&Number.isFinite(expiresAt)
+              &&expiresAt>checkoutServerNow(state.checkout);
+            if(activeOrder){
               state.checkout.paymentOrder={
                 order_id:data.order_id,product_id:data.product_id,price:data.price,
                 payment_method:data.payment_method,status:data.status,
@@ -4168,10 +4269,9 @@
                 software_plan_mrp:data.software_plan_mrp
               };
               state.checkout.graceMinutes=Number(data.grace_minutes??5);
-              state.checkout.paymentTimerExpired=data.status==='expired'||expiresAt<=checkoutServerNow(state.checkout);
+              state.checkout.paymentTimerExpired=false;
               state.checkout.coupon=null;
-              state.checkout.paymentOrderSignature=data.status==='expired'
-                ?checkoutPaymentSignature(state.checkout):null;
+              state.checkout.paymentOrderSignature=null;
               state.checkout.utr='';
             }else{
               try{localStorage.removeItem(storageKey)}
@@ -4246,19 +4346,28 @@
           });
           if(error)throw error;
           if(data?.ok){
-            checkout.product.price=Number(data.price);
             anchorCheckoutServerTime(checkout,data.server_now,data.order_id);
-            checkout.paymentOrder={
-              order_id:data.order_id,product_id:data.product_id,price:data.price,
-              payment_method:data.payment_method,status:data.status,
-              payment_expires_at:data.payment_expires_at
-            };
-            checkout.graceMinutes=Number(data.grace_minutes??5);
-            checkout.paymentTimerExpired=data.status==='expired'
-              ||parseServerTimestamp(data.payment_expires_at)<=checkoutServerNow(checkout);
-            checkout.paymentOrderSignature=checkoutPaymentSignature(checkout);
+            const expiresAt=parseServerTimestamp(data.payment_expires_at);
+            const activeOrder=['unpaid','pending_payment'].includes(data.status)
+              &&Number.isFinite(expiresAt)
+              &&expiresAt>checkoutServerNow(checkout);
+            if(activeOrder){
+              checkout.product.price=Number(data.price);
+              checkout.paymentOrder={
+                order_id:data.order_id,product_id:data.product_id,price:data.price,
+                payment_method:data.payment_method,status:data.status,
+                payment_expires_at:data.payment_expires_at
+              };
+              checkout.graceMinutes=Number(data.grace_minutes??5);
+              checkout.paymentTimerExpired=false;
+              checkout.paymentOrderSignature=checkoutPaymentSignature(checkout);
+            }else{
+              try{localStorage.removeItem(storageKey)}
+              catch(storageError){console.warn('Could not clear the expired pending Used Keys payment:',storageError)}
+            }
           }else{
-            localStorage.removeItem(storageKey);
+            try{localStorage.removeItem(storageKey)}
+            catch(storageError){console.warn('Could not clear the stale pending Used Keys payment:',storageError)}
           }
         }catch(error){
           state.checkout=null;
@@ -4347,20 +4456,20 @@
           renderCheckout();return;
         }
         if(data.status==='new'&&data.order_id)void notifyOrderRequest(data.order_id);
-        sessionStorage.removeItem('active_upi_product');
-        sessionStorage.removeItem('active_upi_software_plan');
-        sessionStorage.removeItem('active_upi_used_key');
-        try{localStorage.removeItem(checkout.usedKey
-          ?`pending-used-key:${state.user.id}:${checkout.usedKey.id}`
-          :checkoutStorageKey(state.user.id,checkout))}
+        try{
+          sessionStorage.removeItem('active_upi_product');
+          sessionStorage.removeItem('active_upi_software_plan');
+          sessionStorage.removeItem('active_upi_used_key');
+          localStorage.removeItem(checkout.usedKey
+            ?`pending-used-key:${state.user.id}:${checkout.usedKey.id}`
+            :checkoutStorageKey(state.user.id,checkout));
+        }
         catch(storageError){console.warn('Could not clear the submitted payment order from local storage:',storageError)}
         if(checkout.usedKey)void refreshUsedKeys().catch(error=>handleUsedKeysLoadError(error,'Could not refresh Used Keys after payment:'));
-        await refreshMyOrders();
-        try{await refreshMyCoupons()}
-        catch(error){console.error('UTR was submitted, but coupons could not be refreshed:',error)}
-        $('modal-title').textContent='Payment submitted';
-        $('modal-body').innerHTML=`<div class="wallet-balance"><strong style="font-size:18px">Payment verification pending</strong><small style="margin-top:9px">Your UTR has been submitted. Delivery details will appear after admin verification.</small><small>${escapeHtml(checkout.product.name)}${checkout.softwarePlanLabel?` · ${escapeHtml(checkout.softwarePlanLabel)}`:''} · ₹${money(checkout.paymentOrder.price)}</small><small>Order #${escapeHtml(data.order_id)} · UTR ${escapeHtml(utr)}</small></div><button class="modal-primary" id="upi-order-view" type="button">View My Orders</button><button class="back" id="upi-order-done" type="button" style="margin-left:7px">Done</button>`;
-        $('upi-order-view').addEventListener('click',()=>openWallet('orders'));$('upi-order-done').addEventListener('click',closeModal);
+        closeModal();
+        showNotice('UTR submitted. Your order is under review.');
+        openOrdersPanel();
+        void refreshMyCoupons().catch(error=>console.error('UTR was submitted, but coupons could not be refreshed:',error));
       }catch(error){checkout.submittingPayment=false;checkout.paymentError=error.message||'Could not submit this payment.';renderCheckout()}
     }
 
@@ -4535,7 +4644,6 @@
     setTheme(document.documentElement.dataset.theme);
     renderBrandLogos();
     window.setInterval(updateOfferCountdowns,1000);
-    window.setInterval(updateCheckoutPaymentTimer,1000);
     window.setInterval(()=>{
       if(!state.client||!state.user||!state.rememberSession)return;
       try{
