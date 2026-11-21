@@ -105,6 +105,8 @@ grant execute on function public.guest_create_order(text, bigint, bigint, text, 
 grant execute on function public.guest_submit_order_utr(bigint, text, text, text) to service_role;
 grant execute on function public.guest_get_order(bigint, text) to service_role;
 grant execute on function public.guest_claim_demo_key(bigint, text, text, text, text) to service_role;
+revoke all on function public.link_guest_orders_to_user() from public, anon;
+grant execute on function public.link_guest_orders_to_user() to authenticated;
 
 revoke all on function public.admin_list_orders() from public, anon;
 revoke all on function public.admin_order_request_counts() from public, anon;

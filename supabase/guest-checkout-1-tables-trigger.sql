@@ -13,10 +13,12 @@ alter table public.orders add column if not exists guest_email_sent_at timestamp
 
 alter table public.orders drop constraint if exists orders_guest_identity_check;
 alter table public.orders add constraint orders_guest_identity_check check (
-  (user_id is null and guest_email is not null
+  (guest_email is not null
     and guest_access_hash is not null and guest_access_hash ~ '^[0-9a-f]{64}$'
-    and guest_device_hash is not null and guest_device_hash ~ '^[0-9a-f]{64}$'
-    and guest_ip_hash is not null and guest_ip_hash ~ '^[0-9a-f]{64}$')
+    and ((user_id is null
+      and guest_device_hash is not null and guest_device_hash ~ '^[0-9a-f]{64}$'
+      and guest_ip_hash is not null and guest_ip_hash ~ '^[0-9a-f]{64}$')
+      or (user_id is not null and guest_device_hash is null and guest_ip_hash is null)))
   or (user_id is not null and guest_email is null and guest_access_hash is null
     and guest_device_hash is null and guest_ip_hash is null)
 );
@@ -74,7 +76,7 @@ create trigger release_guest_used_key_reservation
   after update of status on public.orders
   for each row
   when (
-    old.user_id is null and old.used_key_id is not null
+    old.used_key_id is not null
     and new.status in ('expired', 'rejected', 'cancelled')
   )
   execute function private.release_guest_used_key_reservation();

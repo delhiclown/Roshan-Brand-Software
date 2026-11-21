@@ -86,6 +86,18 @@ function hashAccessToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
+function publicSiteOrigin() {
+  const configuredOrigin = String(process.env.PUBLIC_SITE_URL || '').trim();
+  if (configuredOrigin) {
+    const url = new URL(configuredOrigin);
+    if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Public site URL must use HTTP or HTTPS.');
+    return url.origin;
+  }
+  const deploymentHost = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  if (deploymentHost) return `https://${deploymentHost.replace(/^https?:\/\//i, '')}`;
+  return `http://localhost:${Number(process.env.PORT) || 3000}`;
+}
+
 function demoKeyEmail(data) {
   const name = escapeHtml(data.software_name);
   const key = escapeHtml(data.license_key);
@@ -107,11 +119,11 @@ module.exports = async function guestCheckout(req, res) {
   let ip;
   try {
     ip = getClientIp(req);
-    if (isRateLimited(ip)) return sendJson(res, 429, { error: 'Too many requests. Please wait a minute and try again.' });
     const body = req.body && typeof req.body === 'object' ? req.body : {};
     const action = String(body.action || '');
 
     if (action === 'create_order' || action === 'claim_demo') {
+      if (isRateLimited(ip)) return sendJson(res, 429, { error: 'Too many requests. Please wait a minute and try again.' });
       const email = await validateEmailAddress(body.email);
       const whatsapp = validateWhatsApp(body.whatsapp);
       const deviceId = validateDeviceId(body.device_id);
@@ -165,23 +177,85 @@ module.exports = async function guestCheckout(req, res) {
     }
 
     if (action === 'submit_utr') {
+      const token = accessToken(body.access_token);
       const data = await callRpc('guest_submit_order_utr', {
         p_order_id: orderId(body.order_id),
         p_utr: String(body.utr || '').trim(),
-        p_access_hash: hashAccessToken(accessToken(body.access_token)),
+        p_access_hash: hashAccessToken(token),
         p_ip_hash: hashGuestValue(ip)
       });
-      if (!data?.ok) return sendJson(res, 400, { error: data?.message || 'Could not submit this UTR.' });
+      if (!data?.ok) {
+        return sendJson(res, data?.reason === 'rate_limited' ? 429 : 400, {
+          error: data?.message || 'Could not submit this UTR.',
+          reason: data?.reason || 'server_error',
+          retry_after_seconds: data?.retry_after_seconds || 0,
+          remaining_attempts: data?.remaining_attempts
+        });
+      }
+      if (data.customer_email) {
+        try {
+          const trackingUrl = `${publicSiteOrigin()}/order/${encodeURIComponent(String(data.order_id))}?token=${encodeURIComponent(token)}`;
+          await sendGuestEmail({
+            to: data.customer_email,
+            subject: 'We received your payment details',
+            html: `<p>We received your payment details and will confirm shortly.</p><p>Order ID: <strong>#${escapeHtml(String(data.order_id))}</strong></p><p><a href="${escapeHtml(trackingUrl)}">Track your order</a></p><p>Verification pending? We will send the product to your email once confirmed.</p>`,
+            text: `We received your payment details and will confirm shortly.\nOrder ID: #${data.order_id}\nTrack your order: ${trackingUrl}\nVerification pending? We will send the product to your email once confirmed.`
+          });
+        } catch (error) {
+          console.error('UTR was submitted but confirmation email failed:', error);
+        }
+      }
       return sendJson(res, 200, { ok: true, order: data });
     }
 
-    if (action === 'get_order') {
-      const data = await callRpc('guest_get_order', {
+    if (action === 'upload_screenshot') {
+      const mime = String(body.mime || '');
+      const base64 = String(body.screenshot_base64 || '');
+      const data = await callRpc('guest_submit_payment_screenshot', {
         p_order_id: orderId(body.order_id),
-        p_access_hash: hashAccessToken(accessToken(body.access_token))
+        p_access_hash: hashAccessToken(accessToken(body.access_token)),
+        p_screenshot_base64: base64,
+        p_screenshot_mime: mime
       });
-      if (!data?.ok) return sendJson(res, 404, { error: data?.message || 'Guest order was not found.' });
+      if (!data?.ok) return sendJson(res, 400, { error: data?.message || 'Could not upload the screenshot.', reason: data?.reason || 'server_error' });
+      return sendJson(res, 200, data);
+    }
+
+    if (action === 'get_order') {
+      let guestOrderId;
+      let accessHash;
+      try {
+        guestOrderId = orderId(body.order_id);
+        accessHash = hashAccessToken(accessToken(body.access_token));
+      } catch {
+        return sendJson(res, 404, { error: 'Order could not be found.' });
+      }
+      const data = await callRpc('guest_get_order', {
+        p_order_id: guestOrderId,
+        p_access_hash: accessHash
+      });
+      if (!data?.ok) return sendJson(res, 404, { error: 'Order could not be found.' });
       return sendJson(res, 200, { ok: true, order: data });
+    }
+
+    if (action === 'get_orders') {
+      if (!Array.isArray(body.orders) || body.orders.length > 25) {
+        return sendJson(res, 400, { error: 'Guest order history request is invalid.' });
+      }
+      const credentials = body.orders.map(item => ({
+        orderId: orderId(item?.order_id),
+        accessHash: hashAccessToken(accessToken(item?.access_token))
+      }));
+      const results = await Promise.all(credentials.map(({ orderId: guestOrderId, accessHash }) =>
+        callRpc('guest_get_order', {
+          p_order_id: guestOrderId,
+          p_access_hash: accessHash
+        })
+      ));
+      return sendJson(res, 200, {
+        ok: true,
+        orders: results.filter(result => result?.ok)
+      });
     }
 
     return sendJson(res, 400, { error: 'Unknown guest checkout action.' });

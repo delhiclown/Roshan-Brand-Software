@@ -203,7 +203,7 @@ begin
     return jsonb_build_object('ok', false, 'message', 'Guest order could not be verified.');
   end if;
   select o.* into v_order from public.orders as o
-    where o.id = p_order_id and o.user_id is null
+    where o.id = p_order_id and o.guest_email is not null
       and o.guest_access_hash = p_access_hash
       and o.guest_email is not null and o.guest_email_sent_at is null
     for update;
@@ -248,7 +248,37 @@ begin
       or (v_order.payment_expires_at is not null and clock_timestamp() > v_order.payment_expires_at),
     status = 'new', payment_status = 'pending'
   where o.id = v_order.id;
-  return jsonb_build_object('ok', true, 'order_id', v_order.id, 'status', 'new');
+  return jsonb_build_object('ok', true, 'order_id', v_order.id, 'status', 'new',
+    'customer_email', v_order.guest_email);
+end;
+$$;
+
+create or replace function public.link_guest_orders_to_user()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_email text;
+  v_linked_count integer := 0;
+begin
+  if v_user_id is null then
+    return jsonb_build_object('ok', false, 'message', 'Sign in to link guest orders.');
+  end if;
+  select lower(btrim(u.email::text)) into v_email
+    from auth.users as u
+    where u.id = v_user_id and u.email_confirmed_at is not null;
+  if v_email is null then
+    return jsonb_build_object('ok', false, 'message', 'Verify your email to link guest orders.');
+  end if;
+  update public.orders as o
+    set user_id = v_user_id, guest_device_hash = null, guest_ip_hash = null
+    where o.user_id is null and o.guest_email = v_email
+      and o.guest_access_hash is not null;
+  get diagnostics v_linked_count = row_count;
+  return jsonb_build_object('ok', true, 'linked_count', v_linked_count);
 end;
 $$;
 
@@ -270,7 +300,8 @@ begin
     return jsonb_build_object('ok', false, 'message', 'Guest order was not found.');
   end if;
   select o.* into v_order from public.orders as o
-    where o.id = p_order_id and o.user_id is null and o.guest_access_hash = p_access_hash;
+    where o.id = p_order_id and o.guest_email is not null
+      and o.guest_access_hash = p_access_hash;
   if not found then return jsonb_build_object('ok', false, 'message', 'Guest order was not found.'); end if;
   select s.encryption_key into v_encryption_key from private.order_delivery_secrets as s where s.id = true;
   if v_order.used_key_id is not null then
@@ -370,5 +401,6 @@ revoke all on function public.guest_create_order(text, bigint, bigint, text, tex
 revoke all on function public.guest_submit_order_utr(bigint, text, text, text) from public, anon, authenticated;
 revoke all on function public.guest_get_order(bigint, text) from public, anon, authenticated;
 revoke all on function public.guest_claim_demo_key(bigint, text, text, text, text) from public, anon, authenticated;
+revoke all on function public.link_guest_orders_to_user() from public, anon, authenticated;
 
 commit;

@@ -25,7 +25,7 @@ test('customers can claim a Google Gmail demo and view it with the software down
 
 test('rental flow uses exact server amount, UTR verification and admin-only account assignment', () => {
   assert.match(homepage, /id="rental-software-view"/);
-  assert.match(homepage, /rpc\('list_available_rental_products'\)/);
+  assert.match(homepage, /collectionRpc\('list_available_rental_products'\)/);
   assert.match(homepage, /rpc\('create_rental_order'/);
   assert.match(homepage, /am:amount\.toFixed\(2\)/);
   assert.match(homepage, /rpc\('submit_rental_payment_utr'/);

@@ -31,3 +31,12 @@ test('signup confirmation, password reset, and Remember me keep visible outcomes
   assert.match(publicIndex, /setRememberSession\(\$\('auth-remember'\)\.checked\)/);
   assert.match(publicIndex, /Could not save the Remember me preference\. Check your browser storage settings and try again\./);
 });
+
+test('profile menu My Orders stays inside click handling and uses the orders panel navigation', () => {
+  assert.match(publicIndex, /\[data-menu="orders"\]'\)\.addEventListener\('click',\(\)=>openOrdersPanel\(\)\)/);
+  assert.match(publicIndex, /!menu\.contains\(event\.target\)&&!event\.target\.closest\('\.avatar-wrap'\)/);
+  assert.match(publicIndex, /!event\.target\.closest\('#orders-trigger'\)&&!menu\?\.contains\(event\.target\)/);
+  for (const action of ['wallet', 'history', 'logout']) {
+    assert.match(publicIndex, new RegExp(`\\[data-menu="${action}"\\]`));
+  }
+});

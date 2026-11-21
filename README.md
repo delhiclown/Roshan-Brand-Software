@@ -70,9 +70,10 @@ Configure these server-only values in `.env` for local use and in each Vercel en
 - `GUEST_HASH_SECRET`: a randomly generated secret with at least 32 characters. It is used to HMAC email, device, and IP identifiers before storing demo-abuse records. If it is missing or too short, the server logs the configuration reason and customers see “Checkout is temporarily unavailable. Please contact support.”
 - `RESEND_API_KEY`: an API key from Resend.
 - `RESEND_FROM_EMAIL`: a sender address verified in Resend, for example `Roshan Brand <orders@your-verified-domain.example>`.
+- `PUBLIC_SITE_URL`: the public HTTPS origin used to build guest tracking links in payment confirmation emails.
 - `SUPABASE_SERVICE_ROLE_KEY`: required by the guest API and must remain server-only.
 
-Guest orders use UPI QR and UTR review; the guest receives delivery on screen and by Resend after an admin completes the order. Free guest demos do not require a UTR and are sent after the daily eligibility checks. If an order email fails, the admin panel shows a retry action; the order remains recorded. Do not send the service-role key, Resend key, or hash secret to the browser.
+Guest orders use UPI QR and UTR review. A token-protected tracking link is shown after payment details are submitted and emailed to the customer; delivery secrets appear on the tracking page only after completion. Guest orders are linked to an account only after the account email is confirmed. Free guest demos do not require a UTR and are sent after the daily eligibility checks. If an order email fails, the admin panel shows a retry action; the order remains recorded. Do not send the service-role key, Resend key, or hash secret to the browser.
 
 On the Login form, **Remember me** is unchecked by default. Without it, the auth session is stored for the current browser session; with it, the saved session expires after 30 days. Registration uses Full Name, Email, and Password (minimum 6 characters).
 
@@ -151,6 +152,8 @@ For a fresh database, run the root-level SQL files below in the listed order fro
 17. [`supabase/inventory-stock-toggle-migration.sql`](./supabase/inventory-stock-toggle-migration.sql) — run after one guest-checkout route.
 18. [`supabase/channel-settings-migration.sql`](./supabase/channel-settings-migration.sql).
 19. [`supabase/telegram-order-alerts-migration.sql`](./supabase/telegram-order-alerts-migration.sql) — requires order requests.
+20. [`supabase/migrations/20261121054743_upi_utr_pending_verification_fix.sql`](./supabase/migrations/20261121054743_upi_utr_pending_verification_fix.sql) — guest UTR verification and screenshot flow.
+21. [`supabase/migrations/20261121065000_guest_order_tracking_account_linking.sql`](./supabase/migrations/20261121065000_guest_order_tracking_account_linking.sql) — secure guest tracking and verified-email order linking. Apply after the guest checkout SQL.
 
 [`supabase/product-pricing-stats-migration.sql`](./supabase/product-pricing-stats-migration.sql) is only needed for an existing database that does not already have those columns; fresh installs get them from `setup.sql`. [`supabase/migrations/20261112084600_used_key_utr_pending_payment_fix.sql`](./supabase/migrations/20261112084600_used_key_utr_pending_payment_fix.sql) is a targeted Used Key payment-recovery fix, not a standard fresh-install migration; apply it only when that specific recovery applies to the production data. Files in `supabase/backup/`, `supabase/scratch-run/`, and `supabase/tests/` are backup, test, or assembly scripts and are not part of this production execution list.
 

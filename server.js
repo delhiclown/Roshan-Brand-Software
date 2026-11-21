@@ -36,6 +36,12 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(publicDirectory, 'admin.html'));
 });
 
+app.get('/order/:orderId', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.set('Referrer-Policy', 'no-referrer');
+  res.sendFile(path.join(publicDirectory, 'order.html'));
+});
+
 app.use(express.static(publicDirectory));
 
 const port = process.env.PORT || 3000;

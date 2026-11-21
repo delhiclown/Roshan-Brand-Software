@@ -3,6 +3,10 @@
     {
       "source": "/admin",
       "destination": "/admin.html"
+    },
+    {
+      "source": "/order/:orderId",
+      "destination": "/order.html"
     }
   ]
 }
