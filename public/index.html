@@ -437,24 +437,26 @@
     .positive{color:#74dfaa}.negative{color:#ff929a}
     .qr-box{display:grid;place-items:center;min-height:180px;background:#fff;border-radius:12px;padding:12px;margin:12px auto;width:190px}
     .qr-box img{max-width:170px}
-    .checkout-dialog{width:min(600px,100%);max-height:92dvh;overflow-y:auto;overscroll-behavior:contain}
+    .checkout-dialog{width:min(600px,100%);max-width:100%;min-width:0;max-height:100dvh;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+    .checkout-dialog *{min-width:0;max-width:100%}
     .checkout-product{margin:0 0 14px;padding:13px 15px;border:1px solid rgba(245,192,74,.24);border-radius:14px;background:linear-gradient(130deg,#171a24,#171407)}
     .checkout-product strong{display:block;font-size:16px;overflow-wrap:anywhere}
-    .checkout-amounts{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px;font-size:12px;color:var(--muted)}
+    .checkout-amounts{display:flex;justify-content:space-between;align-items:center;gap:12px;min-width:0;margin-top:8px;font-size:12px;color:var(--muted)}
+    .checkout-amounts span{min-width:0;overflow-wrap:anywhere}
     .checkout-amounts strong{color:var(--gold);font-size:20px;white-space:nowrap}
-    .checkout-coupon{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin:12px 0}
+    .checkout-coupon{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;min-width:0;margin:12px 0}
     .checkout-coupon label{grid-column:1/-1;color:var(--muted);font-size:11px}
     .checkout-coupon input,.checkout-utr{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:#080f20;color:var(--text);padding:11px;font:inherit}
-    .checkout-coupon input{height:40px;padding:8px 11px;font-size:12px}
-    .checkout-coupon .modal-primary{min-height:40px;padding:9px 12px}
+    .checkout-coupon input{height:44px;padding:8px 11px;font-size:16px}
+    .checkout-coupon .modal-primary{min-width:0;min-height:44px;padding:9px 12px;white-space:nowrap}
     .checkout-coupon-message{grid-column:1/-1;min-height:16px;font-size:11px}
     .checkout-coupon-message.success{color:#74dfaa}.checkout-coupon-message.error{color:#ff929a}
     .used-key-original{display:block;color:var(--muted);font-size:11px;text-decoration:line-through}
     .used-key-badge{display:inline-flex;width:max-content;margin:0 0 9px;padding:4px 8px;border:1px solid rgba(245,192,74,.38);border-radius:999px;color:var(--gold);font-size:10px;font-weight:800;letter-spacing:.08em}
     .used-key-note{margin-top:8px!important;color:var(--muted)!important;font-size:11px!important}
     .used-key-card .product-image-wrap{margin-bottom:16px}
-    .checkout-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
-    .checkout-tab{min-height:44px;padding:9px 7px;border:1px solid var(--line);border-radius:11px;background:#101a31;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer}
+    .checkout-tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,110px),1fr));gap:8px;min-width:0;margin:12px 0}
+    .checkout-tab{min-width:0;min-height:44px;padding:9px 7px;border:1px solid var(--line);border-radius:11px;background:#101a31;color:var(--muted);font-size:11px;font-weight:700;overflow-wrap:anywhere;cursor:pointer}
     .checkout-tab.active{border-color:var(--gold);background:linear-gradient(145deg,#242039,#171a24);color:var(--gold);box-shadow:0 0 18px rgba(245,192,74,.12)}
     .checkout-panel{padding:14px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,#101a30,#080f20)}
     .checkout-panel h3{margin:0 0 8px;font-size:14px}
@@ -475,14 +477,17 @@
     .checkout-upi-id{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#080f20;overflow-wrap:anywhere}
     .checkout-upi-id strong{min-width:0;overflow-wrap:anywhere}
     .checkout-app-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
-    .checkout-app-links button{min-height:44px;display:grid;place-items:center;border:1px solid var(--line);border-radius:10px;background:#101a31;color:var(--text);font-size:11px;font-weight:700;cursor:pointer}
+    .checkout-dialog input{font-size:16px}
+    .checkout-app-links button{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 9px;border:1px solid var(--line);border-radius:10px;background:#101a31;color:var(--text);font-size:12px;font-weight:700;cursor:pointer}
     .checkout-app-links button:hover{border-color:var(--gold);color:var(--gold)}
-    .checkout-app-logo{display:inline-flex;align-items:center;font-size:15px;font-weight:800;letter-spacing:-.4px}
-    .checkout-app-logo.gpay span{background:conic-gradient(from -45deg,#4285f4 0 25%,#34a853 25% 50%,#fbbc05 50% 70%,#ea4335 70% 86%,#4285f4 86%);background-clip:text;-webkit-background-clip:text;color:transparent;font-size:20px;margin-right:3px}
-    .checkout-app-logo.paytm{background:linear-gradient(90deg,#00b9f1,#153e9c);background-clip:text;-webkit-background-clip:text;color:transparent}
+    .checkout-app-logo{width:24px;height:24px;flex:none;border-radius:50%}
     .checkout-utr-step .checkout-note{margin:4px 0 0;line-height:1.4}
     .checkout-utr-step .checkout-utr-label{margin:7px 0 4px}
-    .checkout-utr-step .checkout-utr{height:40px;padding:8px 10px;font-size:13px}
+    .checkout-utr-step .checkout-utr{height:44px;padding:8px 10px;font-size:16px}
+    .checkout-utr-result{margin-top:8px;font-size:13px;font-weight:700;line-height:1.45}
+    .checkout-utr-result.success,.orders-item-detail p.orders-utr-submitted,.customer-order-detail small.orders-utr-submitted{color:#74dfaa}
+    .checkout-utr-result.already{display:flex;align-items:flex-start;gap:7px;color:#ff929a}
+    .checkout-utr-result.already svg{width:16px;height:16px;flex:none}
     .checkout-rate-limit-countdown{min-height:18px;margin-top:7px;color:#ffcf70;font-size:12px;font-weight:700;text-align:center}
     .checkout-payment-fallback{display:grid;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
     .checkout-upi-feedback{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
@@ -493,8 +498,8 @@
     .checkout-late-payment[open] summary{margin-bottom:8px;color:var(--text)}
     .checkout-payment-fallback strong{font-size:12px}
     .checkout-payment-fallback .btn,.checkout-payment-fallback input,.checkout-payment-fallback .back{width:100%;box-sizing:border-box}
-    @media(max-width:639.98px){.modal{padding:8px;align-items:center}.checkout-dialog{width:100%;max-height:calc(100dvh - 16px);padding:16px}.checkout-panel{padding:11px}.checkout-panel .qr-box{width:min(158px,100%);min-height:158px;padding:7px}.checkout-panel .qr-box img,.checkout-panel .qr-box canvas{width:min(142px,100%)}.checkout-tabs{gap:5px}.checkout-tab{font-size:10px;padding:8px 4px}#wallet-modal .dialog.checkout-dialog{animation:none}.checkout-panel .checkout-upi-submit{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:3;box-shadow:0 0 0 8px rgba(8,15,32,.96)}}
-    @media(max-width:639.98px) and (max-height:700px){.checkout-dialog{padding:12px}.dialog-head{margin-bottom:10px}.checkout-product{margin-bottom:8px;padding:9px 11px}.checkout-amounts{margin-top:4px}.checkout-coupon{gap:5px;margin:7px 0}.checkout-tabs{margin:7px 0}.checkout-panel{padding:8px}.checkout-panel h3{margin-bottom:5px}.checkout-panel .qr-box{margin:5px auto;min-height:140px;width:min(140px,100%)}.checkout-panel .qr-box img,.checkout-panel .qr-box canvas{width:min(124px,100%)}.checkout-upi-id{padding:8px}.checkout-app-links{gap:6px;margin:7px 0}.checkout-app-links a{min-height:38px}.checkout-utr-step{margin-top:7px;padding:8px}}
+    @media(max-width:639.98px){.modal{padding:8px;align-items:center}.checkout-dialog{width:100%;max-width:100%;max-height:calc(100vh - max(8px,env(safe-area-inset-top,0px)) - max(8px,env(safe-area-inset-bottom,0px)));max-height:calc(100dvh - max(8px,env(safe-area-inset-top,0px)) - max(8px,env(safe-area-inset-bottom,0px)));padding:16px}.checkout-panel{min-width:0;padding:11px}.checkout-panel .qr-box{width:min(158px,100%);min-height:158px;padding:7px}.checkout-panel .qr-box img,.checkout-panel .qr-box canvas{width:min(142px,100%)}.checkout-tabs{gap:5px}.checkout-tab{font-size:11px;padding:8px 4px}#wallet-modal .dialog.checkout-dialog{animation:none}}
+    @media(max-width:639.98px) and (max-height:700px){.checkout-dialog{padding:12px}.dialog-head{margin-bottom:10px}.checkout-product{margin-bottom:8px;padding:9px 11px}.checkout-amounts{margin-top:4px}.checkout-coupon{gap:5px;margin:7px 0}.checkout-tabs{margin:7px 0}.checkout-panel{padding:8px}.checkout-panel h3{margin-bottom:5px}.checkout-panel .qr-box{margin:5px auto;min-height:140px;width:min(140px,100%)}.checkout-panel .qr-box img,.checkout-panel .qr-box canvas{width:min(124px,100%)}.checkout-upi-id{padding:8px}.checkout-app-links{gap:6px;margin:7px 0}.checkout-app-links button{min-height:44px}.checkout-utr-step{margin-top:7px;padding:8px}}
     .upi-app-options{display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
     .upi-app-link,.upi-qr-toggle{min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center;border:1px solid var(--line);border-radius:11px;background:#101a31;color:var(--text);font-size:12px;font-weight:600;cursor:pointer}
     .upi-app-link:hover,.upi-qr-toggle:hover{border-color:var(--gold);color:var(--gold)}
@@ -621,7 +626,7 @@
       .modal{align-items:flex-end;padding:0}
       .dialog{width:100%;max-width:none;max-height:92dvh;border-radius:20px 20px 0 0;border-bottom:0;padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px));animation:wallet-sheet-in .28s ease both}
       #wallet-modal.modal.open{align-items:flex-end;overflow:hidden;overscroll-behavior:none;padding:0}
-      #wallet-modal .dialog.checkout-dialog{flex:none;max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;margin:0}
+      #wallet-modal .dialog.checkout-dialog{flex:none;width:100%;max-width:100%;min-width:0;max-height:calc(100vh - max(8px,env(safe-area-inset-top,0px)));max-height:calc(100dvh - max(8px,env(safe-area-inset-top,0px)));min-height:0;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;margin:0}
       @keyframes wallet-sheet-in{from{transform:translateY(100%)}to{transform:translateY(0)}}
       .upi-app-options{display:grid}
       .upi-qr-toggle{display:flex}
@@ -2960,7 +2965,7 @@
             : `<p>Software: <strong>${escapeHtml(order.software_name||order.product_name)}</strong></p>${order.is_demo_key&&Number(order.demo_validity_days)>0?`<p>${Number(order.demo_validity_days)} days demo</p>`:''}${licenseKey?`<div class="orders-key-box"><span class="key-label">KEY NAME - </span><span class="key-value">${escapeHtml(licenseKey)}</span><button class="orders-copy orders-copy-key" type="button" data-copy-license="${escapeHtml(order.id)}" data-copy-kind="key" data-copy-value="${escapeHtml(licenseKey)}" aria-live="polite">Copy Key</button></div>`:''}${link?`<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(order.software_name||order.product_name)}</a>`:''}`}
             ${order.is_rental&&order.rental_active===false?'<p>Rental period ended.</p>':''}
             ${order.is_rental&&order.rental_expires_at?`<p>Rental access until ${escapeHtml(formatDate(order.rental_expires_at))}</p>`:''}${order.delivery_note?`<p>${escapeHtml(order.delivery_note)}</p>`:''}${order.delivery_text?`<pre>${escapeHtml(order.delivery_text)}</pre>`:''}`
-          : `${orderInfo}<p>${order.late_payment?'Payment verification is pending.':order.status==='pending_payment'||order.status==='unpaid'?'Payment is due. Resume checkout to submit your UTR.':order.status==='expired'?'Payment time expired. If you already paid, submit your UTR for manual review.':order.status==='pending_verification'||order.status==='new'?'Payment verification pending.':status.label==='Processing'?'Your order is being processed.':`This order was ${status.label.toLowerCase()}.`}</p>${order.payment_method&&order.payment_method!=='wallet'?`<p>Payment: ${escapeHtml(order.payment_method==='upi_qr'?'Scan QR (UPI)':'UPI app')} · ₹${money(order.price)}</p>`:''}${order.coupon_code?`<p>Coupon ${escapeHtml(order.coupon_code)} · ${escapeHtml(order.discount_percent)}% off · Original ₹${money(order.original_price)} · Final ₹${money(order.price)}</p>`:''}${order.reject_reason?`<p>Reason: ${escapeHtml(order.reject_reason)}</p>`:''}${!order.is_guest_order&&['pending_payment','unpaid','expired'].includes(order.status)&&order.payment_method!=='wallet'&&!order.offer_claim_id?`<button class="orders-pay-button" type="button" data-resume-payment="${escapeHtml(order.id)}">Submit UTR / Resume Payment</button>`:''}${order.status==='rejected'&&order.payment_method!=='wallet'&&!order.is_guest_order?`<form class="orders-resubmit-form" data-resubmit-form="${escapeHtml(order.id)}"><label for="resubmit-utr-${escapeHtml(order.id)}">Submit a new 12-digit UTR</label><input id="resubmit-utr-${escapeHtml(order.id)}" data-resubmit-utr="${escapeHtml(order.id)}" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" required><button class="orders-pay-button" type="submit">Resubmit UTR</button><p class="modal-error" data-resubmit-error="${escapeHtml(order.id)}" aria-live="polite"></p></form>`:''}${order.status==='pending_payment'&&order.offer_claim_id?`<button class="orders-pay-button" type="button" data-pay-offer-order="${escapeHtml(order.id)}">Pay now</button><button class="orders-delete-button" type="button" data-delete-offer-order="${escapeHtml(order.id)}">Delete unpaid order</button>`:''}`;
+          : `${orderInfo}<p class="${order.payment_method&&order.payment_method!=='wallet'&&order.payment_status==='pending'?'orders-utr-submitted':''}">${order.payment_method&&order.payment_method!=='wallet'&&order.payment_status==='pending'?'Your UTR has been submitted. Please wait for verification.':order.late_payment?'Payment verification is pending.':order.status==='pending_payment'||order.status==='unpaid'?'Payment is due. Resume checkout to submit your UTR.':order.status==='expired'?'Payment time expired. If you already paid, submit your UTR for manual review.':order.status==='pending_verification'||order.status==='new'?'Payment verification pending.':status.label==='Processing'?'Your order is being processed.':`This order was ${status.label.toLowerCase()}.`}</p>${order.payment_method&&order.payment_method!=='wallet'?`<p>Payment: ${escapeHtml(order.payment_method==='upi_qr'?'Scan QR (UPI)':'UPI app')} · ₹${money(order.price)}</p>`:''}${order.coupon_code?`<p>Coupon ${escapeHtml(order.coupon_code)} · ${escapeHtml(order.discount_percent)}% off · Original ₹${money(order.original_price)} · Final ₹${money(order.price)}</p>`:''}${order.reject_reason?`<p>Reason: ${escapeHtml(order.reject_reason)}</p>`:''}${!order.is_guest_order&&['pending_payment','unpaid','expired'].includes(order.status)&&order.payment_method!=='wallet'&&!order.offer_claim_id?`<button class="orders-pay-button" type="button" data-resume-payment="${escapeHtml(order.id)}">Submit UTR / Resume Payment</button>`:''}${order.status==='rejected'&&order.payment_method!=='wallet'&&!order.is_guest_order?`<form class="orders-resubmit-form" data-resubmit-form="${escapeHtml(order.id)}"><label for="resubmit-utr-${escapeHtml(order.id)}">Submit a new 12-digit UTR</label><input id="resubmit-utr-${escapeHtml(order.id)}" data-resubmit-utr="${escapeHtml(order.id)}" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" required><button class="orders-pay-button" type="submit">Resubmit UTR</button><p class="modal-error" data-resubmit-error="${escapeHtml(order.id)}" aria-live="polite"></p></form>`:''}${order.status==='pending_payment'&&order.offer_claim_id?`<button class="orders-pay-button" type="button" data-pay-offer-order="${escapeHtml(order.id)}">Pay now</button><button class="orders-delete-button" type="button" data-delete-offer-order="${escapeHtml(order.id)}">Delete unpaid order</button>`:''}`;
         const itemName=order.is_offer_free?`Free · ${order.product_name}`:order.product_name;
         return `<article class="orders-item"><button class="orders-item-trigger" type="button" data-orders-item="${escapeHtml(order.id)}" aria-expanded="false"><span class="orders-item-main"><strong>${escapeHtml(order.is_demo_key?'Demo · '+order.product_name:order.is_rental?'Rental · '+order.product_name:itemName)}</strong><small>${order.is_demo_key?'Free demo key · ':`${Number(order.quantity)||1} item(s) · ₹${money(order.price)} · `}${formatDate(order.created_at)}</small></span><span class="orders-status ${status.className}">${status.label}</span></button><div class="orders-item-detail hidden" data-orders-detail="${escapeHtml(order.id)}">${delivery}</div></article>`;
       }).join('')}</div>` : '';
@@ -3816,14 +3821,15 @@
             const link=delivered?safeHttpUrl(order.download_link||order.delivery_link):'';
             const orderType=order.used_key_id?'Used Key':order.product_type||'';
             const delivery=delivered?`<div class="customer-order-detail">${order.is_demo_key&&Number(order.demo_validity_days)>0?`<p>${Number(order.demo_validity_days)} days demo</p>`:''}${order.is_rental&&order.rental_expires_at?`<p>Rental access until ${escapeHtml(formatDate(order.rental_expires_at))}</p>`:''}${order.is_rental&&order.rental_active===false?'<p>Rental period ended.</p>':''}${order.license_key?`<div class="orders-key-box"><span class="key-label">KEY NAME - </span><span class="key-value">${escapeHtml(order.license_key)}</span><button class="orders-copy orders-copy-key" type="button" data-copy-key="${escapeHtml(order.id)}" data-copy-kind="key" data-copy-value="${escapeHtml(order.license_key)}" aria-live="polite">Copy Key</button></div>`:''}${order.delivery_note?`<p>${escapeHtml(order.delivery_note)}</p>`:''}${order.delivery_text?`<pre class="customer-delivery-text">${escapeHtml(order.delivery_text)}</pre>`:link?'<p class="modal-note">Your software download is ready.</p>':'<p class="modal-note">No text delivery details.</p>'}${link?`<a class="delivery-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(order.product_name)}</a>`:''}<div class="customer-order-actions">${order.delivery_text?`<button class="back" type="button" data-copy-delivery="${order.id}">Copy delivery</button>`:''}${link?`<button class="back" type="button" data-copy-link="${order.id}">Copy link</button>`:''}</div></div>`:`<div class="customer-order-detail"><small>${orderStatus==='pending'?'Your order is awaiting delivery.':`Order status: ${escapeHtml(orderStatus)}`}</small></div>`;
-            const detailMessage=order.payment_method!=='wallet'&&order.payment_status==='pending'
-              ?'Payment submitted. Waiting for admin verification.'
+            const utrSubmitted=order.payment_method!=='wallet'&&order.payment_status==='pending';
+            const detailMessage=utrSubmitted
+              ?'Your UTR has been submitted. Please wait for verification.'
               :order.payment_method!=='wallet'&&order.payment_status==='paid'
                 ?'Payment approved. Your order is awaiting delivery.'
                 :orderStatusValue==='pending'?'Your order is awaiting delivery.':`Order status: ${status.label}`;
             const orderDetails=`${order.payment_method&&order.payment_method!=='wallet'?`<small>Payment: ${escapeHtml(order.payment_method==='upi_qr'?'Scan QR (UPI)':'UPI app')} · ₹${money(order.price)}</small>`:''}${order.coupon_code?`<small>Coupon ${escapeHtml(order.coupon_code)} · ${escapeHtml(order.discount_percent)}% off · Original ₹${money(order.original_price)} · Final ₹${money(order.price)}</small>`:''}${order.reject_reason?`<small>Reason: ${escapeHtml(order.reject_reason)}</small>`:''}`;
             const statusClass=status.className==='processing'?'pending':status.className;
-            const details=delivered?delivery:`<div class="customer-order-detail"><small>${escapeHtml(detailMessage)}</small>${orderDetails}</div>`;
+            const details=delivered?delivery:`<div class="customer-order-detail"><small class="${utrSubmitted?'orders-utr-submitted':''}">${escapeHtml(detailMessage)}</small>${orderDetails}</div>`;
             return `<article class="customer-order"><button class="customer-order-head" type="button" data-customer-order="${order.id}" aria-expanded="false"><span><strong>Order #${order.id} · ${escapeHtml(order.product_name)}</strong><small>${escapeHtml(orderType)} · ₹${money(order.price)} · ${formatDate(order.created_at)}</small></span><span class="status-badge ${statusClass}">${escapeHtml(status.label)}</span></button><div class="customer-order-content hidden" data-order-detail="${order.id}">${details}</div></article>`;
           }).join(''):'<div class="empty">No orders yet.</div>';
           body.querySelectorAll('[data-customer-order]').forEach(button=>button.addEventListener('click',()=>{
@@ -4038,10 +4044,12 @@
         const remaining=Math.max(0,checkout.rateLimitUntilMs-Date.now());
         const submit=$('checkout-submit-payment');
         const countdown=$('checkout-rate-limit-countdown');
+        const alreadySubmitted=checkout.utrSubmitState==='success'||checkout.utrSubmitState==='already'
+          ||checkout.paymentOrder?.status==='pending_verification';
         if(remaining<=0){
           checkout.rateLimitUntilMs=0;
           if(countdown)countdown.textContent='';
-          if(submit){submit.disabled=!/^\d{12}$/.test(String(checkout.utr||''));submit.textContent='Submit UTR for review'}
+          if(submit){submit.disabled=alreadySubmitted||checkout.submittingPayment||!/^\d{12}$/.test(String(checkout.utr||''));submit.textContent=checkout.submittingPayment?'Submitting...':'Submit UTR for review'}
         }else{
           if(submit){submit.disabled=true;submit.textContent=`Try again in ${formatPaymentCountdown(remaining)}`}
           if(countdown)countdown.textContent=`Try again in ${formatPaymentCountdown(remaining)}`;
@@ -4208,15 +4216,20 @@
       const paymentVerificationPending=['pending_verification','completed','delivered'].includes(paymentOrder?.status);
       const paymentOrderExpired=Boolean(paymentOrder&&(paymentOrder.status==='expired'||!Number.isFinite(paymentOrderExpiry)||paymentOrderExpiry<=checkoutServerNow(checkout)));
       const utrValid=/^\d{12}$/.test(String(checkout.utr||''));
+      const utrSubmitted=checkout.utrSubmitState==='success'||checkout.utrSubmitState==='already'||paymentOrder?.status==='pending_verification';
+      const utrSubmitMessage=checkout.utrSubmitState==='success'
+        ?'<div class="checkout-utr-result success" role="status">Your UTR has been submitted. Please wait for verification.</div>'
+        :utrSubmitted?'<div class="checkout-utr-result already" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 4h.01"/></svg>Please wait, your UTR is already submitted.</div>':'';
       const utrRateLimited=Number(checkout.rateLimitUntilMs||0)>Date.now();
       const whatsappNumber=String(state.settings.whatsapp_number||'').replace(/\D/g,'');
       const whatsappMessage=encodeURIComponent(`Hello, I need help with payment for Order #${paymentOrder?.order_id||''}. Amount: ₹${money(qrAmount)}.`);
       const whatsappLink=whatsappNumber?`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`:'';
       const fallbackOptions=checkout.paymentError?`<div class="checkout-payment-fallback"><strong>Need help?</strong>${whatsappLink?`<a class="btn ghost" href="${whatsappLink}" target="_blank" rel="noopener">Contact on WhatsApp</a>`:''}<label class="checkout-utr-label" for="checkout-payment-screenshot">Upload payment screenshot</label><input id="checkout-payment-screenshot" type="file" accept="image/png,image/jpeg,image/webp"><button class="back" id="checkout-upload-screenshot" type="button">Upload screenshot for manual verification</button></div>`:'';
-      const utrForm=paymentOrderReady&&!paymentVerificationPending?`<div class="checkout-utr-step"><strong>${paymentOrderExpired?'Already paid? Submit UTR':'After payment'}</strong><p class="checkout-note">${paymentOrderExpired?'The QR timer only controls payment details. Support can verify late payments.':'Enter the 12-digit UTR / transaction ID to submit your order for verification.'}</p><label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID</label><input class="checkout-utr" id="checkout-utr" type="text" inputmode="text" autocomplete="off" maxlength="24" pattern="[0-9 ]{12,}" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error" aria-live="polite">${escapeHtml(checkout.paymentError||'')}</div><div class="checkout-rate-limit-countdown" id="checkout-rate-limit-countdown" role="timer"></div><button class="modal-primary checkout-submit" id="checkout-submit-payment" type="button" ${(!utrValid||utrRateLimited||checkout.submittingPayment)?'disabled':''}>${utrRateLimited?`Try again in ${formatPaymentCountdown(checkout.rateLimitUntilMs-Date.now())}`:'Submit UTR for review'}</button>${fallbackOptions}</div>`:'';
+      const showSubmittedUtrForm=paymentOrder?.status==='pending_verification'||checkout.utrSubmitState==='success'||checkout.utrSubmitState==='already';
+      const utrForm=paymentOrderReady&&(!paymentVerificationPending||showSubmittedUtrForm)?`<div class="checkout-utr-step"><strong>${utrSubmitted?'UTR status':paymentOrderExpired?'Already paid? Submit UTR':'After payment'}</strong><p class="checkout-note">${utrSubmitted?'Your payment details are being reviewed.':paymentOrderExpired?'The QR timer only controls payment details. Support can verify late payments.':'Enter the 12-digit UTR / transaction ID to submit your order for verification.'}</p>${utrSubmitMessage}<label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID</label><input class="checkout-utr" id="checkout-utr" type="text" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}" ${utrSubmitted?'disabled':''}><div class="modal-error" id="checkout-payment-error" aria-live="polite">${escapeHtml(checkout.paymentError||'')}</div><div class="checkout-rate-limit-countdown" id="checkout-rate-limit-countdown" role="timer"></div><button class="modal-primary checkout-submit" id="checkout-submit-payment" type="button" ${(!utrValid||utrRateLimited||checkout.submittingPayment||utrSubmitted)?'disabled':''}>${checkout.submittingPayment?'Submitting...':utrRateLimited?`Try again in ${formatPaymentCountdown(checkout.rateLimitUntilMs-Date.now())}`:'Submit UTR for review'}</button>${fallbackOptions}</div>`:'';
       const latePaymentForms=(checkout.latePaymentOrders||[]).map(order=>{
         const orderRateLimited=Number(checkout.rateLimitUntilByOrder?.[order.order_id]||0)>Date.now();
-        return `<div class="checkout-utr-step"><strong>Already paid? Submit details for expired Order #${escapeHtml(order.order_id)}</strong><p class="checkout-note">Support can verify a late payment for ₹${money(order.price)}.</p><div class="checkout-note" data-late-grace data-late-expiry="${escapeHtml(order.payment_expires_at||'')}"></div><label class="checkout-utr-label" for="late-utr-${escapeHtml(order.order_id)}">UTR / Transaction ID</label><input class="checkout-utr" id="late-utr-${escapeHtml(order.order_id)}" data-late-utr="${escapeHtml(order.order_id)}" type="text" inputmode="text" autocomplete="off" maxlength="24" pattern="[0-9 ]{12,}" value="${escapeHtml(order.utr||'')}"><div class="modal-error" id="late-utr-error-${escapeHtml(order.order_id)}" aria-live="polite">${escapeHtml(order.error||'')}</div><div class="checkout-rate-limit-countdown" data-late-countdown="${escapeHtml(order.order_id)}" role="timer"></div><button class="modal-primary checkout-submit" data-submit-late-utr="${escapeHtml(order.order_id)}" type="button" ${order.submitting||orderRateLimited||!/^\\d{12}$/.test(String(order.utr||''))?'disabled':''}>${orderRateLimited?`Try again in ${formatPaymentCountdown(checkout.rateLimitUntilByOrder[order.order_id]-Date.now())}`:'Submit UTR for late payment review'}</button></div>`;
+        return `<div class="checkout-utr-step"><strong>Already paid? Submit details for expired Order #${escapeHtml(order.order_id)}</strong><p class="checkout-note">Support can verify a late payment for ₹${money(order.price)}.</p><div class="checkout-note" data-late-grace data-late-expiry="${escapeHtml(order.payment_expires_at||'')}"></div><label class="checkout-utr-label" for="late-utr-${escapeHtml(order.order_id)}">UTR / Transaction ID</label><input class="checkout-utr" id="late-utr-${escapeHtml(order.order_id)}" data-late-utr="${escapeHtml(order.order_id)}" type="text" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" value="${escapeHtml(order.utr||'')}"><div class="modal-error" id="late-utr-error-${escapeHtml(order.order_id)}" aria-live="polite">${escapeHtml(order.error||'')}</div><div class="checkout-rate-limit-countdown" data-late-countdown="${escapeHtml(order.order_id)}" role="timer"></div><button class="modal-primary checkout-submit" data-submit-late-utr="${escapeHtml(order.order_id)}" type="button" ${order.submitting||orderRateLimited||!/^\\d{12}$/.test(String(order.utr||''))?'disabled':''}>${order.submitting?'Submitting...':orderRateLimited?`Try again in ${formatPaymentCountdown(checkout.rateLimitUntilByOrder[order.order_id]-Date.now())}`:'Submit UTR for late payment review'}</button></div>`;
       }).join('');
       const latePaymentSection=latePaymentForms?`<details class="checkout-late-payment"><summary>Already paid for an expired order? Submit UTR</summary>${latePaymentForms}</details>`:'';
       let paymentPanel='';
@@ -4227,10 +4240,10 @@
         paymentPanel=`<section class="checkout-panel"><h3>Scan QR (UPI)</h3>${paymentVerificationPending?`<p class="checkout-note">${paymentOrder.status==='pending_verification'?'Payment Pending Verification':'Payment confirmed'} · Order #${escapeHtml(paymentOrder.order_id)}. ${paymentOrder.status==='pending_verification'?'We will confirm shortly.':'No further payment is needed.'}</p>`:checkout.paymentCreationFailed&&!paymentOrder?'':!paymentOrderReady?'<p class="checkout-note">Preparing payment details…</p>':paymentOrderExpired?'<p class="checkout-note">Time is up. Generate a new QR to pay.</p>':`${validUpiConfiguration||savedQrUrl?`<p class="checkout-note">Scan with a UPI app and pay exactly ₹${money(pricing.finalPrice)}.</p>`:'<p class="modal-error">UPI QR is unavailable. Please contact the store.</p>'}${qrMarkup}`}${utrForm}${latePaymentSection}</section>`;
       }else if(method==='upi_app'){
         const appButtons=[
-          ['Google Pay','gpay://upi/pay','<span class="checkout-app-logo gpay"><span>G</span>Pay</span>'],
-          ['PhonePe','phonepe://pay','PhonePe'],
-          ['Paytm','paytmmp://pay','<span class="checkout-app-logo paytm">Paytm</span>'],
-          ['Other UPI app','upi://pay','Other UPI app']
+          ['Google Pay','gpay://upi/pay','<svg class="checkout-app-logo" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#4285f4"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">G</text></svg><span>Google Pay</span>'],
+          ['PhonePe','phonepe://pay','<svg class="checkout-app-logo" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#673ab7"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">P</text></svg><span>PhonePe</span>'],
+          ['Paytm','paytmmp://pay','<svg class="checkout-app-logo" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#00b9f1"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">P</text></svg><span>Paytm</span>'],
+          ['Other UPI app','upi://pay','<svg class="checkout-app-logo" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#20a66a"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">U</text></svg><span>Other UPI app</span>']
         ].map(([label,scheme,logo])=>`<button class="checkout-app-link" type="button" data-upi-scheme="${scheme}" aria-label="${label}">${logo}</button>`).join('');
         const qrFallback=methods.includes('upi_qr')?'<button class="btn ghost" type="button" data-checkout-method="upi_qr">Scan QR instead</button>':'';
         const upiConfigurationMessage='<div class="modal-error" role="alert">UPI ID not configured, please use Scan QR</div>';
@@ -4329,7 +4342,8 @@
         checkout.utr=event.currentTarget.value.replace(/\s/g,'').replace(/\D/g,'').slice(0,12);
         event.currentTarget.value=checkout.utr;
         const submit=$('checkout-submit-payment');
-        if(submit&&!checkout.rateLimitUntilMs)submit.disabled=checkout.utr.length!==12;
+        if(submit)submit.disabled=checkout.utr.length!==12||Number(checkout.rateLimitUntilMs||0)>Date.now()
+          ||checkout.submittingPayment||Boolean(checkout.utrSubmitState)||checkout.paymentOrder?.status==='pending_verification';
       });
       $('checkout-wallet-pay')?.addEventListener('click',purchaseWithWallet);
       $('checkout-add-money')?.addEventListener('click',openWalletTopup);
@@ -4795,11 +4809,24 @@
       $('purchase-orders').addEventListener('click',()=>openWallet('orders'));$('purchase-done').addEventListener('click',closeModal);
     }
 
+    function markMyOrderUtrSubmitted(orderId,utr){
+      const order=state.myOrders?.find(item=>String(item.id)===String(orderId));
+      if(!order)return;
+      order.status='pending_verification';
+      order.payment_status='pending';
+      if(utr){order.utr=utr;order.utr_number=utr}
+    }
+
     async function submitUpiProductPayment(orderIdOverride=null,utrOverride=null){
       const checkout=state.checkout;
       if(!checkout||checkout.submittingPayment)return;
       const submittedOrderId=orderIdOverride||checkout.paymentOrder?.order_id;
       const isLatePayment=orderIdOverride!==null;
+      if(!isLatePayment&&(checkout.utrSubmitState||checkout.paymentOrder?.status==='pending_verification')){
+        checkout.utrSubmitState='already';
+        renderCheckout();
+        return;
+      }
       const submittedUtr=String(utrOverride??checkout.utr??'').replace(/\s/g,'').trim();
       const errorNode=isLatePayment?$(`late-utr-error-${submittedOrderId}`):$('checkout-payment-error');
       checkout.paymentError='';
@@ -4815,15 +4842,30 @@
       }
       const submit=isLatePayment?$(`late-utr-error-${submittedOrderId}`)?.parentElement?.querySelector(`[data-submit-late-utr="${CSS.escape(String(submittedOrderId))}"]`):$('checkout-submit-payment');
       checkout.submittingPayment=true;
-      if(submit){submit.disabled=true;submit.textContent='Submitting order…'}
+      if(submit){submit.disabled=true;submit.textContent='Submitting...'}
       try{
-        const {data,error}=await state.client.rpc('submit_product_payment_utr',{
+        const {data,error}=await checkoutRpcWithTimeout(state.client.rpc('submit_product_payment_utr',{
           p_order_id:submittedOrderId,
           p_utr:submittedUtr
-        });
+        }),'UTR submission');
         if(error)throw error;
         if(!data?.ok){
           checkout.submittingPayment=false;
+          if(data?.reason==='already_submitted'){
+            const message='Please wait, your UTR is already submitted.';
+            if(isLatePayment){
+              const lateOrder=checkout.latePaymentOrders?.find(order=>String(order.order_id)===String(submittedOrderId));
+              if(lateOrder)lateOrder.error=message;
+            }else{
+              checkout.utrSubmitState='already';
+              checkout.paymentError='';
+              if(checkout.paymentOrder)checkout.paymentOrder.status='pending_verification';
+            }
+            markMyOrderUtrSubmitted(submittedOrderId,submittedUtr);
+            await refreshMyOrders();
+            renderCheckout();
+            return;
+          }
           let message='';
           if(data?.reason==='price_changed'){await refreshStore();message='The product price changed. Please review the updated price.'}
           else if(data?.reason==='duplicate')message='This UTR has already been used.';
@@ -4863,13 +4905,28 @@
         }
         catch(storageError){console.warn('Could not clear the submitted payment order from local storage:',storageError)}
         if(checkout.usedKey)void refreshUsedKeys().catch(error=>handleUsedKeysLoadError(error,'Could not refresh Used Keys after payment:'));
-        closeModal();
-        showNotice('UTR submitted. Your order is under review.');
-        openOrdersPanel();
+        if(isLatePayment){
+          markMyOrderUtrSubmitted(submittedOrderId,submittedUtr);
+          checkout.submittingPayment=false;
+          await refreshMyOrders();
+          closeModal();
+          showNotice('Your UTR has been submitted. Please wait for verification.');
+          openOrdersPanel();
+          void refreshMyCoupons().catch(error=>console.error('UTR was submitted, but coupons could not be refreshed:',error));
+          return;
+        }
+        checkout.utrSubmitState='success';
+        checkout.paymentError='';
+        if(checkout.paymentOrder)checkout.paymentOrder.status='pending_verification';
+        checkout.submittingPayment=false;
+        markMyOrderUtrSubmitted(submittedOrderId,submittedUtr);
+        await refreshMyOrders();
+        renderCheckout();
         void refreshMyCoupons().catch(error=>console.error('UTR was submitted, but coupons could not be refreshed:',error));
       }catch(error){
         checkout.submittingPayment=false;
         const message=error.message||'Could not submit this payment.';
+        console.error('Could not submit checkout UTR:',error);
         if(isLatePayment){
           const lateOrder=checkout.latePaymentOrders?.find(order=>String(order.order_id)===String(submittedOrderId));
           if(lateOrder)lateOrder.error=message;
