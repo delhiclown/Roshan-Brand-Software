@@ -99,8 +99,10 @@ test('unused keys are previews only until an atomic skip-locked approval claim',
   assert.ok(completeOrder);
   assert.match(getRequest[1], /order by k\.created_at, k\.id\s+limit 1/i);
   assert.doesNotMatch(getRequest[1], /update private\.used_key_inventory/i);
-  assert.match(completeOrder[1], /for update skip locked/i);
-  assert.match(completeOrder[1], /set status = 'sold', in_stock = false, delivered_order_id = p_order_id/i);
+  assert.match(completeOrder[1], /for update(?: of k)? skip locked/i);
+  assert.match(completeOrder[1], /set status = 'sold', delivered_order_id = p_order_id/i);
+  assert.doesNotMatch(orderDeliveryAutofillMigration, /k\.in_stock|in_stock\s*=\s*false/i);
+  assert.match(completeOrder[1], /join public\.products as p\s+on p\.id = k\.product_id and p\.in_stock/i);
   assert.match(completeOrder[1], /update public\.orders as o\s+set status = 'completed'/i);
   assert.match(completeOrder[1], /license_key_fingerprint = extensions\.hmac\(v_license, v_encryption_key, 'sha256'\)/i);
   assert.match(orderDeliveryAutofillMigration, /software_plan_code text/);

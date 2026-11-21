@@ -34,7 +34,7 @@ create unique index if not exists used_key_inventory_delivered_order_idx
   where delivered_order_id is not null;
 create index if not exists used_key_inventory_software_plan_available_idx
   on private.used_key_inventory (product_id, software_plan_code, created_at, id)
-  where status = 'available' and is_visible and in_stock;
+  where status = 'available' and is_visible;
 
 create or replace function public.admin_list_used_keys_with_plan()
 returns table(
@@ -63,7 +63,7 @@ begin
         then coalesce(k.sold_validity_days, o.used_key_remaining_days, k.validity_days, 0)
         else private.used_key_remaining_days(k.expiry_at, v_now)
       end,
-      k.in_stock, k.software_plan_code
+      coalesce(p.in_stock, false), k.software_plan_code
     from private.used_key_inventory as k
     left join public.products as p on p.id = k.product_id
     left join public.product_download_links as dl on dl.product_id = k.product_id
@@ -318,9 +318,11 @@ begin
     select k.id, extensions.pgp_sym_decrypt(k.license_key_encrypted, v_encryption_key)
     into v_auto_license_key_id, v_auto_license_key
     from private.used_key_inventory as k
+    join public.products as p
+      on p.id = k.product_id and p.in_stock
     where k.product_id = v_order.product_id
       and k.software_plan_code = v_order.software_plan_code
-      and k.status = 'available' and k.is_visible and k.in_stock
+      and k.status = 'available' and k.is_visible
       and k.expiry_at > clock_timestamp()
     order by k.created_at, k.id
     limit 1;
@@ -414,12 +416,14 @@ begin
       v_auto_key_id := (p_details ->> 'auto_key_id')::bigint;
       select k.* into v_auto_key
       from private.used_key_inventory as k
+      join public.products as p
+        on p.id = k.product_id and p.in_stock
       where k.id = v_auto_key_id
         and k.product_id = v_order.product_id
         and k.software_plan_code = v_order.software_plan_code
-        and k.status = 'available' and k.is_visible and k.in_stock
+        and k.status = 'available' and k.is_visible
         and k.expiry_at > clock_timestamp()
-      for update skip locked;
+      for update of k skip locked;
       if not found then
         return jsonb_build_object('ok', false, 'message', 'This key was claimed by another order. Reload this order to select another key.');
       end if;
@@ -428,7 +432,7 @@ begin
         return jsonb_build_object('ok', false, 'message', 'The selected key changed. Reload this order before approving.');
       end if;
       update private.used_key_inventory as k
-      set status = 'sold', in_stock = false, delivered_order_id = p_order_id,
+      set status = 'sold', delivered_order_id = p_order_id,
           updated_at = clock_timestamp()
       where k.id = v_auto_key.id;
     elsif exists (
