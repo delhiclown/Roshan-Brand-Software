@@ -483,6 +483,13 @@
     .checkout-utr-step .checkout-note{margin:4px 0 0;line-height:1.4}
     .checkout-utr-step .checkout-utr-label{margin:7px 0 4px}
     .checkout-utr-step .checkout-utr{height:40px;padding:8px 10px;font-size:13px}
+    .checkout-rate-limit-countdown{min-height:18px;margin-top:7px;color:#ffcf70;font-size:12px;font-weight:700;text-align:center}
+    .checkout-payment-fallback{display:grid;gap:7px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+    .checkout-late-payment{margin-top:12px;border-top:1px solid var(--line);padding-top:9px}
+    .checkout-late-payment summary{color:var(--muted);font-size:11px;cursor:pointer}
+    .checkout-late-payment[open] summary{margin-bottom:8px;color:var(--text)}
+    .checkout-payment-fallback strong{font-size:12px}
+    .checkout-payment-fallback .btn,.checkout-payment-fallback input,.checkout-payment-fallback .back{width:100%;box-sizing:border-box}
     @media(max-width:639.98px){.modal{padding:8px;align-items:center}.checkout-dialog{width:100%;max-height:calc(100dvh - 16px);padding:16px}.checkout-panel{padding:11px}.checkout-panel .qr-box{width:min(158px,100%);min-height:158px;padding:7px}.checkout-panel .qr-box img,.checkout-panel .qr-box canvas{width:min(142px,100%)}.checkout-tabs{gap:5px}.checkout-tab{font-size:10px;padding:8px 4px}#wallet-modal .dialog.checkout-dialog{animation:none}.checkout-panel .checkout-upi-submit{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:3;box-shadow:0 0 0 8px rgba(8,15,32,.96)}}
     @media(max-width:639.98px) and (max-height:700px){.checkout-dialog{padding:12px}.dialog-head{margin-bottom:10px}.checkout-product{margin-bottom:8px;padding:9px 11px}.checkout-amounts{margin-top:4px}.checkout-coupon{gap:5px;margin:7px 0}.checkout-tabs{margin:7px 0}.checkout-panel{padding:8px}.checkout-panel h3{margin-bottom:5px}.checkout-panel .qr-box{margin:5px auto;min-height:140px;width:min(140px,100%)}.checkout-panel .qr-box img,.checkout-panel .qr-box canvas{width:min(124px,100%)}.checkout-upi-id{padding:8px}.checkout-app-links{gap:6px;margin:7px 0}.checkout-app-links a{min-height:38px}.checkout-utr-step{margin-top:7px;padding:8px}}
     .upi-app-options{display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
@@ -1732,16 +1739,32 @@
       const upiUrl=`upi://pay?${params.toString()}`;
       $('modal-title').textContent='Pay with UPI';
       $('wallet-dialog').classList.add('checkout-dialog');
-      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(order.product_name)}</strong>${order.software_plan_label?`<p class="checkout-note">Plan: ${escapeHtml(order.software_plan_label)}</p>`:''}<div class="checkout-amounts"><span>Exact amount</span><strong>₹${money(amount)}</strong></div></div><p class="checkout-note">Order #${escapeHtml(order.order_id)} · Payment expires ${escapeHtml(formatDate(order.payment_expires_at))}. After paying, submit the 12-digit UTR. Admin will verify the payment and complete delivery.</p><div class="qr-box" id="guest-payment-qr" aria-label="Guest order UPI payment QR code"></div><a class="modal-primary" style="display:block;text-align:center;margin-top:12px" href="${escapeHtml(upiUrl)}">Open UPI app</a><label class="checkout-utr-label" for="guest-order-utr">UTR / Transaction ID (12 digits)</label><input class="checkout-utr" id="guest-order-utr" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Enter 12-digit UTR"><div class="modal-error" id="guest-order-error" role="status" aria-live="polite"></div><button class="modal-primary" id="guest-order-submit" type="button">Submit UTR for review</button><div id="guest-order-status" role="status" aria-live="polite"></div>`;
+      const whatsappNumber=String(state.settings.whatsapp_number||'').replace(/\D/g,'');
+      const whatsappMessage=encodeURIComponent(`Hello, I need help with payment for Order #${order.order_id}. Amount: ₹${money(amount)}.`);
+      const whatsappLink=whatsappNumber?`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`:'';
+      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(order.product_name)}</strong>${order.software_plan_label?`<p class="checkout-note">Plan: ${escapeHtml(order.software_plan_label)}</p>`:''}<div class="checkout-amounts"><span>Exact amount</span><strong>₹${money(amount)}</strong></div></div><p class="checkout-note">Order #${escapeHtml(order.order_id)} · The timer is for submitting the UTR, not cancellation. After paying, submit the 12-digit UTR.</p><div class="qr-box" id="guest-payment-qr" aria-label="Guest order UPI payment QR code"></div><a class="modal-primary" style="display:block;text-align:center;margin-top:12px" href="${escapeHtml(upiUrl)}">Open UPI app</a><label class="checkout-utr-label" for="guest-order-utr">UTR / Transaction ID (12 digits)</label><input class="checkout-utr" id="guest-order-utr" inputmode="text" autocomplete="off" maxlength="24" placeholder="Enter 12-digit UTR"><div class="modal-error" id="guest-order-error" role="status" aria-live="polite"></div><div class="checkout-rate-limit-countdown" id="guest-rate-limit-countdown" role="timer"></div><button class="modal-primary" id="guest-order-submit" type="button" disabled>Submit UTR for review</button><div class="checkout-payment-fallback" id="guest-payment-fallback">${whatsappLink?`<strong>Need help?</strong><a class="btn ghost" href="${whatsappLink}" target="_blank" rel="noopener">Contact on WhatsApp</a>`:''}<label class="checkout-utr-label" for="guest-payment-screenshot">Upload payment screenshot</label><input id="guest-payment-screenshot" type="file" accept="image/png,image/jpeg,image/webp"><button class="back" id="guest-upload-screenshot" type="button">Upload screenshot for manual verification</button></div><div id="guest-order-status" role="status" aria-live="polite"></div>`;
       new QRCode($('guest-payment-qr'),{text:upiUrl,width:230,height:230,colorDark:'#060b17',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
-      $('guest-order-utr').addEventListener('input',event=>{event.currentTarget.value=event.currentTarget.value.replace(/\D/g,'').slice(0,12)});
+      $('guest-order-utr').addEventListener('input',event=>{
+        event.currentTarget.value=event.currentTarget.value.replace(/\s/g,'').replace(/\D/g,'').slice(0,12);
+        $('guest-order-submit').disabled=event.currentTarget.value.length!==12||Boolean(guestOrder.rateLimitUntilMs&&guestOrder.rateLimitUntilMs>Date.now());
+      });
       $('guest-order-submit').addEventListener('click',submitGuestOrderUtr);
+      $('guest-upload-screenshot')?.addEventListener('click',async()=>{
+        const file=$('guest-payment-screenshot')?.files?.[0];
+        if(!file){showNotice('Choose a PNG, JPG, or WebP screenshot first.');return}
+        if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>2*1024*1024){showNotice('Upload a PNG, JPG, or WebP screenshot no larger than 2 MB.');return}
+        const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(reader.error||new Error('Could not read the screenshot.'));reader.readAsDataURL(file)});
+        try{
+          await guestCheckoutApi({action:'upload_screenshot',order_id:guestOrder.orderId,access_token:guestOrder.accessToken,screenshot_base64:dataUrl.split(',')[1]||'',mime:file.type});
+          $('guest-order-status').textContent='Screenshot uploaded for manual verification.';
+        }catch(error){$('guest-order-error').textContent=error.message||'Could not upload the screenshot.'}
+      });
     }
 
     async function submitGuestOrderUtr(){
       const guestOrder=state.activeGuestOrder;
       if(!guestOrder||guestOrder.submitting)return;
-      const utr=$('guest-order-utr').value.trim();
+      const utr=$('guest-order-utr').value.replace(/\s/g,'').trim();
       if(!/^\d{12}$/.test(utr)){$('guest-order-error').textContent='Enter the 12-digit UTR / transaction ID.';return}
       const button=$('guest-order-submit');
       guestOrder.submitting=true;
@@ -1753,16 +1776,30 @@
           access_token:guestOrder.accessToken,utr
         });
         guestOrder.submitted=true;
-        guestOrder.order.status='new';
+        guestOrder.order.status='pending_verification';
         clearInterval(state.guestOrderPoll);
         state.guestOrderPoll=null;
         closeModal();
-        showNotice('UTR submitted. Your order is under review.');
+        showNotice('We received your payment details and will confirm shortly.');
         openOrdersPanel();
       }catch(error){
         const errorNode=$('guest-order-error');
-        if(errorNode)errorNode.textContent=error.message||'Could not submit the UTR.';
-        if(button.isConnected)button.disabled=false;
+        const result=error.result||{};
+        if(result.reason==='duplicate')errorNode.textContent='This UTR has already been used.';
+        else if(result.reason==='invalid_format')errorNode.textContent='Enter exactly 12 digits for the UTR / transaction ID.';
+        else if(result.reason==='rate_limited'){
+          const seconds=Number(result.retry_after_seconds||300);
+          guestOrder.rateLimitUntilMs=Date.now()+seconds*1000;
+          errorNode.textContent=`If you have already paid, don't worry. We will verify your UTR and confirm your order. Order ID: #${guestOrder.orderId}`;
+          const countdown=$('guest-rate-limit-countdown');
+          const timer=setInterval(()=>{
+            const remaining=Math.max(0,guestOrder.rateLimitUntilMs-Date.now());
+            if(remaining<=0){clearInterval(timer);guestOrder.rateLimitUntilMs=0;if(countdown)countdown.textContent='';button.disabled=$('guest-order-utr').value.length!==12;button.textContent='Submit UTR for review';return}
+            button.disabled=true;button.textContent=`Try again in ${formatPaymentCountdown(remaining)}`;if(countdown)countdown.textContent=`Try again in ${formatPaymentCountdown(remaining)}`;
+          },1000);
+        }else errorNode.textContent='Server error. Please try again.';
+        guestOrder.submitting=false;
+        if(button.isConnected&&result.reason!=='rate_limited')button.disabled=$('guest-order-utr').value.length!==12;
       }finally{guestOrder.submitting=false}
     }
 
@@ -3389,7 +3426,7 @@
       $('wallet-chip').addEventListener('click',()=>openWallet('wallet'));
       $('avatar-button').addEventListener('click',toggleProfileMenu);
       $('profile-menu').querySelector('[data-menu="wallet"]').addEventListener('click',()=>openWallet('wallet').then(showAddMoney));
-      $('profile-menu').querySelector('[data-menu="orders"]').addEventListener('click',openOrdersPanel);
+      $('profile-menu').querySelector('[data-menu="orders"]').addEventListener('click',()=>openOrdersPanel());
       $('profile-menu').querySelector('[data-menu="history"]').addEventListener('click',()=>openWallet('history'));
       $('profile-menu').querySelector('[data-menu="logout"]').addEventListener('click',signOut);
     }
@@ -3513,18 +3550,6 @@
           openRentalCheckout(pendingRentalProduct).catch(error=>showNotice(error.message||'Could not start rental checkout.'));
         },0);
       }
-      const activePaymentProduct=sessionStorage.getItem('active_upi_product');
-      const activePaymentPlan=sessionStorage.getItem('active_upi_software_plan');
-      const activeUsedKeyId=sessionStorage.getItem('active_upi_used_key');
-      if(state.user&&activeUsedKeyId&&!pendingId&&!pendingUsedKeyId&&state.authMode!=='reset'){
-        sessionStorage.removeItem('active_upi_used_key');
-        setTimeout(()=>buyUsedKey(activeUsedKeyId),0);
-      }
-      if(state.user&&activePaymentProduct&&!pendingId&&!pendingUsedKeyId&&state.authMode!=='reset'){
-        sessionStorage.removeItem('active_upi_product');
-        sessionStorage.removeItem('active_upi_software_plan');
-        setTimeout(()=>buyProduct(activePaymentProduct,activePaymentPlan),0);
-      }
       const pendingOrders=sessionStorage.getItem('wallet_pending_track_order');
       if(state.user&&pendingOrders&&state.authMode!=='reset'){
         sessionStorage.removeItem('wallet_pending_track_order');
@@ -3574,6 +3599,20 @@
         sessionStorage.removeItem('active_upi_used_key');
       }catch(error){console.warn('Could not clear the active checkout session:',error)}
     }
+    function clearPersistedCheckoutIntent(){
+      try{
+        sessionStorage.removeItem('active_upi_product');
+        sessionStorage.removeItem('active_upi_software_plan');
+        sessionStorage.removeItem('active_upi_used_key');
+      }catch(error){console.warn('Could not clear a stale checkout intent:',error)}
+    }
+    window.addEventListener('pageshow',event=>{
+      clearPersistedCheckoutIntent();
+      if(event.persisted&&(state.checkout||$('wallet-dialog').classList.contains('checkout-dialog')))closeModal();
+    });
+    window.addEventListener('popstate',()=>{
+      if(state.checkout||$('wallet-dialog').classList.contains('checkout-dialog'))closeModal();
+    });
     function transactionLabel(type){return ({topup:'Wallet top-up',purchase:'Purchase',refund:'Refund',admin_credit:'Balance added',admin_debit:'Balance deducted'})[type]||type}
     function formatDate(value){return new Date(value).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'})}
     const copyFeedbackTimers=new WeakMap();
@@ -3874,6 +3913,14 @@
       const seconds=Math.max(0,Math.ceil(milliseconds/1000));
       return `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;
     }
+    async function checkoutRpcWithTimeout(request,operation){
+      let timeoutId;
+      const timeout=new Promise((resolve,reject)=>{
+        timeoutId=window.setTimeout(()=>reject(new Error(`${operation} timed out after 10 seconds. Please retry.`)),10000);
+      });
+      try{return await Promise.race([request,timeout])}
+      finally{window.clearTimeout(timeoutId)}
+    }
     function parseServerTimestamp(value){
       const timestamp=String(value||'').trim();
       if(!timestamp)return NaN;
@@ -3902,16 +3949,24 @@
     }
     function paymentTimerMarkup(checkout){
       const order=checkout.paymentOrder;
-      if(!order)return '<div class="payment-countdown" role="status"><span>Preparing secure payment order…</span></div>';
+      if(!order){
+        if(checkout.preparingPayment)return '<div class="payment-countdown" role="status"><span>Preparing secure payment order…</span></div>';
+        if(checkout.paymentCreationFailed)return `<div class="payment-countdown expired" role="alert"><strong>${escapeHtml(checkout.paymentError||'Payment details could not be prepared.')}</strong><button class="modal-primary" type="button" data-retry-payment-creation>Retry</button></div>`;
+        return '<div class="payment-countdown" role="status"><span>Preparing secure payment order…</span></div>';
+      }
+      if(['pending_verification','completed','delivered'].includes(order.status)){
+        const label=order.status==='pending_verification'?'Payment Pending Verification':'Payment confirmed';
+        return `<div class="payment-countdown expired" role="status"><strong>${label}</strong><span>Order #${escapeHtml(order.order_id)} · ${order.status==='pending_verification'?'We will confirm shortly.':'No further payment is needed.'}</span></div>`;
+      }
       const expiry=parseServerTimestamp(order.payment_expires_at);
       const serverNow=checkoutServerNow(checkout);
       const remaining=expiry-serverNow;
       if(!Number.isFinite(expiry)||remaining<=0||order.status==='expired'){
-        const graceMinutes=Number(checkout.graceMinutes??5);
+        const graceMinutes=Number(checkout.graceMinutes??5); // Server-configured late UTR grace period.
         const graceRemaining=expiry+graceMinutes*60*1000-serverNow;
-        return `<div class="payment-countdown expired" data-payment-timer data-payment-expiry="${escapeHtml(order.payment_expires_at)}" data-server-offset="${Number(checkout.serverTimeOffsetMs)||0}" data-grace-minutes="${graceMinutes}" role="status"><strong>Payment time expired.</strong><time>00:00</time></div><p class="payment-grace-note" data-payment-grace-note>${graceRemaining>0?`Grace period: ${formatPaymentCountdown(graceRemaining)} remaining. `:''}Already paid? Submit your UTR for manual review. Late UTRs can still be submitted for support.</p><button class="back" type="button" data-new-payment>New Order / Try Again</button>`;
+        return `<div class="payment-countdown expired" data-payment-timer data-payment-expiry="${escapeHtml(order.payment_expires_at)}" data-server-offset="${Number(checkout.serverTimeOffsetMs)||0}" data-grace-minutes="${graceMinutes}" role="status"><strong>Time is up. Generate a new QR to pay.</strong><time>00:00</time></div><p class="payment-grace-note" data-payment-grace-note>${graceRemaining>0?`Grace period: ${formatPaymentCountdown(graceRemaining)} remaining. `:''}Already paid? Submit your UTR for manual review. Support can verify late payments.</p><button class="modal-primary" type="button" data-new-payment ${checkout.preparingPayment?'disabled':''}>${checkout.preparingPayment?'Generating new QR…':'Generate New QR'}</button>`;
       }
-      const message='Time left to pay — order fails automatically after 10 minutes if UTR is not submitted';
+      const message='Time left to submit UTR';
       return `<div class="payment-countdown ${remaining<120000?'urgent':''}" data-payment-timer data-payment-expiry="${escapeHtml(order.payment_expires_at)}" data-server-offset="${Number(checkout.serverTimeOffsetMs)||0}" data-grace-minutes="${Number(checkout.graceMinutes??5)}" role="timer"><span>${message}</span><time>${formatPaymentCountdown(remaining)}</time></div>`;
     }
     function startCheckoutPaymentTimer(){
@@ -3923,19 +3978,59 @@
     function updateCheckoutPaymentTimer(){
       const timer=document.querySelector('[data-payment-timer]');
       const checkout=state.checkout;
+      if(checkout?.rateLimitUntilMs){
+        const remaining=Math.max(0,checkout.rateLimitUntilMs-Date.now());
+        const submit=$('checkout-submit-payment');
+        const countdown=$('checkout-rate-limit-countdown');
+        if(remaining<=0){
+          checkout.rateLimitUntilMs=0;
+          if(countdown)countdown.textContent='';
+          if(submit){submit.disabled=!/^\d{12}$/.test(String(checkout.utr||''));submit.textContent='Submit UTR for review'}
+        }else{
+          if(submit){submit.disabled=true;submit.textContent=`Try again in ${formatPaymentCountdown(remaining)}`}
+          if(countdown)countdown.textContent=`Try again in ${formatPaymentCountdown(remaining)}`;
+        }
+      }
+      for(const grace of document.querySelectorAll('[data-late-grace]')){
+        const expiry=parseServerTimestamp(grace.dataset.lateExpiry);
+        const graceMs=Number(checkout?.graceMinutes??5)*60*1000;
+        const remaining=expiry+graceMs-checkoutServerNow(checkout||{});
+        grace.textContent=remaining>0
+          ?`Grace period: ${formatPaymentCountdown(remaining)} remaining. Late payments remain reviewable.`
+          :'Grace period ended. Support can still review a late payment.';
+      }
+      for(const countdown of document.querySelectorAll('[data-late-countdown]')){
+        const orderId=countdown.dataset.lateCountdown;
+        const until=Number(checkout?.rateLimitUntilByOrder?.[orderId]||0);
+        const remaining=Math.max(0,until-Date.now());
+        const button=document.querySelector(`[data-submit-late-utr="${CSS.escape(orderId)}"]`);
+        const input=document.querySelector(`[data-late-utr="${CSS.escape(orderId)}"]`);
+        if(remaining<=0){
+          if(checkout?.rateLimitUntilByOrder)delete checkout.rateLimitUntilByOrder[orderId];
+          countdown.textContent='';
+          if(button){button.disabled=!/^\d{12}$/.test(String(input?.value||''));button.textContent='Submit UTR for late payment review'}
+        }else{
+          countdown.textContent=`Try again in ${formatPaymentCountdown(remaining)}`;
+          if(button){button.disabled=true;button.textContent=`Try again in ${formatPaymentCountdown(remaining)}`}
+        }
+      }
       if(!timer||!checkout?.paymentOrder)return;
       const expiry=parseServerTimestamp(timer.dataset.paymentExpiry);
       const serverNow=checkoutServerNow(checkout);
       const remaining=expiry-serverNow;
-      if((!Number.isFinite(expiry)||remaining<=0)&&!checkout.paymentTimerExpired){
+      if((checkout.paymentOrder.status==='expired'||!Number.isFinite(expiry)||remaining<=0)&&!checkout.paymentTimerExpired){
         checkout.paymentTimerExpired=true;
-        renderCheckout();
+        const expiredOrder={...checkout.paymentOrder};
+        if(!checkout.autoRenewalStarted&&!checkout.paymentSubmitting){
+          checkout.autoRenewalStarted=true;
+          void startNewCheckoutPayment(checkout,expiredOrder,true);
+        }
         return;
       }
       const time=timer.querySelector('time');
       if(time)time.textContent=formatPaymentCountdown(remaining);
       timer.classList.toggle('urgent',remaining>0&&remaining<120000);
-      if(remaining<=0){
+      if(remaining<=0||checkout.paymentOrder.status==='expired'){
         timer.classList.add('expired');
         const note=timer.parentElement.querySelector('[data-payment-grace-note]');
         if(note){
@@ -3947,7 +4042,8 @@
     }
     async function ensureCheckoutPaymentOrder(){
       const checkout=state.checkout;
-      if(!checkout||checkout.method==='wallet'||checkout.preparingPayment||(checkout.paymentError&&!checkout.paymentOrder))return;
+      if(!checkout||checkout.method==='wallet'||checkout.preparingPayment||checkout.paymentCreationFailed
+        ||checkout.paymentOrder?.status==='pending_verification')return;
       const existingExpiry=checkout.paymentOrder?parseServerTimestamp(checkout.paymentOrder.payment_expires_at):NaN;
       if(checkout.paymentOrder&&(checkout.paymentOrder.status==='expired'||!Number.isFinite(existingExpiry)||existingExpiry<=checkoutServerNow(checkout)))return;
       const pricing=checkoutPrice();
@@ -3959,25 +4055,26 @@
       try{
         const orderId=checkout.paymentOrder?.status==='pending_payment'&&existingExpiry>checkoutServerNow(checkout)
           ?checkout.paymentOrder.order_id:null;
-        const {data,error}=checkout.usedKey
-          ?await state.client.rpc('prepare_used_key_payment',{
+        const paymentRequest=checkout.usedKey
+          ?state.client.rpc('prepare_used_key_payment',{
             p_used_key_id:Number(checkout.usedKey.id),p_order_id:orderId
           })
           :checkout.softwarePlanCode
-          ?await state.client.rpc('prepare_software_plan_payment',{
+          ?state.client.rpc('prepare_software_plan_payment',{
             p_order_id:orderId,
             p_product_id:checkout.product.id,
             p_plan_code:checkout.softwarePlanCode,
             p_coupon_code:checkout.coupon?.code||null,
             p_payment_method:checkout.method
           })
-          :await state.client.rpc('prepare_product_payment',{
+          :state.client.rpc('prepare_product_payment',{
             p_order_id:['unpaid','pending_payment'].includes(checkout.paymentOrder?.status)&&existingExpiry>checkoutServerNow(checkout)
               ?checkout.paymentOrder.order_id:null,
             p_product_id:checkout.product.id,
             p_coupon_code:checkout.coupon?.code||null,
             p_payment_method:checkout.method
           });
+        const {data,error}=await checkoutRpcWithTimeout(paymentRequest,'Payment details');
         if(error)throw error;
         if(!data?.ok){
           const message=data?.message||'Could not start payment.';
@@ -3990,8 +4087,12 @@
         }
         if(!data?.ok)return;
         if(state.checkout!==checkout)return;
-        if(!Number.isFinite(parseServerTimestamp(data.payment_expires_at)))throw new Error('The server returned an invalid payment expiry time.');
         anchorCheckoutServerTime(checkout,data.server_now,data.order_id);
+        const paymentExpiry=parseServerTimestamp(data.payment_expires_at);
+        if(!Number.isFinite(paymentExpiry)||paymentExpiry<=checkoutServerNow(checkout)
+            ||!['unpaid','pending_payment'].includes(data.status)){
+          throw new Error('The server returned a payment order that is not active. Please retry.');
+        }
         if(!checkout.softwarePlanCode)checkout.product.price=Number(data.price);
         else checkout.product.price=Number(data.original_price??checkout.product.price);
         checkout.paymentOrder={
@@ -4009,12 +4110,17 @@
         checkout.graceMinutes=Number(data.grace_minutes??5);
         checkout.paymentOrderSignature=checkoutPaymentSignature(checkout);
         checkout.paymentTimerExpired=false;
+        checkout.autoRenewalStarted=false;
         try{localStorage.setItem(checkout.usedKey
           ?`pending-used-key:${state.user.id}:${checkout.usedKey.id}`
           :checkoutStorageKey(state.user.id,checkout),String(data.order_id))}
         catch(error){console.warn('Could not persist the pending payment order in local storage:',error)}
       }catch(error){
-        if(state.checkout===checkout)checkout.paymentError=error.message||'Could not start payment.';
+        console.error('Could not prepare checkout payment details:',error);
+        if(state.checkout===checkout){
+          checkout.paymentError=error.message||'Could not start payment.';
+          checkout.paymentCreationFailed=true;
+        }
       }finally{
         checkout.preparingPayment=false;
         if(state.checkout===checkout)renderCheckout();
@@ -4039,20 +4145,32 @@
       const desiredPaymentSignature=checkoutPaymentSignature(checkout);
       const paymentOrderReady=Boolean(paymentOrder&&!checkout.preparingPayment&&(method==='wallet'||checkout.paymentOrderSignature===desiredPaymentSignature));
       const paymentOrderExpiry=paymentOrder?parseServerTimestamp(paymentOrder.payment_expires_at):NaN;
+      const paymentVerificationPending=['pending_verification','completed','delivered'].includes(paymentOrder?.status);
       const paymentOrderExpired=Boolean(paymentOrder&&(paymentOrder.status==='expired'||!Number.isFinite(paymentOrderExpiry)||paymentOrderExpiry<=checkoutServerNow(checkout)));
-      const utrForm=paymentOrderReady?`<div class="checkout-utr-step"><strong>${paymentOrderExpired?'Already paid? Submit UTR':'After payment'}</strong><p class="checkout-note">${paymentOrderExpired?'Your payment details will be sent for manual review. Late payments are not automatically rejected.':'Enter the 12-digit UTR / transaction ID to submit your order for verification.'}</p><label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID</label><input class="checkout-utr" id="checkout-utr" type="text" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error" aria-live="polite">${escapeHtml(checkout.paymentError||'')}</div><button class="modal-primary checkout-submit" id="checkout-submit-payment" type="button">Submit UTR for review</button></div>`:'';
+      const utrValid=/^\d{12}$/.test(String(checkout.utr||''));
+      const utrRateLimited=Number(checkout.rateLimitUntilMs||0)>Date.now();
+      const whatsappNumber=String(state.settings.whatsapp_number||'').replace(/\D/g,'');
+      const whatsappMessage=encodeURIComponent(`Hello, I need help with payment for Order #${paymentOrder?.order_id||''}. Amount: ₹${money(qrAmount)}.`);
+      const whatsappLink=whatsappNumber?`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`:'';
+      const fallbackOptions=checkout.paymentError?`<div class="checkout-payment-fallback"><strong>Need help?</strong>${whatsappLink?`<a class="btn ghost" href="${whatsappLink}" target="_blank" rel="noopener">Contact on WhatsApp</a>`:''}<label class="checkout-utr-label" for="checkout-payment-screenshot">Upload payment screenshot</label><input id="checkout-payment-screenshot" type="file" accept="image/png,image/jpeg,image/webp"><button class="back" id="checkout-upload-screenshot" type="button">Upload screenshot for manual verification</button></div>`:'';
+      const utrForm=paymentOrderReady&&!paymentVerificationPending?`<div class="checkout-utr-step"><strong>${paymentOrderExpired?'Already paid? Submit UTR':'After payment'}</strong><p class="checkout-note">${paymentOrderExpired?'The QR timer only controls payment details. Support can verify late payments.':'Enter the 12-digit UTR / transaction ID to submit your order for verification.'}</p><label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID</label><input class="checkout-utr" id="checkout-utr" type="text" inputmode="text" autocomplete="off" maxlength="24" pattern="[0-9 ]{12,}" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}"><div class="modal-error" id="checkout-payment-error" aria-live="polite">${escapeHtml(checkout.paymentError||'')}</div><div class="checkout-rate-limit-countdown" id="checkout-rate-limit-countdown" role="timer"></div><button class="modal-primary checkout-submit" id="checkout-submit-payment" type="button" ${(!utrValid||utrRateLimited||checkout.submittingPayment)?'disabled':''}>${utrRateLimited?`Try again in ${formatPaymentCountdown(checkout.rateLimitUntilMs-Date.now())}`:'Submit UTR for review'}</button>${fallbackOptions}</div>`:'';
+      const latePaymentForms=(checkout.latePaymentOrders||[]).map(order=>{
+        const orderRateLimited=Number(checkout.rateLimitUntilByOrder?.[order.order_id]||0)>Date.now();
+        return `<div class="checkout-utr-step"><strong>Already paid? Submit details for expired Order #${escapeHtml(order.order_id)}</strong><p class="checkout-note">Support can verify a late payment for ₹${money(order.price)}.</p><div class="checkout-note" data-late-grace data-late-expiry="${escapeHtml(order.payment_expires_at||'')}"></div><label class="checkout-utr-label" for="late-utr-${escapeHtml(order.order_id)}">UTR / Transaction ID</label><input class="checkout-utr" id="late-utr-${escapeHtml(order.order_id)}" data-late-utr="${escapeHtml(order.order_id)}" type="text" inputmode="text" autocomplete="off" maxlength="24" pattern="[0-9 ]{12,}" value="${escapeHtml(order.utr||'')}"><div class="modal-error" id="late-utr-error-${escapeHtml(order.order_id)}" aria-live="polite">${escapeHtml(order.error||'')}</div><div class="checkout-rate-limit-countdown" data-late-countdown="${escapeHtml(order.order_id)}" role="timer"></div><button class="modal-primary checkout-submit" data-submit-late-utr="${escapeHtml(order.order_id)}" type="button" ${order.submitting||orderRateLimited||!/^\\d{12}$/.test(String(order.utr||''))?'disabled':''}>${orderRateLimited?`Try again in ${formatPaymentCountdown(checkout.rateLimitUntilByOrder[order.order_id]-Date.now())}`:'Submit UTR for late payment review'}</button></div>`;
+      }).join('');
+      const latePaymentSection=latePaymentForms?`<details class="checkout-late-payment"><summary>Already paid for an expired order? Submit UTR</summary>${latePaymentForms}</details>`:'';
       let paymentPanel='';
       if(method==='wallet'){
         const canPay=state.balance>=pricing.originalPrice;
         paymentPanel=`<section class="checkout-panel"><h3>Pay from Wallet</h3><p class="checkout-note">Coupons apply to QR / UPI payments only.</p><div class="wallet-balance"><small>Available wallet balance</small><strong>₹${money(state.balance)}</strong></div>${canPay?`<button class="modal-primary checkout-submit" id="checkout-wallet-pay" type="button">Pay with Wallet · ₹${money(pricing.originalPrice)}</button>`:`<div class="modal-error">Insufficient balance. Add money to your wallet to continue.</div><button class="modal-primary checkout-submit" id="checkout-add-money" type="button">Add money to wallet</button>`}${checkout.paymentOrder?`<p class="checkout-note">UPI order #${escapeHtml(checkout.paymentOrder.order_id)} amount: ₹${money(checkout.paymentOrder.price)}. UTR submitted here will apply to this UPI order.</p>${utrForm}`:''}</section>`;
       }else if(method==='upi_qr'){
-        paymentPanel=`<section class="checkout-panel"><h3>Scan QR (UPI)</h3>${!paymentOrderReady?'<p class="checkout-note">Preparing payment details…</p>':paymentOrderExpired?'<p class="checkout-note">Payment QR is no longer available for this order.</p>':`<p class="checkout-note">Scan with a UPI app and pay exactly ₹${money(pricing.finalPrice)}.</p>${qrMarkup}`}${utrForm}${checkout.paymentError?`<div class="modal-error">${escapeHtml(checkout.paymentError)}</div>${paymentOrderReady?'<button class="back" type="button" data-retry-payment>Retry</button>':''}`:''}</section>`;
+        paymentPanel=`<section class="checkout-panel"><h3>Scan QR (UPI)</h3>${paymentVerificationPending?`<p class="checkout-note">${paymentOrder.status==='pending_verification'?'Payment Pending Verification':'Payment confirmed'} · Order #${escapeHtml(paymentOrder.order_id)}. ${paymentOrder.status==='pending_verification'?'We will confirm shortly.':'No further payment is needed.'}</p>`:checkout.paymentCreationFailed&&!paymentOrder?'':!paymentOrderReady?'<p class="checkout-note">Preparing payment details…</p>':paymentOrderExpired?'<p class="checkout-note">Time is up. Generate a new QR to pay.</p>':`<p class="checkout-note">Scan with a UPI app and pay exactly ₹${money(pricing.finalPrice)}.</p>${qrMarkup}`}${utrForm}${latePaymentSection}</section>`;
       }else if(method==='upi_app'){
         const deepLinks=[
           ['Google Pay','gpay://upi/pay','<span class="checkout-app-logo gpay"><span>G</span>Pay</span>'],
           ['Paytm','paytmmp://pay','<span class="checkout-app-logo paytm">Paytm</span>']
         ].map(([label,scheme,logo])=>`<a href="${scheme}?${qrParams.toString()}" target="_blank" rel="noopener" aria-label="${label}">${logo}</a>`).join('');
-        paymentPanel=`<section class="checkout-panel"><h3>Pay with UPI ID / UPI App</h3>${!paymentOrderReady?'<p class="checkout-note">Preparing payment details…</p>':paymentOrderExpired?'<p class="checkout-note">UPI payment details are hidden after this order expires.</p>':`<div class="checkout-upi-id"><strong>${escapeHtml(upiId||'UPI ID not configured')}</strong><button class="btn ghost" id="copy-checkout-upi" type="button" ${upiId?'':'disabled'}>Copy UPI ID</button></div><div class="checkout-app-links">${deepLinks}</div><p class="checkout-note">Pay exactly ₹${money(pricing.finalPrice)} using your UPI app.</p>`}${utrForm}${checkout.paymentError?`<div class="modal-error">${escapeHtml(checkout.paymentError)}</div>${paymentOrderReady?'<button class="back" type="button" data-retry-payment>Retry</button>':''}`:''}</section>`;
+        paymentPanel=`<section class="checkout-panel"><h3>Pay with UPI ID / UPI App</h3>${paymentVerificationPending?`<p class="checkout-note">${paymentOrder.status==='pending_verification'?'Payment Pending Verification':'Payment confirmed'} · Order #${escapeHtml(paymentOrder.order_id)}. ${paymentOrder.status==='pending_verification'?'We will confirm shortly.':'No further payment is needed.'}</p>`:checkout.paymentCreationFailed&&!paymentOrder?'':!paymentOrderReady?'<p class="checkout-note">Preparing payment details…</p>':paymentOrderExpired?'<p class="checkout-note">Time is up. Generate a new QR to pay.</p>':`<div class="checkout-upi-id"><strong>${escapeHtml(upiId||'UPI ID not configured')}</strong><button class="btn ghost" id="copy-checkout-upi" type="button" ${upiId?'':'disabled'}>Copy UPI ID</button></div><div class="checkout-app-links">${deepLinks}</div><p class="checkout-note">Pay exactly ₹${money(pricing.finalPrice)} using your UPI app.</p>`}${utrForm}${latePaymentSection}</section>`;
       }else{
         paymentPanel='<section class="checkout-panel"><p class="modal-error">No payment methods are currently available. Please contact the store.</p></section>';
       }
@@ -4123,23 +4241,31 @@
         renderCheckout();
       });
       $('checkout-utr')?.addEventListener('input',event=>{
-        checkout.utr=event.currentTarget.value.replace(/\D/g,'').slice(0,12);
-        if(checkout.utr.length===12)submitUpiProductPayment();
+        checkout.utr=event.currentTarget.value.replace(/\s/g,'').replace(/\D/g,'').slice(0,12);
+        event.currentTarget.value=checkout.utr;
+        const submit=$('checkout-submit-payment');
+        if(submit&&!checkout.rateLimitUntilMs)submit.disabled=checkout.utr.length!==12;
       });
       $('checkout-wallet-pay')?.addEventListener('click',purchaseWithWallet);
       $('checkout-add-money')?.addEventListener('click',openWalletTopup);
       $('checkout-submit-payment')?.addEventListener('click',submitUpiProductPayment);
-      $('modal-body').querySelector('[data-new-payment]')?.addEventListener('click',()=>{
-        checkout.method=checkout.usedKey?'upi_qr':checkoutDefaultMethod(methods,state.balance,Number(product.price),isCheckoutMobile());
-        checkout.paymentOrder=null;checkout.paymentOrderSignature=null;checkout.paymentTimerExpired=false;checkout.utr='';checkout.paymentError='';
-        const storageKeys=[checkout.usedKey
-          ?`pending-used-key:${state.user.id}:${checkout.usedKey.id}`
-          :checkoutStorageKey(state.user.id,checkout)];
-        if(!checkout.usedKey&&checkout.softwarePlanCode)storageKeys.push(`pending-payment:${state.user.id}:${product.id}`);
-        try{storageKeys.forEach(key=>localStorage.removeItem(key))}
-        catch(error){console.warn('Could not clear the expired payment order from local storage:',error)}
-        void ensureCheckoutPaymentOrder();
-      });
+      $('modal-body').querySelector('[data-new-payment]')?.addEventListener('click',()=>void startNewCheckoutPayment(checkout,checkout.paymentOrder,false));
+      $('modal-body').querySelectorAll('[data-late-utr]').forEach(input=>input.addEventListener('input',()=>{
+        const order=(checkout.latePaymentOrders||[]).find(item=>String(item.order_id)===input.dataset.lateUtr);
+        if(order)order.utr=input.value.replace(/\s/g,'').replace(/\D/g,'').slice(0,12);
+        input.value=order?.utr||'';
+        const button=$('modal-body').querySelector(`[data-submit-late-utr="${CSS.escape(input.dataset.lateUtr)}"]`);
+        if(button&&!checkout.rateLimitUntilByOrder?.[input.dataset.lateUtr])button.disabled=String(input.value).length!==12;
+      }));
+      $('modal-body').querySelectorAll('[data-submit-late-utr]').forEach(button=>button.addEventListener('click',()=>{
+        const orderId=button.dataset.submitLateUtr;
+        const order=(checkout.latePaymentOrders||[]).find(item=>String(item.order_id)===orderId);
+        if(order)void submitUpiProductPayment(order.order_id,order.utr);
+      }));
+      $('modal-body').querySelectorAll('[data-retry-payment-creation]').forEach(button=>button.addEventListener('click',()=>{
+        checkout.paymentCreationFailed=false;checkout.paymentError='';checkout.retryPaymentCreation=true;
+        renderCheckout();void ensureCheckoutPaymentOrder();
+      }));
       $('modal-body').querySelector('[data-retry-payment]')?.addEventListener('click',()=>{
         checkout.paymentError='';
         renderCheckout();
@@ -4151,6 +4277,30 @@
           event.currentTarget.textContent='Copied';
           setTimeout(()=>{if(event.currentTarget.isConnected)event.currentTarget.textContent='Copy UPI ID'},1400);
         }catch(error){showNotice('Could not copy the UPI ID. Please copy it manually.')}
+      });
+      $('checkout-upload-screenshot')?.addEventListener('click',async()=>{
+        const file=$('checkout-payment-screenshot')?.files?.[0];
+        if(!file){showNotice('Choose a PNG, JPG, or WebP screenshot first.');return}
+        if(!['image/png','image/jpeg','image/webp'].includes(file.type)){showNotice('Only PNG, JPG, or WebP screenshots are allowed.');return}
+        if(file.size>2*1024*1024){showNotice('The screenshot must be 2 MB or smaller.');return}
+        const button=$('checkout-upload-screenshot');
+        button.disabled=true;
+        try{
+          const dataUrl=await new Promise((resolve,reject)=>{
+            const reader=new FileReader();
+            reader.onload=()=>resolve(String(reader.result||''));
+            reader.onerror=()=>reject(reader.error||new Error('Could not read the screenshot.'));
+            reader.readAsDataURL(file);
+          });
+          const base64=dataUrl.split(',')[1]||'';
+          const {data,error}=await state.client.rpc('submit_payment_screenshot',{
+            p_order_id:checkout.paymentOrder.order_id,p_screenshot_base64:base64,p_screenshot_mime:file.type
+          });
+          if(error||!data?.ok)throw new Error(error?.message||data?.message||'Could not upload the screenshot.');
+          checkout.paymentError='Screenshot uploaded. We will verify your payment manually.';
+          renderCheckout();
+        }catch(error){showNotice(error.message||'Could not upload the screenshot.')}
+        finally{if(button.isConnected)button.disabled=false}
       });
       if(method==='upi_qr'&&window.QRCode){
         if($('product-payment-qr'))new QRCode($('product-payment-qr'),{text:`upi://pay?${qrParams.toString()}`,width:160,height:160,colorDark:'#060b17',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
@@ -4166,6 +4316,127 @@
     function checkoutStorageKey(userId,checkout){
       const base=`pending-payment:${userId}:${checkout.product.id}`;
       return checkout.softwarePlanCode?`${base}:${checkout.softwarePlanCode}`:base;
+    }
+    function latePaymentStorageKey(userId,checkout){
+      return `late-payment-orders:${userId}:${checkout.usedKey?`used-key-${checkout.usedKey.id}`:checkout.product.id}:${checkout.softwarePlanCode||''}`;
+    }
+    function persistLatePaymentOrders(checkout){
+      if(!state.user||!checkout)return;
+      const key=latePaymentStorageKey(state.user.id,checkout);
+      const now=Date.now();
+      const orderIds=(checkout.latePaymentOrders||[])
+        .filter(order=>now-Number(order.lateStoredAt||now)<86400000)
+        .map(order=>({order_id:String(order.order_id),saved_at:Number(order.lateStoredAt)||now}))
+        .filter(order=>/^[1-9]\d{0,17}$/.test(order.order_id)).slice(-25);
+      try{
+        if(orderIds.length)localStorage.setItem(key,JSON.stringify(orderIds));
+        else localStorage.removeItem(key);
+      }catch(error){console.warn('Could not save expired payment references for late UTR review:',error)}
+    }
+    async function restoreLatePaymentOrders(checkout){
+      if(!state.user||!checkout)return;
+      const key=latePaymentStorageKey(state.user.id,checkout);
+      let records=[];
+      try{
+        const stored=JSON.parse(localStorage.getItem(key)||'[]');
+        if(Array.isArray(stored)){
+          records=stored.map(record=>typeof record==='object'&&record!==null
+            ?{orderId:String(record.order_id||''),savedAt:Number(record.saved_at)||0}
+            :{orderId:String(record),savedAt:0})
+            .filter(record=>/^[1-9]\d{0,17}$/.test(record.orderId)
+              &&(!record.savedAt||Date.now()-record.savedAt<86400000)).slice(-25);
+        }
+      }catch(error){console.warn('Could not read expired payment references:',error)}
+      if(!records.length){try{localStorage.removeItem(key)}catch(error){console.warn('Could not remove stale expired payment references:',error)}return}
+      try{
+        localStorage.setItem(key,JSON.stringify(records.map(record=>({
+          order_id:record.orderId,saved_at:record.savedAt||Date.now()
+        }))));
+      }catch(error){console.warn('Could not prune stale expired payment references:',error)}
+      try{
+        const {data,error}=await checkoutRpcWithTimeout(state.client.rpc('get_my_expired_payment_orders',{p_order_ids:records.map(record=>Number(record.orderId))}),'Restoring late-payment options');
+        if(error)throw error;
+        if(!data?.ok)throw new Error(data?.message||'Expired payment references could not be verified.');
+        const recordsById=new Map(records.map(record=>[record.orderId,record]));
+        const requestedIds=new Set(recordsById.keys());
+        const cutoff=Date.now()-86400000;
+        const restoredOrders=(Array.isArray(data.orders)?data.orders:[])
+          .filter(order=>{
+            const createdAt=parseServerTimestamp(order.created_at);
+            return !order.utr&&Number.isFinite(createdAt)&&createdAt>=cutoff;
+          })
+          .map(order=>({...order,utr:'',lateStoredAt:recordsById.get(String(order.order_id))?.savedAt||Date.now()}));
+        const newerOrders=(checkout.latePaymentOrders||[]).filter(order=>!requestedIds.has(String(order.order_id)));
+        checkout.latePaymentOrders=[...newerOrders,...restoredOrders];
+        persistLatePaymentOrders(checkout);
+      }catch(error){console.error('Could not restore expired payment options:',error)}
+    }
+    function clearCheckoutOrderStorage(checkout){
+      if(!state.user||!checkout)return;
+      const keys=checkout.usedKey
+        ?[`pending-used-key:${state.user.id}:${checkout.usedKey.id}`]
+        :[checkoutStorageKey(state.user.id,checkout)];
+      if(!checkout.usedKey&&checkout.softwarePlanCode)keys.push(`pending-payment:${state.user.id}:${checkout.product.id}`);
+      try{keys.forEach(key=>localStorage.removeItem(key))}
+      catch(error){console.warn('Could not clear the stale payment order from local storage:',error)}
+    }
+    async function startNewCheckoutPayment(checkout,expiredOrder,automatic){
+      if(state.checkout!==checkout||checkout.preparingPayment||checkout.expiringPayment)return;
+      checkout.expiringPayment=true;
+      checkout.preparingPayment=true;
+      if(expiredOrder?.order_id&&!['pending_verification','completed','delivered'].includes(expiredOrder.status)){
+        checkout.latePaymentOrders=checkout.latePaymentOrders||[];
+        if(!checkout.latePaymentOrders.some(order=>String(order.order_id)===String(expiredOrder.order_id))){
+          checkout.latePaymentOrders.push({...expiredOrder,utr:checkout.utr||'',lateStoredAt:Date.now()});
+          persistLatePaymentOrders(checkout);
+        }
+        clearCheckoutOrderStorage(checkout);
+        checkout.paymentOrder=null;
+        checkout.paymentOrderSignature=null;
+        checkout.paymentTimerExpired=false;
+      }
+      checkout.paymentError='';
+      renderCheckout();
+      if(expiredOrder?.order_id&&!['pending_verification','completed','delivered'].includes(expiredOrder.status)){
+        try{
+          const {data,error}=await checkoutRpcWithTimeout(state.client.rpc('expire_my_payment_order',{p_order_id:expiredOrder.order_id}),'Expiring the old payment');
+          if(error||!data?.ok)throw error||new Error(data?.message||'Could not expire the previous payment order.');
+          if(['pending_verification','completed','delivered'].includes(data.status)){
+            checkout.latePaymentOrders=checkout.latePaymentOrders.filter(order=>String(order.order_id)!==String(expiredOrder.order_id));
+            persistLatePaymentOrders(checkout);
+            checkout.paymentOrder={...expiredOrder,status:data.status};
+            checkout.paymentOrderSignature=checkoutPaymentSignature(checkout);
+            checkout.paymentTimerExpired=false;
+            clearCheckoutOrderStorage(checkout);
+            checkout.preparingPayment=false;
+            checkout.expiringPayment=false;
+            renderCheckout();
+            return;
+          }
+          if(data.status!=='expired')throw new Error(`Previous order is still ${data.status||'active'}.`);
+        }catch(error){
+          console.error('Could not expire the old payment order before creating a new QR:',error);
+          if(checkout.coupon){
+            checkout.coupon=null;
+            checkout.couponMessage='The expired payment coupon could not be released. The new QR will use the current product price.';
+            checkout.couponMessageType='error';
+          }
+        }
+      }
+      clearCheckoutOrderStorage(checkout);
+      checkout.paymentOrder=null;
+      checkout.paymentOrderSignature=null;
+      checkout.paymentTimerExpired=false;
+      checkout.paymentError='';
+      checkout.paymentCreationFailed=false;
+      checkout.retryPaymentCreation=false;
+      checkout.utr='';
+      checkout.autoRenewalStarted=Boolean(automatic);
+      checkout.preparingPayment=false;
+      checkout.expiringPayment=false;
+      if(!automatic)checkout.autoRenewalStarted=false;
+      renderCheckout();
+      void ensureCheckoutPaymentOrder();
     }
     async function buyProduct(productId,softwarePlanCode=null){
       if(state.authReadyPromise)await state.authReadyPromise;
@@ -4229,6 +4500,8 @@
         utr:'',
         paymentError:''
       };
+      const checkout=state.checkout;
+      const latePaymentRestore=restoreLatePaymentOrders(checkout);
       const storageKey=checkoutStorageKey(state.user.id,state.checkout);
       let pendingOrderId=null;
       try{
@@ -4245,9 +4518,9 @@
       catch(error){console.warn('Could not read the pending payment order from local storage:',error)}
       if(pendingOrderId){
         try{
-          const {data,error}=await state.client.rpc('get_my_pending_product_payment',{
+          const {data,error}=await checkoutRpcWithTimeout(state.client.rpc('get_my_pending_product_payment',{
             p_order_id:Number(pendingOrderId),p_product_id:product.id
-          });
+          }),'Resuming the saved payment');
           if(error)throw error;
           const matchingPlan=!selectedPlan
             ?!data?.software_plan_code
@@ -4258,7 +4531,19 @@
             const activeOrder=['unpaid','pending_payment'].includes(data.status)
               &&Number.isFinite(expiresAt)
               &&expiresAt>checkoutServerNow(state.checkout);
-            if(activeOrder){
+            if(data.status==='pending_verification'){
+              state.checkout.paymentOrder={
+                order_id:data.order_id,product_id:data.product_id,price:data.price,
+                payment_method:data.payment_method,status:data.status,
+                payment_expires_at:data.payment_expires_at,
+                original_price:data.original_price,
+                software_plan_code:data.software_plan_code,
+                software_plan_label:data.software_plan_label,
+                software_plan_mrp:data.software_plan_mrp
+              };
+              state.checkout.paymentOrderSignature=checkoutPaymentSignature(state.checkout);
+              state.checkout.graceMinutes=Number(data.grace_minutes??5);
+            }else if(activeOrder){
               state.checkout.paymentOrder={
                 order_id:data.order_id,product_id:data.product_id,price:data.price,
                 payment_method:data.payment_method,status:data.status,
@@ -4274,27 +4559,18 @@
               state.checkout.paymentOrderSignature=null;
               state.checkout.utr='';
             }else{
-              try{localStorage.removeItem(storageKey)}
-              catch(storageError){console.warn('Could not clear the expired pending payment order:',storageError)}
+              clearCheckoutOrderStorage(state.checkout);
             }
           }else{
-            try{localStorage.removeItem(storageKey)}
-            catch(storageError){console.warn('Could not clear the stale pending payment order:',storageError)}
+            clearCheckoutOrderStorage(state.checkout);
           }
         }catch(error){
-          console.error('Could not resume pending payment:',error);
-          state.checkout.paymentError='Could not resume the saved payment. Please try again.';
+          console.error('Could not resume saved payment; clearing its stale order reference and creating a fresh order:',error);
+          clearCheckoutOrderStorage(state.checkout);
         }
-      }
-      if(state.checkout.method!=='wallet'||state.checkout.paymentOrder){
-        try{
-          sessionStorage.setItem('active_upi_product',String(product.id));
-          if(selectedPlan)sessionStorage.setItem('active_upi_software_plan',selectedPlan.code);
-          else sessionStorage.removeItem('active_upi_software_plan');
-        }
-        catch(error){console.warn('Could not persist the active payment checkout:',error)}
       }
       openModal();renderCheckout();
+      void latePaymentRestore.then(()=>{if(state.checkout===checkout)renderCheckout()});
     }
 
     async function buyUsedKey(usedKeyId,pendingOrderId=null){
@@ -4333,6 +4609,7 @@
         couponMessageType:'',utr:'',paymentError:''
       };
       state.checkout=checkout;
+      const latePaymentRestore=restoreLatePaymentOrders(checkout);
       const storageKey=`pending-used-key:${state.user.id}:${item.id}`;
       let orderId=pendingOrderId;
       if(!orderId){
@@ -4341,9 +4618,9 @@
       }
       if(orderId){
         try{
-          const {data,error}=await state.client.rpc('get_my_pending_used_key_payment',{
+          const {data,error}=await checkoutRpcWithTimeout(state.client.rpc('get_my_pending_used_key_payment',{
             p_order_id:Number(orderId),p_used_key_id:Number(item.id)
-          });
+          }),'Resuming the saved Used Keys payment');
           if(error)throw error;
           if(data?.ok){
             anchorCheckoutServerTime(checkout,data.server_now,data.order_id);
@@ -4351,7 +4628,15 @@
             const activeOrder=['unpaid','pending_payment'].includes(data.status)
               &&Number.isFinite(expiresAt)
               &&expiresAt>checkoutServerNow(checkout);
-            if(activeOrder){
+            if(data.status==='pending_verification'){
+              checkout.paymentOrder={
+                order_id:data.order_id,product_id:data.product_id,price:data.price,
+                payment_method:data.payment_method,status:data.status,
+                payment_expires_at:data.payment_expires_at
+              };
+              checkout.paymentOrderSignature=checkoutPaymentSignature(checkout);
+              checkout.graceMinutes=Number(data.grace_minutes??5);
+            }else if(activeOrder){
               checkout.product.price=Number(data.price);
               checkout.paymentOrder={
                 order_id:data.order_id,product_id:data.product_id,price:data.price,
@@ -4362,21 +4647,18 @@
               checkout.paymentTimerExpired=false;
               checkout.paymentOrderSignature=checkoutPaymentSignature(checkout);
             }else{
-              try{localStorage.removeItem(storageKey)}
-              catch(storageError){console.warn('Could not clear the expired pending Used Keys payment:',storageError)}
+              clearCheckoutOrderStorage(checkout);
             }
           }else{
-            try{localStorage.removeItem(storageKey)}
-            catch(storageError){console.warn('Could not clear the stale pending Used Keys payment:',storageError)}
+            clearCheckoutOrderStorage(checkout);
           }
         }catch(error){
-          state.checkout=null;
-          showNotice(`Could not resume this Used Keys payment: ${error.message}`);
-          return;
+          console.error('Could not resume saved Used Keys payment; clearing its stale reference and creating a fresh order:',error);
+          clearCheckoutOrderStorage(checkout);
         }
       }
-      sessionStorage.setItem('active_upi_used_key',String(item.id));
       openModal();renderCheckout();
+      void latePaymentRestore.then(()=>{if(state.checkout===checkout)renderCheckout()});
     }
 
     async function purchaseWithWallet(){
@@ -4428,34 +4710,64 @@
       $('purchase-orders').addEventListener('click',()=>openWallet('orders'));$('purchase-done').addEventListener('click',closeModal);
     }
 
-    async function submitUpiProductPayment(){
+    async function submitUpiProductPayment(orderIdOverride=null,utrOverride=null){
       const checkout=state.checkout;
       if(!checkout||checkout.submittingPayment)return;
+      const submittedOrderId=orderIdOverride||checkout.paymentOrder?.order_id;
+      const isLatePayment=orderIdOverride!==null;
+      const submittedUtr=String(utrOverride??checkout.utr??'').replace(/\s/g,'').trim();
+      const errorNode=isLatePayment?$(`late-utr-error-${submittedOrderId}`):$('checkout-payment-error');
       checkout.paymentError='';
-      const utr=String(checkout.utr||'').trim();
-      if(!/^\d{12}$/.test(utr)){
-        checkout.paymentError='Enter a valid 12-digit UTR / Transaction ID.';renderCheckout();return;
+      if(!/^\d{12}$/.test(submittedUtr)){
+        if(isLatePayment){if(errorNode)errorNode.textContent='Enter exactly 12 digits for the UTR / transaction ID.'}
+        else{checkout.paymentError='Enter a valid 12-digit UTR / Transaction ID.';renderCheckout()}
+        return;
       }
-      if(!checkout.paymentOrder||checkout.preparingPayment){
+      if(!submittedOrderId||(!isLatePayment&&!checkout.paymentOrder)||(checkout.preparingPayment&&!isLatePayment)){
         checkout.paymentError='Payment order is still being prepared. Please wait and try again.';
-        renderCheckout();return;
+        if(!isLatePayment)renderCheckout();
+        return;
       }
-      const submit=$('checkout-submit-payment');
+      const submit=isLatePayment?$(`late-utr-error-${submittedOrderId}`)?.parentElement?.querySelector(`[data-submit-late-utr="${CSS.escape(String(submittedOrderId))}"]`):$('checkout-submit-payment');
       checkout.submittingPayment=true;
       if(submit){submit.disabled=true;submit.textContent='Submitting order…'}
       try{
         const {data,error}=await state.client.rpc('submit_product_payment_utr',{
-          p_order_id:checkout.paymentOrder.order_id,
-          p_utr:utr
+          p_order_id:submittedOrderId,
+          p_utr:submittedUtr
         });
         if(error)throw error;
         if(!data?.ok){
           checkout.submittingPayment=false;
-          if(data?.reason==='price_changed'){await refreshStore();checkout.paymentError='The product price changed. Please review the updated price.'}
-          else checkout.paymentError=data?.message||'Could not submit this payment.';
-          renderCheckout();return;
+          let message='';
+          if(data?.reason==='price_changed'){await refreshStore();message='The product price changed. Please review the updated price.'}
+          else if(data?.reason==='duplicate')message='This UTR has already been used.';
+          else if(data?.reason==='invalid_format')message='Enter exactly 12 digits for the UTR / transaction ID.';
+          else if(data?.reason==='rate_limited'){
+            const seconds=Number(data.retry_after_seconds||300);
+            if(isLatePayment){
+              checkout.rateLimitUntilByOrder=checkout.rateLimitUntilByOrder||{};
+              checkout.rateLimitUntilByOrder[submittedOrderId]=Date.now()+seconds*1000;
+              message=`If you have already paid, don't worry. We will verify your UTR and confirm your order. Order ID: #${submittedOrderId}`;
+            }else{
+              checkout.rateLimitUntilMs=Date.now()+seconds*1000;
+              message=`If you have already paid, don't worry. We will verify your UTR and confirm your order. Order ID: #${submittedOrderId}`;
+            }
+          }else message=data?.message||'Server error. Please try again.';
+          if(isLatePayment){
+            const lateOrder=checkout.latePaymentOrders?.find(order=>String(order.order_id)===String(submittedOrderId));
+            if(lateOrder)lateOrder.error=message;
+            renderCheckout();
+          }
+          else{checkout.paymentError=message;renderCheckout()}
+          return;
         }
-        if(data.status==='new'&&data.order_id)void notifyOrderRequest(data.order_id);
+        if(data.status==='pending_verification'&&data.order_id)void notifyOrderRequest(data.order_id);
+        checkout.rateLimitUntilMs=0;
+        if(isLatePayment){
+          checkout.latePaymentOrders=checkout.latePaymentOrders.filter(order=>String(order.order_id)!==String(submittedOrderId));
+          persistLatePaymentOrders(checkout);
+        }
         try{
           sessionStorage.removeItem('active_upi_product');
           sessionStorage.removeItem('active_upi_software_plan');
@@ -4470,7 +4782,15 @@
         showNotice('UTR submitted. Your order is under review.');
         openOrdersPanel();
         void refreshMyCoupons().catch(error=>console.error('UTR was submitted, but coupons could not be refreshed:',error));
-      }catch(error){checkout.submittingPayment=false;checkout.paymentError=error.message||'Could not submit this payment.';renderCheckout()}
+      }catch(error){
+        checkout.submittingPayment=false;
+        const message=error.message||'Could not submit this payment.';
+        if(isLatePayment){
+          const lateOrder=checkout.latePaymentOrders?.find(order=>String(order.order_id)===String(submittedOrderId));
+          if(lateOrder)lateOrder.error=message;
+        }else checkout.paymentError=message;
+        renderCheckout();
+      }
     }
 
     async function refreshStore(){
@@ -4615,8 +4935,8 @@
     $('wallet-modal').addEventListener('click',event=>{if(event.target===$('wallet-modal'))closeModal()});
     document.addEventListener('click',event=>{
       const menu=$('profile-menu');
-      if(menu&&!menu.classList.contains('hidden')&&!event.target.closest('.avatar-wrap')){menu.classList.add('hidden');$('avatar-button')?.setAttribute('aria-expanded','false')}
-      if(state.ordersPanelOpen&&!event.target.closest('#orders-panel')&&!event.target.closest('#orders-trigger'))closeOrdersPanel();
+      if(menu&&!menu.classList.contains('hidden')&&!menu.contains(event.target)&&!event.target.closest('.avatar-wrap')){menu.classList.add('hidden');$('avatar-button')?.setAttribute('aria-expanded','false')}
+      if(state.ordersPanelOpen&&!event.target.closest('#orders-panel')&&!event.target.closest('#orders-trigger')&&!menu?.contains(event.target))closeOrdersPanel();
       if(!$('offers-modal').classList.contains('hidden')&&!event.target.closest('.offers-dialog')&&!event.target.closest('.offer-claim-dialog'))closeOffersModal();
       const drawer=$('mobile-drawer');
       if(drawer&&drawer.classList.contains('open')&&!event.target.closest('#mobile-drawer')&&!event.target.closest('#menu-toggle')){

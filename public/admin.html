@@ -1863,6 +1863,12 @@
           ['UTR Number',data.utr_number||'—'],['Payment time',formatDate(data.payment_submitted_at)],
           ['Status',data.status],...(data.reject_reason?[['Rejection reason',data.reject_reason]]:[])
         ].map(([label,value])=>`<div class="order-detail"><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></div>`).join('');
+        try{
+          const screenshot=await state.client.rpc('admin_order_payment_screenshot',{p_order_id:Number(id)});
+          if(!screenshot.error&&screenshot.data?.ok){
+            $('order-request-payment').insertAdjacentHTML('beforeend',`<div class="order-detail"><small>Payment Screenshot</small><a href="data:${escapeHtml(screenshot.data.mime)};base64,${escapeHtml(screenshot.data.base64)}" target="_blank" rel="noopener">View / download screenshot</a></div>`);
+          }
+        }catch(error){console.error('Could not load payment screenshot:',error)}
         $('software-delivery-fields').classList.toggle('hidden',vps);
         $('vps-delivery-fields').classList.toggle('hidden',!vps);
         $('request-software-name').value=data.software_name||'';

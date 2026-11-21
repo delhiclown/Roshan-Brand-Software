@@ -199,7 +199,7 @@ module.exports = async function notifyOrder(req, res) {
       select: 'id,user_id,product_id,product_name,product_type,quantity,price,amount,utr,utr_number,created_at,payment_submitted_at,utr_submitted_at,used_key_id,used_key_remaining_days',
       id: `eq.${orderId}`,
       user_id: `eq.${user.id}`,
-      status: 'eq.new',
+      status: 'eq.pending_verification',
       limit: '1'
     });
     const orderResponse = await fetchWithTimeout(

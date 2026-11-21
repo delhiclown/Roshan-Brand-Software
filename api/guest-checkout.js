@@ -107,11 +107,11 @@ module.exports = async function guestCheckout(req, res) {
   let ip;
   try {
     ip = getClientIp(req);
-    if (isRateLimited(ip)) return sendJson(res, 429, { error: 'Too many requests. Please wait a minute and try again.' });
     const body = req.body && typeof req.body === 'object' ? req.body : {};
     const action = String(body.action || '');
 
     if (action === 'create_order' || action === 'claim_demo') {
+      if (isRateLimited(ip)) return sendJson(res, 429, { error: 'Too many requests. Please wait a minute and try again.' });
       const email = await validateEmailAddress(body.email);
       const whatsapp = validateWhatsApp(body.whatsapp);
       const deviceId = validateDeviceId(body.device_id);
@@ -171,8 +171,40 @@ module.exports = async function guestCheckout(req, res) {
         p_access_hash: hashAccessToken(accessToken(body.access_token)),
         p_ip_hash: hashGuestValue(ip)
       });
-      if (!data?.ok) return sendJson(res, 400, { error: data?.message || 'Could not submit this UTR.' });
+      if (!data?.ok) {
+        return sendJson(res, data?.reason === 'rate_limited' ? 429 : 400, {
+          error: data?.message || 'Could not submit this UTR.',
+          reason: data?.reason || 'server_error',
+          retry_after_seconds: data?.retry_after_seconds || 0,
+          remaining_attempts: data?.remaining_attempts
+        });
+      }
+      if (data.customer_email) {
+        try {
+          await sendGuestEmail({
+            to: data.customer_email,
+            subject: 'We received your payment details',
+            html: `<p>We received your payment details and will confirm shortly.</p><p>Order ID: <strong>#${escapeHtml(String(data.order_id))}</strong></p>`,
+            text: `We received your payment details and will confirm shortly.\nOrder ID: #${data.order_id}`
+          });
+        } catch (error) {
+          console.error('UTR was submitted but confirmation email failed:', error);
+        }
+      }
       return sendJson(res, 200, { ok: true, order: data });
+    }
+
+    if (action === 'upload_screenshot') {
+      const mime = String(body.mime || '');
+      const base64 = String(body.screenshot_base64 || '');
+      const data = await callRpc('guest_submit_payment_screenshot', {
+        p_order_id: orderId(body.order_id),
+        p_access_hash: hashAccessToken(accessToken(body.access_token)),
+        p_screenshot_base64: base64,
+        p_screenshot_mime: mime
+      });
+      if (!data?.ok) return sendJson(res, 400, { error: data?.message || 'Could not upload the screenshot.', reason: data?.reason || 'server_error' });
+      return sendJson(res, 200, data);
     }
 
     if (action === 'get_order') {

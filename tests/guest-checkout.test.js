@@ -16,6 +16,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const apiSource = fs.readFileSync(path.join(__dirname, '..', 'api', 'guest-checkout.js'), 'utf8');
 const migration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'guest-checkout-migration.sql'), 'utf8');
+const productPaymentMigration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'product-payment-expiry-migration.sql'), 'utf8');
+const softwarePlanMigration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'software-pnr-plans-migration.sql'), 'utf8');
+const usedKeyPaymentMigration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'used-keys-auto-validity-migration.sql'), 'utf8');
+const expiryRecoveryMigration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'migrations', '20261121055800_checkout_expiry_recovery.sql'), 'utf8');
 const publicIndex = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
 const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'public', 'service-worker.js'), 'utf8');
 const envExample = fs.readFileSync(path.join(__dirname, '..', '.env.example'), 'utf8');
@@ -244,14 +248,44 @@ test('UTR success closes checkout and guest order credentials persist for My Ord
   assert.match(publicIndex, /if\(!state\.user&&!state\.guestMode\)/);
 });
 
-test('checkout does not resume expired saved orders and Try Again creates a fresh payment order', () => {
+test('checkout back and reopen creates an active QR and keeps expired orders secondary', () => {
   assert.match(publicIndex, /cache:'no-store'/);
   assert.match(publicIndex, /const activeOrder=\['unpaid','pending_payment'\]\.includes\(data\.status\)\s*&&Number\.isFinite\(expiresAt\)\s*&&expiresAt>checkoutServerNow\((?:state\.checkout|checkout)\)/);
-  assert.match(publicIndex, /data-new-payment[\s\S]*?checkout\.paymentOrder=null;checkout\.paymentOrderSignature=null;checkout\.paymentTimerExpired=false;[\s\S]*?storageKeys\.forEach\(key=>localStorage\.removeItem\(key\)\)[\s\S]*?void ensureCheckoutPaymentOrder\(\)/);
+  assert.doesNotMatch(publicIndex, /const activePaymentProduct=sessionStorage\.getItem\('active_upi_product'\)/);
+  assert.match(publicIndex, /window\.addEventListener\('pageshow',event=>\{\s*clearPersistedCheckoutIntent\(\);\s*if\(event\.persisted&&\(state\.checkout\|\|\$\('wallet-dialog'\)\.classList\.contains\('checkout-dialog'\)\)\)closeModal\(\)/);
+  assert.match(publicIndex, /window\.addEventListener\('popstate',\(\)=>\{\s*if\(state\.checkout\|\|\$\('wallet-dialog'\)\.classList\.contains\('checkout-dialog'\)\)closeModal\(\)/);
+  assert.match(publicIndex, /void latePaymentRestore\.then\(\(\)=>\{if\(state\.checkout===checkout\)renderCheckout\(\)\}\)/);
+  assert.match(publicIndex, /<details class="checkout-late-payment"><summary>Already paid for an expired order\? Submit UTR<\/summary>/);
+  assert.match(publicIndex, /const cutoff=Date\.now\(\)-86400000/);
+  assert.match(publicIndex, /checkout\.paymentOrder=null;\s*checkout\.paymentOrderSignature=null;\s*checkout\.paymentTimerExpired=false/);
+  assert.match(publicIndex, /async function startNewCheckoutPayment\(checkout,expiredOrder,automatic\)/);
+  assert.match(publicIndex, /data-new-payment[\s\S]*?startNewCheckoutPayment\(checkout,checkout\.paymentOrder,false\)/);
+  assert.match(publicIndex, /function clearCheckoutOrderStorage\(checkout\)/);
+  assert.match(publicIndex, /async function checkoutRpcWithTimeout\(request,operation\)/);
+  assert.match(publicIndex, /Promise\.race\(\[request,timeout\]\)/);
+  assert.match(publicIndex, /setTimeout\(\(\)=>reject\(new Error\(`\$\{operation\} timed out after 10 seconds/);
+  assert.match(publicIndex, /function persistLatePaymentOrders\(checkout\)/);
+  assert.match(publicIndex, /get_my_expired_payment_orders/);
+  assert.match(publicIndex, /checkout\.paymentCreationFailed=true/);
+  assert.match(publicIndex, /clearCheckoutOrderStorage\(checkout\);[\s\S]*?checkout\.paymentOrder=null;[\s\S]*?checkout\.paymentOrderSignature=null/);
+  assert.match(publicIndex, /data\.status==='pending_verification'/);
+  assert.match(publicIndex, /Time is up\. Generate a new QR to pay\./);
   assert.match(publicIndex, /p_order_id:\['unpaid','pending_payment'\]\.includes\(checkout\.paymentOrder\?\.status\)&&existingExpiry>checkoutServerNow\(checkout\)/);
   assert.match(publicIndex, /anchorCheckoutServerTime\(checkout,data\.server_now,data\.order_id\);[\s\S]*?checkout\.paymentOrder=\{\s*order_id:data\.order_id/);
+  assert.match(productPaymentMigration, /v_created_at := clock_timestamp\(\);[\s\S]*?v_created_at \+ make_interval\(mins => v_timeout\)/);
+  assert.match(productPaymentMigration, /payment_expires_at > clock_timestamp\(\)/);
+  assert.match(softwarePlanMigration, /v_created_at := clock_timestamp\(\);[\s\S]*?v_created_at \+ make_interval\(mins => v_timeout\)/);
+  assert.match(usedKeyPaymentMigration, /v_now \+ make_interval\(mins => v_timeout\)/);
+  assert.match(expiryRecoveryMigration, /'created_at', o\.created_at/);
+  assert.match(expiryRecoveryMigration, /and o\.status = 'expired' and o\.utr is null/);
   assert.match(apiSource, /function sendJson\(res, status, body\)\s*\{\s*res\.setHeader\('Cache-Control', 'no-store'\)/);
   assert.match(migration, /insert into public\.orders \([\s\S]*?v_now \+ make_interval\(mins => v_timeout\)/);
+  assert.match(expiryRecoveryMigration, /status = 'expired', payment_status = 'rejected'[\s\S]*?payment_expires_at <= clock_timestamp\(\)/);
+  assert.match(expiryRecoveryMigration, /status = 'pending_verification'/);
+  assert.match(expiryRecoveryMigration, /create or replace function public\.get_my_expired_payment_orders/);
+  assert.match(expiryRecoveryMigration, /'\* \* \* \* \*'/);
+  assert.match(expiryRecoveryMigration, /Payment QR lifetime in minutes \(default 10\)/);
+  assert.match(expiryRecoveryMigration, /Late-payment UTR grace period in minutes \(default 5\)/);
 });
 
 test('guest Software checkout accepts only the three database plan IDs', () => {
