@@ -140,6 +140,7 @@ declare
   v_delivery public.order_delivery%rowtype;
   v_used_key private.used_key_inventory%rowtype;
   v_download_link text;
+  v_catalog_download_link text;
   v_key text;
   v_customer text;
 begin
@@ -159,10 +160,26 @@ begin
     select k.* into v_used_key from private.used_key_inventory as k where k.id = v_order.used_key_id;
     select d.download_url into v_download_link
       from public.product_download_links as d where d.product_id = v_order.product_id;
+  elsif v_order.product_type = 'software' then
+    select d.download_url into v_catalog_download_link
+      from public.product_download_links as d
+      join public.products as p on p.id = d.product_id
+      where d.product_id = v_order.product_id and p.category = 'software'
+        and nullif(btrim(d.download_url), '') is not null;
+    if nullif(btrim(v_catalog_download_link), '') is null then
+      select d.download_url into v_catalog_download_link
+        from public.product_download_links as d
+        join public.products as p on p.id = d.product_id
+        where p.category = 'software'
+          and lower(btrim(p.name)) = lower(btrim(v_order.product_name))
+          and nullif(btrim(d.download_url), '') is not null
+        order by p.id
+        limit 1;
+    end if;
   end if;
   return jsonb_build_object(
     'ok', true, 'id', v_order.id, 'user_id', v_order.user_id, 'customer', v_customer,
-    'guest_order', v_order.user_id is null, 'guest_email_sent_at', v_order.guest_email_sent_at,
+    'guest_order', v_order.guest_email is not null, 'guest_email_sent_at', v_order.guest_email_sent_at,
     'product_id', v_order.product_id,
     'product_name', case when v_order.used_key_id is not null
       then coalesce((select p.name from public.products as p where p.id = v_order.product_id), v_order.product_name)
@@ -186,6 +203,7 @@ begin
       then extensions.pgp_sym_decrypt(v_delivery.license_key_encrypted, v_key) else '' end,
     'download_link', case when v_order.used_key_id is not null
       then coalesce(v_download_link, '') else coalesce(v_delivery.download_link, '') end,
+    'catalog_download_link', coalesce(v_catalog_download_link, ''),
     'vps_ip', coalesce(v_delivery.vps_ip, ''), 'vps_port', v_delivery.vps_port,
     'vps_username', coalesce(v_delivery.vps_username, ''),
     'vps_password', case when v_delivery.vps_password_encrypted is null then ''
@@ -336,13 +354,13 @@ begin
   if not public.is_store_admin() then raise exception 'Admin access required'; end if;
   return query
     select o.id, coalesce(u.email::text, o.guest_email, ''), o.product_name,
-      o.amount, o.utr_number, o.payment_submitted_at, o.user_id is null,
+      o.amount, o.utr_number, o.payment_submitted_at, o.guest_email is not null,
       o.status, o.guest_email_sent_at is not null
     from public.orders as o
     left join auth.users as u on u.id = o.user_id
     where o.product_type = 'rental'
       and ((o.status = 'new' and o.utr_number is not null)
-        or (o.user_id is null and o.status = 'completed' and o.payment_status = 'paid'
+        or (o.guest_email is not null and o.status = 'completed' and o.payment_status = 'paid'
           and o.guest_email_sent_at is null))
     order by o.payment_submitted_at desc, o.id desc;
 end;
@@ -363,7 +381,7 @@ declare
 begin
   if not public.is_store_admin() then raise exception 'Admin access required'; end if;
   select o.* into v_order from public.orders as o
-    where o.id = p_order_id and o.user_id is null and o.guest_email is not null;
+    where o.id = p_order_id and o.guest_email is not null;
   if not found then return jsonb_build_object('ok', false, 'message', 'Guest order was not found.'); end if;
   if v_order.status <> 'completed' or v_order.payment_status <> 'paid' then
     return jsonb_build_object('ok', false, 'message', 'Complete and verify the guest order before sending delivery.');
@@ -385,6 +403,7 @@ begin
   return jsonb_build_object(
     'ok', true, 'email_sent', false, 'order_id', v_order.id,
     'guest_email', v_order.guest_email, 'product_name', v_order.product_name,
+    'software_name', coalesce(nullif(btrim(v_delivery.software_name), ''), v_order.product_name),
     'license_key', case when v_order.used_key_id is not null
       then extensions.pgp_sym_decrypt(v_used_key.license_key_encrypted, v_key)
       when v_delivery.license_key_encrypted is not null
@@ -411,7 +430,7 @@ as $$
 begin
   if not public.is_store_admin() then raise exception 'Admin access required'; end if;
   update public.orders as o set guest_email_sent_at = coalesce(o.guest_email_sent_at, clock_timestamp())
-    where o.id = p_order_id and o.user_id is null and o.guest_email is not null
+    where o.id = p_order_id and o.guest_email is not null
       and o.status = 'completed' and o.payment_status = 'paid';
   if not found then return jsonb_build_object('ok', false, 'message', 'Completed guest order was not found.'); end if;
   return jsonb_build_object('ok', true);

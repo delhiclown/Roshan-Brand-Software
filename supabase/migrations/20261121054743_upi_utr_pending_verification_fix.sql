@@ -138,7 +138,7 @@ declare
   v_remaining integer;
 begin
   select o.* into v_order from public.orders as o
-    where o.id = p_order_id and o.user_id is null
+    where o.id = p_order_id and o.guest_email is not null
       and o.guest_access_hash = p_access_hash
       and o.guest_email is not null and o.guest_email_sent_at is null
     for update;
@@ -289,7 +289,7 @@ begin
   set payment_screenshot_bytes = v_bytes,
       payment_screenshot_mime = p_screenshot_mime,
       payment_screenshot_submitted_at = clock_timestamp()
-  where id = p_order_id and user_id is null
+  where id = p_order_id and guest_email is not null
     and guest_access_hash = p_access_hash;
   if not found then
     return jsonb_build_object('ok', false, 'reason', 'invalid_order',

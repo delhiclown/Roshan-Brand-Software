@@ -86,6 +86,18 @@ function hashAccessToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
+function publicSiteOrigin() {
+  const configuredOrigin = String(process.env.PUBLIC_SITE_URL || '').trim();
+  if (configuredOrigin) {
+    const url = new URL(configuredOrigin);
+    if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Public site URL must use HTTP or HTTPS.');
+    return url.origin;
+  }
+  const deploymentHost = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  if (deploymentHost) return `https://${deploymentHost.replace(/^https?:\/\//i, '')}`;
+  return `http://localhost:${Number(process.env.PORT) || 3000}`;
+}
+
 function demoKeyEmail(data) {
   const name = escapeHtml(data.software_name);
   const key = escapeHtml(data.license_key);
@@ -165,10 +177,11 @@ module.exports = async function guestCheckout(req, res) {
     }
 
     if (action === 'submit_utr') {
+      const token = accessToken(body.access_token);
       const data = await callRpc('guest_submit_order_utr', {
         p_order_id: orderId(body.order_id),
         p_utr: String(body.utr || '').trim(),
-        p_access_hash: hashAccessToken(accessToken(body.access_token)),
+        p_access_hash: hashAccessToken(token),
         p_ip_hash: hashGuestValue(ip)
       });
       if (!data?.ok) {
@@ -181,11 +194,12 @@ module.exports = async function guestCheckout(req, res) {
       }
       if (data.customer_email) {
         try {
+          const trackingUrl = `${publicSiteOrigin()}/order/${encodeURIComponent(String(data.order_id))}?token=${encodeURIComponent(token)}`;
           await sendGuestEmail({
             to: data.customer_email,
             subject: 'We received your payment details',
-            html: `<p>We received your payment details and will confirm shortly.</p><p>Order ID: <strong>#${escapeHtml(String(data.order_id))}</strong></p>`,
-            text: `We received your payment details and will confirm shortly.\nOrder ID: #${data.order_id}`
+            html: `<p>We received your payment details and will confirm shortly.</p><p>Order ID: <strong>#${escapeHtml(String(data.order_id))}</strong></p><p><a href="${escapeHtml(trackingUrl)}">Track your order</a></p><p>Verification pending? We will send the product to your email once confirmed.</p>`,
+            text: `We received your payment details and will confirm shortly.\nOrder ID: #${data.order_id}\nTrack your order: ${trackingUrl}\nVerification pending? We will send the product to your email once confirmed.`
           });
         } catch (error) {
           console.error('UTR was submitted but confirmation email failed:', error);
@@ -208,11 +222,19 @@ module.exports = async function guestCheckout(req, res) {
     }
 
     if (action === 'get_order') {
+      let guestOrderId;
+      let accessHash;
+      try {
+        guestOrderId = orderId(body.order_id);
+        accessHash = hashAccessToken(accessToken(body.access_token));
+      } catch {
+        return sendJson(res, 404, { error: 'Order could not be found.' });
+      }
       const data = await callRpc('guest_get_order', {
-        p_order_id: orderId(body.order_id),
-        p_access_hash: hashAccessToken(accessToken(body.access_token))
+        p_order_id: guestOrderId,
+        p_access_hash: accessHash
       });
-      if (!data?.ok) return sendJson(res, 404, { error: data?.message || 'Guest order was not found.' });
+      if (!data?.ok) return sendJson(res, 404, { error: 'Order could not be found.' });
       return sendJson(res, 200, { ok: true, order: data });
     }
 

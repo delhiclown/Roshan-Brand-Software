@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Track order</title>
+  <style>
+    :root{color-scheme:dark;--bg:#08111f;--panel:#101d30;--text:#eef5ff;--muted:#a9bad0;--accent:#59d5c6;--line:#263a54}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at top,#172b44,var(--bg) 62%);color:var(--text);font:16px/1.6 Inter,Segoe UI,Arial,sans-serif}
+    main{width:min(100%,560px);padding:30px;border:1px solid var(--line);border-radius:20px;background:rgba(16,29,48,.96);box-shadow:0 24px 70px #0006}
+    h1{margin:0 0 8px;font-size:1.55rem}
+    p{color:var(--muted)}
+    .order-id{color:var(--accent);font-weight:700}
+    .status{margin:20px 0;padding:16px;border:1px solid var(--line);border-radius:12px;background:#0b1728}
+    .delivery{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:12px}
+    .delivery-row{padding:10px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+    .delivery-row:last-child{border-bottom:0}
+    .label{display:block;color:var(--muted);font-size:.85rem}
+    .value{white-space:pre-wrap;overflow-wrap:anywhere}
+    a{color:var(--accent);font-weight:700}
+    .error{color:#ffb1b1}
+    .small{font-size:.9rem}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Order tracking</h1>
+    <p id="order-number" class="order-id"></p>
+    <div id="order-status" class="status" role="status" aria-live="polite">Loading order status…</div>
+    <section id="delivery" class="delivery" hidden></section>
+  </main>
+  <script>
+    (() => {
+      const statusNode = document.getElementById('order-status');
+      const orderNumber = document.getElementById('order-number');
+      const delivery = document.getElementById('delivery');
+      const orderId = location.pathname.match(/^\/order\/([1-9]\d{0,17})$/)?.[1];
+      const token = new URLSearchParams(location.search).get('token') || '';
+      let stopPolling = false;
+
+      function addDeliveryRow(label, value, isLink) {
+        if (!value) return;
+        const row = document.createElement('div');
+        row.className = 'delivery-row';
+        const name = document.createElement('span');
+        name.className = 'label';
+        name.textContent = label;
+        row.append(name);
+        if (isLink) {
+          let parsed;
+          try {
+            parsed = new URL(value, location.origin);
+          } catch {
+            parsed = null;
+          }
+          if (parsed && ['http:', 'https:'].includes(parsed.protocol)) {
+            const link = document.createElement('a');
+            link.href = parsed.href;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = value;
+            row.append(link);
+          } else {
+            const content = document.createElement('span');
+            content.className = 'value';
+            content.textContent = value;
+            row.append(content);
+          }
+        } else {
+          const content = document.createElement('span');
+          content.className = 'value';
+          content.textContent = value;
+          row.append(content);
+        }
+        delivery.append(row);
+      }
+
+      async function loadOrder() {
+        if (!orderId || !/^[A-Za-z0-9_-]{43}$/.test(token)) {
+          stopPolling = true;
+          statusNode.textContent = 'Order could not be found.';
+          statusNode.classList.add('error');
+          return;
+        }
+        try {
+          const response = await fetch('/api/guest-checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store',
+            body: JSON.stringify({ action: 'get_order', order_id: Number(orderId), access_token: token })
+          });
+          const result = await response.json();
+          if (!response.ok || !result?.order) {
+            stopPolling = true;
+            statusNode.textContent = 'Order could not be found.';
+            statusNode.classList.add('error');
+            return;
+          }
+          const order = result.order;
+          orderNumber.textContent = `Order #${order.order_id}`;
+          statusNode.classList.remove('error');
+          if (order.status === 'completed') {
+            stopPolling = true;
+            statusNode.textContent = 'Payment verified. Your order is complete.';
+            delivery.hidden = false;
+            addDeliveryRow('Software', order.software_name || order.product_name, false);
+            addDeliveryRow('License key', order.license_key, false);
+            addDeliveryRow('Download link', order.download_link, true);
+            addDeliveryRow('VPS IP', order.vps_ip, false);
+            addDeliveryRow('VPS port', order.vps_port == null ? '' : String(order.vps_port), false);
+            addDeliveryRow('VPS username', order.vps_username, false);
+            addDeliveryRow('VPS password', order.vps_password, false);
+            addDeliveryRow('Rental access', order.rental_access, false);
+          } else if (order.status === 'pending_verification' || order.status === 'new') {
+            statusNode.textContent = 'Payment details received. Your order is pending verification. Verification pending? We will send the product to your email once confirmed.';
+          } else if (order.status === 'expired') {
+            statusNode.textContent = 'This payment window expired. If you already paid, please contact support with your order number.';
+          } else if (order.status === 'rejected') {
+            stopPolling = true;
+            statusNode.textContent = 'This order was not approved. Please contact support with your order number.';
+          } else {
+            statusNode.textContent = 'Order status: payment pending.';
+          }
+        } catch (error) {
+          console.error('Could not load guest order tracking:', error);
+          statusNode.textContent = 'Order status is temporarily unavailable. Please try again.';
+          statusNode.classList.add('error');
+        }
+      }
+
+      loadOrder();
+      window.setInterval(() => {
+        if (!stopPolling) loadOrder();
+      }, 10000);
+    })();
+  </script>
+</body>
+</html>

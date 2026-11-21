@@ -20,7 +20,10 @@ const productPaymentMigration = fs.readFileSync(path.join(__dirname, '..', 'supa
 const softwarePlanMigration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'software-pnr-plans-migration.sql'), 'utf8');
 const usedKeyPaymentMigration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'used-keys-auto-validity-migration.sql'), 'utf8');
 const expiryRecoveryMigration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'migrations', '20261121055800_checkout_expiry_recovery.sql'), 'utf8');
+const trackingMigration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'migrations', '20261121065000_guest_order_tracking_account_linking.sql'), 'utf8');
+const setupSql = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'setup.sql'), 'utf8');
 const publicIndex = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+const trackingPage = fs.readFileSync(path.join(__dirname, '..', 'public', 'order.html'), 'utf8');
 const serviceWorker = fs.readFileSync(path.join(__dirname, '..', 'public', 'service-worker.js'), 'utf8');
 const envExample = fs.readFileSync(path.join(__dirname, '..', '.env.example'), 'utf8');
 const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
@@ -57,6 +60,10 @@ test('email validation normalizes regular addresses and rejects disposable or in
 });
 
 test('guest device, phone, and IP values require safe formats', () => {
+  assert.match(publicIndex, /id="guest-email" type="email"[^>]*required/);
+  assert.match(publicIndex, /WhatsApp number \(optional, recommended\)/);
+  assert.match(apiSource, /const email = await validateEmailAddress\(body\.email\)/);
+  assert.match(apiSource, /const whatsapp = validateWhatsApp\(body\.whatsapp\)/);
   assert.equal(validateDeviceId('4f2b77ab-27c9-4c8f-a01f-99792e3e8b26'), '4f2b77ab-27c9-4c8f-a01f-99792e3e8b26');
   assert.throws(() => validateDeviceId('not-a-device'), /verify this device/i);
   assert.equal(validateWhatsApp(''), '');
@@ -237,15 +244,106 @@ test('guest order history only returns orders authorized by each saved access to
   }
 });
 
-test('UTR success closes checkout and guest order credentials persist for My Orders', () => {
+test('tracking requests hide invalid-token details behind the same not-found response', async () => {
+  const res = responseRecorder();
+  await guestCheckout({
+    method: 'POST',
+    headers: {},
+    socket: { remoteAddress: '127.0.0.4' },
+    body: { action: 'get_order', order_id: 19, access_token: 'invalid' }
+  }, res);
+  assert.equal(res.statusCode, 404);
+  assert.deepEqual(res.body, { error: 'Order could not be found.' });
+});
+
+test('guest UTR confirmation email includes the capability tracking link and requested message', async () => {
+  const originalFetch = global.fetch;
+  const previousEnv = {
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    GUEST_HASH_SECRET: process.env.GUEST_HASH_SECRET,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
+    PUBLIC_SITE_URL: process.env.PUBLIC_SITE_URL
+  };
+  const token = 'A'.repeat(43);
+  let emailPayload;
+  process.env.SUPABASE_URL = 'https://unit-test.invalid';
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'unit-test-service-key';
+  process.env.GUEST_HASH_SECRET = 'test-secret-with-more-than-32-characters';
+  process.env.RESEND_API_KEY = 'test-resend-key';
+  process.env.RESEND_FROM_EMAIL = 'orders@example.com';
+  process.env.PUBLIC_SITE_URL = 'https://store.example/';
+  global.fetch = async (url, options) => {
+    if (String(url).endsWith('/rpc/guest_submit_order_utr')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ok: true,
+          order_id: 42,
+          status: 'pending_verification',
+          customer_email: 'customer@example.com'
+        })
+      };
+    }
+    if (String(url) === 'https://api.resend.com/emails') {
+      emailPayload = JSON.parse(options.body);
+      return { ok: true, status: 200, json: async () => ({ id: 'email-42' }) };
+    }
+    throw new Error(`Unexpected request: ${url}`);
+  };
+  try {
+    const res = responseRecorder();
+    await guestCheckout({
+      method: 'POST',
+      headers: {},
+      socket: { remoteAddress: '127.0.0.4' },
+      body: { action: 'submit_utr', order_id: 42, access_token: token, utr: '123456789012' }
+    }, res);
+    assert.equal(res.statusCode, 200);
+    assert.match(emailPayload.text, /https:\/\/store\.example\/order\/42\?token=A{43}/);
+    assert.match(emailPayload.text, /Verification pending\? We will send the product to your email once confirmed\./);
+    assert.match(emailPayload.html, /We received your payment details and will confirm shortly\./);
+  } finally {
+    global.fetch = originalFetch;
+    for (const [key, value] of Object.entries(previousEnv)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
+test('UTR success keeps checkout available and guest order credentials persist for tracking', () => {
   assert.match(publicIndex, /if\(!\/\^\\d\{12\}\$\/\.test\(utr\)\)/);
-  assert.match(publicIndex, /closeModal\(\);\s*showNotice\('UTR submitted\. Your order is under review\.'\);\s*openOrdersPanel\(\)/);
+  assert.match(publicIndex, /guestOrder\.submitted=true;\s*guestOrder\.order=\{\.\.\.guestOrder\.order,\.\.\.result\.order,status:result\.order\?\.status\|\|'pending_verification'\};\s*renderGuestOrderStatus\(\)/);
+  assert.match(publicIndex, /\/order\/\$\{encodeURIComponent\(String\(orderId\)\)\}\?token=/);
+  assert.match(publicIndex, /Verification pending\? We will send the product to your email once confirmed\./);
   assert.match(publicIndex, /function closeModal\(\)\s*\{\s*stopCheckoutPaymentTimer\(\)/);
   assert.match(publicIndex, /function stopCheckoutPaymentTimer\(\)\s*\{\s*if\(state\.checkoutTimer!==null\)\{clearInterval\(state\.checkoutTimer\)/);
   assert.match(publicIndex, /const guestOrderStorageKey='roshan-guest-orders-v1'/);
   assert.match(publicIndex, /persistGuestOrderCredential\(result\.order\.order_id,result\.access_token\)/);
   assert.match(publicIndex, /action:'get_orders',orders:credentials/);
   assert.match(publicIndex, /if\(!state\.user&&!state\.guestMode\)/);
+  assert.match(publicIndex, /rpc\('link_guest_orders_to_user'\)/);
+  assert.match(trackingPage, /action: 'get_order'/);
+  assert.match(trackingPage, /if \(order\.status === 'completed'\)/);
+  assert.doesNotMatch(trackingPage, /innerHTML/);
+  assert.match(trackingPage, /Order could not be found\./);
+});
+
+test('guest tracking and account linking require the order token and verified email', () => {
+  assert.match(trackingMigration, /u\.email_confirmed_at is not null/);
+  assert.match(trackingMigration, /o\.guest_email = v_email/);
+  assert.match(trackingMigration, /set user_id = v_user_id, guest_device_hash = null, guest_ip_hash = null/);
+  assert.match(trackingMigration, /o\.guest_access_hash = p_access_hash/);
+  assert.match(trackingMigration, /status = 'completed' and v_delivery\.license_key_encrypted/);
+  assert.match(trackingMigration, /revoke all on function public\.guest_get_order\(bigint, text\) from public, anon, authenticated/);
+  assert.match(trackingMigration, /grant execute on function public\.guest_get_order\(bigint, text\) to service_role/);
+  assert.match(trackingMigration, /grant execute on function public\.link_guest_orders_to_user\(\) to authenticated/);
+  assert.match(setupSql, /alter table public\.orders enable row level security/);
+  assert.match(setupSql, /for select to authenticated using \(user_id = \(select auth\.uid\(\)\)\)/);
+  assert.match(setupSql, /revoke all on public\.wallets, public\.wallet_transactions, public\.topup_requests, public\.orders from anon, authenticated/);
 });
 
 test('checkout back and reopen creates an active QR and keeps expired orders secondary', () => {

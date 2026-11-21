@@ -1596,6 +1596,9 @@
       }
       return result;
     }
+    function guestOrderTrackingHref(orderId,accessToken){
+      return `/order/${encodeURIComponent(String(orderId))}?token=${encodeURIComponent(String(accessToken||''))}`;
+    }
 
     function showGuestCheckoutError(error){
       console.error('Could not start guest checkout:',error);
@@ -1616,7 +1619,7 @@
       $('modal-title').textContent=type==='demo'?'Claim a free demo key':'Guest checkout';
       $('wallet-dialog').classList.add('checkout-dialog');
       openModal();
-      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(product.name||product.software_name)}</strong>${product.software_plan_label?`<p class="checkout-note">Plan: ${escapeHtml(product.software_plan_label)} · ₹${money(product.software_plan_price)}</p>`:''}<p class="checkout-note">${type==='demo'?'One demo claim per email, device, and IP address per day.':'Pay by UPI and submit the 12-digit UTR for admin verification.'}</p></div><form id="guest-checkout-form"><div class="modal-field"><label for="guest-email">Email address (required)</label><input id="guest-email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com"></div><div class="modal-field"><label for="guest-whatsapp">WhatsApp number (optional)</label><input id="guest-whatsapp" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="[6-9][0-9]{9}" placeholder="9876543210"></div><div class="modal-error" id="guest-checkout-error" role="status" aria-live="polite"></div><button class="modal-primary" id="guest-checkout-submit" type="submit">${type==='demo'?'Get demo key':'Continue to UPI payment'}</button></form>`;
+      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(product.name||product.software_name)}</strong>${product.software_plan_label?`<p class="checkout-note">Plan: ${escapeHtml(product.software_plan_label)} · ₹${money(product.software_plan_price)}</p>`:''}<p class="checkout-note">${type==='demo'?'One demo claim per email, device, and IP address per day.':'Pay by UPI and submit the 12-digit UTR for admin verification.'}</p></div><form id="guest-checkout-form"><div class="modal-field"><label for="guest-email">Email address (required)</label><input id="guest-email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com"></div><div class="modal-field"><label for="guest-whatsapp">WhatsApp number (optional, recommended)</label><input id="guest-whatsapp" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="10" pattern="[6-9][0-9]{9}" placeholder="9876543210"><small class="checkout-note">Optional. Add a WhatsApp number for payment updates.</small></div><div class="modal-error" id="guest-checkout-error" role="status" aria-live="polite"></div><button class="modal-primary" id="guest-checkout-submit" type="submit">${type==='demo'?'Get demo key':'Continue to UPI payment'}</button></form>`;
       $('guest-checkout-form').addEventListener('submit',submitGuestCheckout);
       const guestWhatsApp=$('guest-whatsapp');
       const guestWhatsAppSubmit=$('guest-checkout-submit');
@@ -1742,7 +1745,8 @@
       const whatsappNumber=String(state.settings.whatsapp_number||'').replace(/\D/g,'');
       const whatsappMessage=encodeURIComponent(`Hello, I need help with payment for Order #${order.order_id}. Amount: ₹${money(amount)}.`);
       const whatsappLink=whatsappNumber?`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`:'';
-      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(order.product_name)}</strong>${order.software_plan_label?`<p class="checkout-note">Plan: ${escapeHtml(order.software_plan_label)}</p>`:''}<div class="checkout-amounts"><span>Exact amount</span><strong>₹${money(amount)}</strong></div></div><p class="checkout-note">Order #${escapeHtml(order.order_id)} · The timer is for submitting the UTR, not cancellation. After paying, submit the 12-digit UTR.</p><div class="qr-box" id="guest-payment-qr" aria-label="Guest order UPI payment QR code"></div><a class="modal-primary" style="display:block;text-align:center;margin-top:12px" href="${escapeHtml(upiUrl)}">Open UPI app</a><label class="checkout-utr-label" for="guest-order-utr">UTR / Transaction ID (12 digits)</label><input class="checkout-utr" id="guest-order-utr" inputmode="text" autocomplete="off" maxlength="24" placeholder="Enter 12-digit UTR"><div class="modal-error" id="guest-order-error" role="status" aria-live="polite"></div><div class="checkout-rate-limit-countdown" id="guest-rate-limit-countdown" role="timer"></div><button class="modal-primary" id="guest-order-submit" type="button" disabled>Submit UTR for review</button><div class="checkout-payment-fallback" id="guest-payment-fallback">${whatsappLink?`<strong>Need help?</strong><a class="btn ghost" href="${whatsappLink}" target="_blank" rel="noopener">Contact on WhatsApp</a>`:''}<label class="checkout-utr-label" for="guest-payment-screenshot">Upload payment screenshot</label><input id="guest-payment-screenshot" type="file" accept="image/png,image/jpeg,image/webp"><button class="back" id="guest-upload-screenshot" type="button">Upload screenshot for manual verification</button></div><div id="guest-order-status" role="status" aria-live="polite"></div>`;
+      const trackingHref=guestOrderTrackingHref(order.order_id,state.activeGuestOrder?.accessToken);
+      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(order.product_name)}</strong>${order.software_plan_label?`<p class="checkout-note">Plan: ${escapeHtml(order.software_plan_label)}</p>`:''}<div class="checkout-amounts"><span>Exact amount</span><strong>₹${money(amount)}</strong></div></div><p class="checkout-note">Order #${escapeHtml(order.order_id)} · The timer is for submitting the UTR, not cancellation. After paying, submit the 12-digit UTR.</p><div class="qr-box" id="guest-payment-qr" aria-label="Guest order UPI payment QR code"></div><a class="modal-primary" style="display:block;text-align:center;margin-top:12px" href="${escapeHtml(upiUrl)}">Open UPI app</a><label class="checkout-utr-label" for="guest-order-utr">UTR / Transaction ID (12 digits)</label><input class="checkout-utr" id="guest-order-utr" inputmode="text" autocomplete="off" maxlength="24" placeholder="Enter 12-digit UTR"><div class="modal-error" id="guest-order-error" role="status" aria-live="polite"></div><div class="checkout-rate-limit-countdown" id="guest-rate-limit-countdown" role="timer"></div><button class="modal-primary" id="guest-order-submit" type="button" disabled>Submit UTR for review</button><div class="checkout-payment-fallback" id="guest-payment-fallback">${whatsappLink?`<strong>Need help?</strong><a class="btn ghost" href="${whatsappLink}" target="_blank" rel="noopener">Contact on WhatsApp</a>`:''}<label class="checkout-utr-label" for="guest-payment-screenshot">Upload payment screenshot</label><input id="guest-payment-screenshot" type="file" accept="image/png,image/jpeg,image/webp"><button class="back" id="guest-upload-screenshot" type="button">Upload screenshot for manual verification</button></div><div class="checkout-utr-step"><a href="${escapeHtml(trackingHref)}">Track your order</a><p class="checkout-note">Verification pending? We will send the product to your email once confirmed.</p></div><div id="guest-order-status" role="status" aria-live="polite"></div>`;
       new QRCode($('guest-payment-qr'),{text:upiUrl,width:230,height:230,colorDark:'#060b17',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
       $('guest-order-utr').addEventListener('input',event=>{
         event.currentTarget.value=event.currentTarget.value.replace(/\s/g,'').replace(/\D/g,'').slice(0,12);
@@ -1771,17 +1775,14 @@
       button.disabled=true;
       $('guest-order-error').textContent='';
       try{
-        await guestCheckoutApi({
+        const result=await guestCheckoutApi({
           action:'submit_utr',order_id:guestOrder.orderId,
           access_token:guestOrder.accessToken,utr
         });
         guestOrder.submitted=true;
-        guestOrder.order.status='pending_verification';
-        clearInterval(state.guestOrderPoll);
-        state.guestOrderPoll=null;
-        closeModal();
+        guestOrder.order={...guestOrder.order,...result.order,status:result.order?.status||'pending_verification'};
+        renderGuestOrderStatus();
         showNotice('We received your payment details and will confirm shortly.');
-        openOrdersPanel();
       }catch(error){
         const errorNode=$('guest-order-error');
         const result=error.result||{};
@@ -1832,12 +1833,12 @@
           order.vps_storage_gb?['Storage',`${order.vps_storage_gb} GB`]:null
         ].filter(Boolean);
         const link=safeHttpUrl(order.download_link);
-        statusNode.innerHTML=`<div class="wallet-balance" style="margin-top:14px"><strong>Payment verified · Order complete</strong>${details.map(([label,value])=>`<div class="orders-key-box"><span class="key-label">${escapeHtml(label)} · </span><span class="key-value">${escapeHtml(value)}</span></div>`).join('')}${link?`<a class="delivery-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Open download / delivery link</a>`:''}<small>${order.email_sent?'A copy was sent to your checkout email.':'Your delivery is shown here. The email is being sent; contact support if it does not arrive.'} Keep order #${escapeHtml(order.order_id)} for support.</small></div>`;
+        statusNode.innerHTML=`<div class="wallet-balance" style="margin-top:14px"><strong>Payment verified · Order complete</strong>${details.map(([label,value])=>`<div class="orders-key-box"><span class="key-label">${escapeHtml(label)} · </span><span class="key-value">${escapeHtml(value)}</span></div>`).join('')}${link?`<a class="delivery-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Open download / delivery link</a>`:''}<a class="delivery-link" href="${escapeHtml(guestOrderTrackingHref(guestOrder.orderId,guestOrder.accessToken))}">Track this order</a><small>${order.email_sent?'A copy was sent to your checkout email.':'Your delivery is shown here. The email is being sent; contact support if it does not arrive.'} Keep order #${escapeHtml(order.order_id)} for support.</small></div>`;
         $('guest-order-submit').classList.add('hidden');
       }else if(order.status==='rejected'){
         statusNode.innerHTML=`<div class="modal-error" style="margin-top:12px">Payment was rejected: ${escapeHtml(order.reject_reason||'Contact support with your order number.')}</div>`;
       }else if(guestOrder.submitted){
-        statusNode.innerHTML=`<p class="checkout-note" style="margin-top:12px">UTR received. Order #${escapeHtml(order.order_id)} is waiting for admin verification. Delivery will appear here and be sent to your email after approval.</p>`;
+        statusNode.innerHTML=`<p class="checkout-note" style="margin-top:12px">UTR received. Order #${escapeHtml(order.order_id)} is waiting for admin verification. Verification pending? We will send the product to your email once confirmed.</p><a class="delivery-link" href="${escapeHtml(guestOrderTrackingHref(guestOrder.orderId,guestOrder.accessToken))}">Track this order</a>`;
         $('guest-order-submit').classList.add('hidden');
       }else{
         statusNode.innerHTML='';
@@ -3508,6 +3509,15 @@
           .on('postgres_changes',{event:'*',schema:'public',table:'wallets',filter:`user_id=eq.${state.user.id}`},()=>refreshWalletBalance().catch(error=>showNotice(error.message)))
           .subscribe();
         await refreshMyOrders();
+        const {data:linkedGuestOrders,error:linkGuestOrdersError}=await state.client.rpc('link_guest_orders_to_user');
+        if(linkGuestOrdersError){
+          console.error('Could not link previous guest orders to this account:',linkGuestOrdersError);
+          showNotice('We could not link your previous guest orders. Please try again later.');
+        }else if(linkedGuestOrders?.ok&&Number(linkedGuestOrders.linked_count)>0){
+          await refreshMyOrders();
+        }else if(linkedGuestOrders?.ok===false&&linkedGuestOrders.message){
+          showNotice(linkedGuestOrders.message);
+        }
         await refreshMyCoupons();
         state.ordersChannel=state.client.channel(`customer-orders-${state.user.id}`)
           .on('postgres_changes',{event:'*',schema:'public',table:'orders',filter:`user_id=eq.${state.user.id}`},()=>refreshMyOrders())

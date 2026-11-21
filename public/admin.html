@@ -38,6 +38,8 @@
     main{padding:34px 0 70px}.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:17px}
     #login-panel{max-width:430px;margin:8vh auto}.sub{color:var(--muted);font-size:12px;line-height:1.7;margin:4px 0 19px}
     .field{margin-bottom:13px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+    .field.needs-manual-download input{border-color:var(--gold);box-shadow:0 0 0 2px rgba(245,192,74,.12)}
+    .field .manual-download-hint{display:block;color:var(--gold);font-size:11px;margin-top:6px}
     input,textarea,select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#080f20;color:var(--text);outline:none}
     #software-plan-fields input[type=number]{min-width:8em}
     input:focus,textarea:focus,select:focus{border-color:var(--gold)}textarea{min-height:76px;resize:vertical}
@@ -501,7 +503,7 @@
       <div id="software-delivery-fields">
         <div class="field"><label for="request-software-name">Software Name</label><input id="request-software-name" maxlength="160"></div>
         <div class="field"><label for="request-license-key">License Key</label><textarea id="request-license-key" maxlength="4000"></textarea></div>
-        <div class="field"><label for="request-download-link">Download Link</label><input id="request-download-link" type="url" maxlength="2048"></div>
+        <div class="field" id="request-download-link-field"><label for="request-download-link">Download Link</label><input id="request-download-link" type="url" maxlength="2048"><small class="manual-download-hint hidden" id="request-download-link-hint">Custom software: enter the download link.</small></div>
       </div>
       <div id="vps-delivery-fields" class="hidden">
         <div class="request-form-grid">
@@ -1871,9 +1873,12 @@
         }catch(error){console.error('Could not load payment screenshot:',error)}
         $('software-delivery-fields').classList.toggle('hidden',vps);
         $('vps-delivery-fields').classList.toggle('hidden',!vps);
-        $('request-software-name').value=data.software_name||'';
+        const fixedUsedKey=Boolean(data.used_key_id);
+        const catalogDownloadLink=String(data.catalog_download_link||'').trim();
+        const savedDownloadLink=String(data.download_link||'').trim();
+        $('request-software-name').value=data.software_name||data.product_name||'';
         $('request-license-key').value=data.license_key||'';
-        $('request-download-link').value=data.download_link||'';
+        $('request-download-link').value=savedDownloadLink||catalogDownloadLink;
         $('request-vps-ip').value=data.vps_ip||'';
         $('request-vps-port').value=data.vps_port||'';
         $('request-vps-username').value=data.vps_username||'';
@@ -1882,14 +1887,16 @@
         $('request-rejection-reason').value='';
         const editable=data.status==='new';
         ['save-order-request','complete-order-request','reject-order-request'].forEach(buttonId=>$(buttonId).disabled=!editable);
-        $('send-guest-order-email').classList.toggle('hidden',!(data.guest_order&&data.status==='completed'&&!data.guest_email_sent_at));
+        $('send-guest-order-email').classList.toggle('hidden',!(data.guest_email&&data.status==='completed'&&!data.guest_email_sent_at));
         $('send-guest-order-email').disabled=false;
         $('request-rejection-reason').disabled=!editable;
-        const fixedUsedKey=Boolean(data.used_key_id);
         const generalProduct=!['software','used_key','vps','windows-vps'].includes(data.product_type);
         $('request-software-name').labels[0].textContent=generalProduct?'Product / service name':'Software Name';
         $('request-license-key').labels[0].textContent=generalProduct?'Delivery details / access':'License Key';
         $('request-software-name').disabled=!editable||fixedUsedKey;$('request-license-key').disabled=!editable||fixedUsedKey;$('request-download-link').disabled=!editable||fixedUsedKey;
+        const downloadField=$('request-download-link-field');
+        downloadField.dataset.manualEntryRequired=String(editable&&data.product_type==='software'&&!fixedUsedKey&&!savedDownloadLink&&!catalogDownloadLink);
+        updateManualDownloadHint();
         ['request-vps-ip','request-vps-port','request-vps-username','request-vps-password','request-vps-storage'].forEach(inputId=>$(inputId).disabled=!editable);
       }catch(error){
         $('order-request-error').textContent=error.message||'Could not load order details.';
@@ -1907,6 +1914,12 @@
         vps_storage_gb:$('request-vps-storage').value.trim()
       };
     }
+    function updateManualDownloadHint(){
+      const field=$('request-download-link-field');
+      const show=field.dataset.manualEntryRequired==='true'&&!$('request-download-link').value.trim();
+      field.classList.toggle('needs-manual-download',show);
+      $('request-download-link-hint').classList.toggle('hidden',!show);
+    }
     function closeOrderRequest(){
       $('order-request-drawer').classList.remove('open');$('order-request-drawer').setAttribute('aria-hidden','true');
       document.body.style.overflow='';state.selectedOrderRequest=null;
@@ -1917,6 +1930,16 @@
       $('order-request-error').textContent='';
       const details=getOrderRequestDetails();
       const link=details.download_link;
+      if(complete&&order.product_type==='software'&&!order.used_key_id){
+        const missing=[];
+        if(!details.software_name)missing.push('Software Name');
+        if(!details.license_key.trim())missing.push('License Key');
+        if(!link)missing.push('Download Link');
+        if(missing.length){
+          $('order-request-error').textContent=`Required field${missing.length===1?'':'s'}: ${missing.join(', ')}.`;
+          return;
+        }
+      }
       if(link&&!/^https?:\/\/\S+$/i.test(link)){
         $('order-request-error').textContent='Download link must start with http:// or https://.';return;
       }
@@ -1930,7 +1953,7 @@
         if(!data?.ok)throw new Error(data?.message||'Could not save order details.');
         if(complete){
           let message='Order completed. Delivery is available to the customer.';
-          if(!order.user_id){
+          if(order.guest_email){
             try{
               await sendGuestOrderEmail(order.id);
               message='Order completed. Guest delivery email sent.';
@@ -2254,6 +2277,7 @@
     $('close-order-request').addEventListener('click',closeOrderRequest);
     $('order-request-overlay').addEventListener('click',closeOrderRequest);
     $('save-order-request').addEventListener('click',()=>saveOrderRequest(false));
+    $('request-download-link').addEventListener('input',updateManualDownloadHint);
     $('complete-order-request').addEventListener('click',()=>saveOrderRequest(true));
     $('send-guest-order-email').addEventListener('click',resendGuestOrderEmail);
     $('reject-order-request').addEventListener('click',rejectOrderRequest);

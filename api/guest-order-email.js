@@ -15,6 +15,7 @@ async function jsonOrNull(response) {
 }
 
 function deliveryEmail(order) {
+  const productName = String(order.software_name || order.product_name || 'Product');
   const details = [];
   if (order.license_key) details.push(['Key / account', order.license_key]);
   if (order.download_link) details.push(['Download link', order.download_link]);
@@ -27,13 +28,13 @@ function deliveryEmail(order) {
   const rows = details.map(([label, value]) => `<p><strong>${escapeHtml(label)}:</strong><br><code>${escapeHtml(value)}</code></p>`).join('');
   const text = [
     `Order #${order.order_id} is complete.`,
-    `Product: ${order.product_name}`,
+    `Product: ${productName}`,
     ...details.map(([label, value]) => `${label}: ${value}`)
   ].join('\n');
   return {
     to: order.guest_email,
     subject: `Your Roshan Brand order #${order.order_id} is ready`,
-    html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827"><h2>Your order is complete</h2><p>Order #${escapeHtml(order.order_id)} · ${escapeHtml(order.product_name)}</p>${rows}<p>If you need help, share order #${escapeHtml(order.order_id)} with support.</p></div>`,
+    html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827"><h2>Your order is complete</h2><p>Order #${escapeHtml(order.order_id)} · ${escapeHtml(productName)}</p>${rows}<p>If you need help, share order #${escapeHtml(order.order_id)} with support.</p></div>`,
     text
   };
 }
