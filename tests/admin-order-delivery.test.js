@@ -9,6 +9,10 @@ const adminHtml = fs.readFileSync(path.join(root, 'public', 'admin.html'), 'utf8
 const splitMigration = fs.readFileSync(path.join(root, 'supabase', 'guest-checkout-3-admin-functions.sql'), 'utf8');
 const monolithicMigration = fs.readFileSync(path.join(root, 'supabase', 'guest-checkout-migration.sql'), 'utf8');
 const softwareMigration = fs.readFileSync(path.join(root, 'supabase', 'software-pnr-plans-migration.sql'), 'utf8');
+const orderRequestFixMigration = fs.readFileSync(
+  path.join(root, 'supabase', 'migrations', '20261121190000_fix_order_requests_ambiguous_status.sql'),
+  'utf8'
+);
 
 test('admin order details prefer saved delivery values and fill catalog defaults', () => {
   assert.match(adminHtml, /request-software-name'\)\.value=data\.software_name\|\|data\.product_name/);
@@ -26,6 +30,39 @@ test('admin order details prefer saved delivery values and fill catalog defaults
   }
   assert.match(softwareMigration, /when o\.status = 'completed' then d\.software_name end/);
   assert.match(softwareMigration, /when o\.status = 'completed' then d\.download_link end/);
+});
+
+test('order request migration resolves output conflicts and classifies delivered orders as completed', () => {
+  const functions = [
+    'admin_list_order_requests',
+    'admin_order_request_counts',
+    'admin_get_request',
+    'admin_review_request',
+    'admin_complete_order',
+    'admin_reject_order_request'
+  ];
+  for (const name of functions) {
+    const match = orderRequestFixMigration.match(new RegExp(
+      `create(?: or replace)? function public\\.${name}\\b[\\s\\S]*?as \\$\\$([\\s\\S]*?)\\$\\$;`,
+      'i'
+    ));
+    assert.ok(match, `missing replacement function ${name}`);
+    assert.match(match[1], /#variable_conflict use_column/);
+  }
+
+  assert.match(orderRequestFixMigration, /begin;\s*[\s\S]*commit;\s*$/i);
+  assert.match(orderRequestFixMigration, /update public\.orders as o\s+set status = 'completed'/i);
+  assert.match(orderRequestFixMigration, /o\.status in \('completed', 'delivered'\)[\s\S]*o\.delivered_at is not null/i);
+  assert.match(orderRequestFixMigration, /count\(\*\) filter \(where b\.status = 'utr_submitted'\)/i);
+  assert.match(orderRequestFixMigration, /count\(\*\) filter \(where b\.status = 'completed'\)/i);
+  assert.match(orderRequestFixMigration, /status = case when v_download_url is null then 'pending' else 'completed' end/i);
+  assert.match(orderRequestFixMigration, /status = case when p_deliver then 'completed' else o\.status end/i);
+});
+
+test('order request table displays RPC errors and renders successful request rows', () => {
+  assert.match(adminHtml, /escapeHtml\(error\.message\)/);
+  assert.match(adminHtml, /requests\.map\(order=>/);
+  assert.match(adminHtml, /<table class="request-table">/);
 });
 
 test('guest delivery email uses the software name and delivery values saved on the order', async () => {
