@@ -26,9 +26,19 @@ test('email auth gives actionable errors and does not close without a session', 
 
 test('signup confirmation, password reset, and Remember me keep visible outcomes', () => {
   assert.match(publicIndex, /state\.client\.auth\.signUp\(/);
-  assert.match(publicIndex, /Account created\. Check your email to confirm your address, then sign in\./);
+  assert.match(publicIndex, /if\(mode==='signup'\)\{[\s\S]*?setRememberSession\(\$\('auth-remember'\)\.checked\);\s*const \{data,error\}=await state\.client\.auth\.signUp/);
+  assert.match(publicIndex, /if\(data\.session\)\{\s*await updateSession\(data\.session\);\s*closeAuthPage\(false\)/);
+  assert.match(publicIndex, /Account created\. Sign in with your new credentials\./);
+  assert.doesNotMatch(publicIndex, /Account created\. Check your email to confirm your address, then sign in\./);
+  assert.match(publicIndex, /Apna password yaad rakho\. Nakli email par password reset kaam nahi karega\./);
   assert.match(publicIndex, /resetPasswordForEmail\(email/);
   assert.match(publicIndex, /setRememberSession\(\$\('auth-remember'\)\.checked\)/);
+  assert.match(publicIndex, /id="auth-remember" type="checkbox" checked/);
+  assert.match(publicIndex, /rememberSession:true/);
+  assert.match(publicIndex, /autoRefreshToken:true/);
+  assert.match(publicIndex, /state\.client\.auth\.signOut\(\{scope:'local'\}\)/);
+  assert.match(publicIndex, /if\(key===authStorageKey\)localStorage\.removeItem\(authSessionExpiryStorageKey\)/);
+  assert.doesNotMatch(publicIndex, /Date\.now\(\)\+30\*24\*60\*60\*1000/);
   assert.match(publicIndex, /Could not save the Remember me preference\. Check your browser storage settings and try again\./);
 });
 

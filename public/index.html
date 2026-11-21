@@ -1105,8 +1105,9 @@
         <div class="auth-field hidden" id="login-name-field"><label for="login-name">Full Name</label><input id="login-name" name="name" type="text" autocomplete="name" maxlength="100" placeholder="Your full name"></div>
         <div class="auth-field"><label for="login-email">Email address</label><input id="login-email" name="email" type="email" autocomplete="username" placeholder="you@example.com" required></div>
         <div class="auth-field" id="auth-password-field"><label for="login-password">Password</label><div class="auth-password-wrap"><input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" minlength="6" required><button class="auth-password-toggle" id="auth-password-toggle" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6-7-10-7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+        <p class="auth-guest-note hidden" id="auth-signup-note">Apna password yaad rakho. Nakli email par password reset kaam nahi karega.</p>
         <div class="auth-login-options" id="auth-login-options">
-          <label class="auth-remember" for="auth-remember"><input id="auth-remember" type="checkbox">Remember me</label>
+          <label class="auth-remember" for="auth-remember"><input id="auth-remember" type="checkbox" checked>Remember me</label>
           <div class="auth-forgot-row" id="auth-forgot-row"><button class="auth-link" id="auth-forgot" type="button">Forgot password?</button></div>
         </div>
         <button class="auth-submit" id="auth-submit" type="submit">Sign in</button>
@@ -1254,11 +1255,15 @@
       {id:'residential', title:'Residential Proxies', icon:'◎', description:'Residential IP options for your data and browsing needs.'},
       {id:'vps', title:'Windows VPS', icon:'▣', description:'Reliable Windows servers for projects that need room to grow.'}
     ];
-    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, checkoutTimer:null, usedKeys:[], usedKeysError:null, usedKeysLoading:true, demoKeys:[], demoKeysError:null, demoKeysLoading:true, rentalProducts:[], rentalProductsError:null, rentalProductsLoading:true, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, pendingAuthRequest:null, authIntent:'', authMode:'signin', rememberSession:false, guestMode:false, activeGuestOrder:null, guestOrderPoll:null, offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
+    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, checkoutTimer:null, usedKeys:[], usedKeysError:null, usedKeysLoading:true, demoKeys:[], demoKeysError:null, demoKeysLoading:true, rentalProducts:[], rentalProductsError:null, rentalProductsLoading:true, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, pendingAuthRequest:null, authIntent:'', authMode:'signin', rememberSession:true, guestMode:false, activeGuestOrder:null, guestOrderPoll:null, offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
       const authRememberStorageKey='roshan-remember-me';
       const authSessionExpiryStorageKey='roshan-auth-session-expires-at';
       let authStorageKey='';
-      try{state.rememberSession=localStorage.getItem(authRememberStorageKey)==='true'}
+      try{
+        const rememberPreference=localStorage.getItem(authRememberStorageKey);
+        if(rememberPreference!==null)state.rememberSession=rememberPreference==='true';
+        localStorage.removeItem(authSessionExpiryStorageKey);
+      }
       catch(error){console.error('Could not read the Remember me preference:',error)}
       try{
         const guestOrders=JSON.parse(localStorage.getItem('roshan-guest-orders-v1')||'[]');
@@ -1269,48 +1274,20 @@
       function createAuthSessionStorage(){
         return {
           getItem:async key=>{
-            if(key===authStorageKey){
-              const expiry=Number(localStorage.getItem(authSessionExpiryStorageKey));
-              if(expiry&&expiry<=Date.now()){
-                localStorage.removeItem(key);
-                sessionStorage.removeItem(key);
-                localStorage.removeItem(authSessionExpiryStorageKey);
-                return null;
-              }
-            }
             const preferred=state.rememberSession?localStorage:sessionStorage;
             const fallback=state.rememberSession?sessionStorage:localStorage;
             const value=preferred.getItem(key)??fallback.getItem(key);
             if(value!==null){
               preferred.setItem(key,value);
               fallback.removeItem(key);
-              if(key===authStorageKey&&state.rememberSession&&!localStorage.getItem(authSessionExpiryStorageKey)){
-                localStorage.setItem(authSessionExpiryStorageKey,String(Date.now()+30*24*60*60*1000));
-              }
             }
             return value;
           },
           setItem:async(key,value)=>{
             const preferred=state.rememberSession?localStorage:sessionStorage;
             const fallback=state.rememberSession?sessionStorage:localStorage;
-            if(key===authStorageKey&&state.rememberSession){
-              const expiry=Number(localStorage.getItem(authSessionExpiryStorageKey));
-              if(expiry&&expiry<=Date.now()){
-                localStorage.removeItem(key);
-                sessionStorage.removeItem(key);
-                localStorage.removeItem(authSessionExpiryStorageKey);
-                throw new Error('Remembered session expired. Sign in again.');
-              }
-            }
             preferred.setItem(key,value);
             fallback.removeItem(key);
-            if(key===authStorageKey){
-              if(state.rememberSession){
-                if(!localStorage.getItem(authSessionExpiryStorageKey)){
-                  localStorage.setItem(authSessionExpiryStorageKey,String(Date.now()+30*24*60*60*1000));
-                }
-              }else localStorage.removeItem(authSessionExpiryStorageKey);
-            }
           },
           removeItem:async key=>{
             localStorage.removeItem(key);
@@ -1659,26 +1636,16 @@
       $('modal-title').textContent=type==='demo'?'Claim a free demo key':'Guest checkout';
       $('wallet-dialog').classList.add('checkout-dialog');
       openModal();
-      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(product.name||product.software_name)}</strong>${product.software_plan_label?`<p class="checkout-note">Plan: ${escapeHtml(product.software_plan_label)} · ₹${money(product.software_plan_price)}</p>`:''}<p class="checkout-note">${type==='demo'?'One demo claim per email, device, and IP address per day.':'Pay by UPI and submit the 12-digit UTR for admin verification.'}</p></div><form id="guest-checkout-form"><div class="modal-field"><label for="guest-email">Email address (required)</label><input id="guest-email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com"></div><div class="modal-field"><label for="guest-whatsapp">WhatsApp number (optional, recommended)</label><input id="guest-whatsapp" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="10" pattern="[6-9][0-9]{9}" placeholder="9876543210"><small class="checkout-note">Optional. Add a WhatsApp number for payment updates.</small></div><div class="modal-error" id="guest-checkout-error" role="status" aria-live="polite"></div><button class="modal-primary" id="guest-checkout-submit" type="submit">${type==='demo'?'Get demo key':'Continue to UPI payment'}</button></form>`;
+      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(product.name||product.software_name)}</strong>${product.software_plan_label?`<p class="checkout-note">Plan: ${escapeHtml(product.software_plan_label)} · ₹${money(product.software_plan_price)}</p>`:''}<p class="checkout-note">${type==='demo'?'One demo claim per email, device, and IP address per day.':'Pay by UPI and submit the 12-digit UTR for admin verification.'}</p></div><form id="guest-checkout-form"><div class="modal-field"><label for="guest-email">Email address (required)</label><input id="guest-email" type="email" autocomplete="email" maxlength="254" required placeholder="you@example.com"></div><div class="modal-field"><label for="guest-whatsapp">WhatsApp number (required)</label><input id="guest-whatsapp" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" pattern="\+?[0-9]{10,15}" required placeholder="+919876543210"><small class="checkout-note">Required. Enter 10 to 15 digits, with an optional +.</small></div><div class="modal-error" id="guest-checkout-error" role="status" aria-live="polite"></div><button class="modal-primary" id="guest-checkout-submit" type="submit">${type==='demo'?'Get demo key':'Continue to UPI payment'}</button></form>`;
       $('guest-checkout-form').addEventListener('submit',submitGuestCheckout);
       const guestWhatsApp=$('guest-whatsapp');
       const guestWhatsAppSubmit=$('guest-checkout-submit');
       guestWhatsAppSubmit.dataset.submitting='false';
-      const normalizeGuestWhatsApp=value=>{
-        const digits=String(value||'').replace(/\D/g,'');
-        return digits.length>10?digits.slice(-10):digits;
-      };
       const validateGuestWhatsApp=()=>{
-        const whatsapp=normalizeGuestWhatsApp(guestWhatsApp.value);
+        const whatsapp=String(guestWhatsApp.value||'').trim();
         const isSubmitting=guestWhatsAppSubmit.dataset.submitting==='true';
-        guestWhatsApp.value=whatsapp;
-        if(!whatsapp){
-          $('guest-checkout-error').textContent='';
-          guestWhatsAppSubmit.disabled=isSubmitting;
-          return true;
-        }
-        if(!/^[6-9][0-9]{9}$/.test(whatsapp)){
-          $('guest-checkout-error').textContent='Enter a valid 10-digit Indian mobile number.';
+        if(!/^\+?[0-9]{10,15}$/.test(whatsapp)){
+          $('guest-checkout-error').textContent='Enter a valid WhatsApp number with 10 to 15 digits and an optional +.';
           guestWhatsAppSubmit.disabled=true;
           return false;
         }
@@ -1687,12 +1654,6 @@
         return true;
       };
       guestWhatsApp.addEventListener('input',validateGuestWhatsApp);
-      guestWhatsApp.addEventListener('paste',event=>{
-        event.preventDefault();
-        const pasted=event.clipboardData?.getData('text')||'';
-        guestWhatsApp.value=normalizeGuestWhatsApp(pasted);
-        validateGuestWhatsApp();
-      });
       $('guest-email').focus();
     }
 
@@ -1704,15 +1665,13 @@
       if(button.dataset.submitting==='true')return;
       const email=$('guest-email').value.trim();
       const whatsappInput=$('guest-whatsapp');
-      const digits=String(whatsappInput.value||'').replace(/\D/g,'').slice(-10);
-      whatsappInput.value=digits;
-      if(digits&&!/^[6-9][0-9]{9}$/.test(digits)){
-        $('guest-checkout-error').textContent='Enter a valid 10-digit Indian mobile number.';
+      const whatsapp=String(whatsappInput.value||'').trim();
+      if(!/^\+?[0-9]{10,15}$/.test(whatsapp)){
+        $('guest-checkout-error').textContent='Enter a valid WhatsApp number with 10 to 15 digits and an optional +.';
         button.disabled=true;
         whatsappInput.focus();
         return;
       }
-      const whatsapp=digits;
       if(!$('guest-email').checkValidity()){
         $('guest-checkout-error').textContent='Enter a valid email address.';
         $('guest-email').focus();
@@ -1726,7 +1685,7 @@
         const common={email,whatsapp,device_id:deviceId,product_id:Number(checkout.product.id)};
         if(checkout.type==='demo'){
           const result=await guestCheckoutApi({action:'claim_demo',...common});
-          renderGuestDemoResult(result.demo,email,true);
+          renderGuestDemoResult(result.demo,email,result.demo.email_sent===true);
           return;
         }
         const result=await guestCheckoutApi({
@@ -1756,19 +1715,34 @@
       }finally{
         if(button.isConnected){
           button.dataset.submitting='false';
-          const currentPhone=String(whatsappInput.value||'').replace(/\D/g,'').slice(-10);
-          button.disabled=Boolean(currentPhone&&!/^[6-9][0-9]{9}$/.test(currentPhone));
+          button.disabled=!/^\+?[0-9]{10,15}$/.test(String(whatsappInput.value||'').trim());
         }
       }
     }
 
     function renderGuestDemoResult(demo,email,emailSent,errorMessage=''){
       const link=safeHttpUrl(demo.download_link);
+      const demoOrder={...demo,product_name:demo.software_name,amount:0,order_type:'demo'};
       $('modal-title').textContent='Your demo key is ready';
-      $('modal-body').innerHTML=`<div class="wallet-balance"><strong>${escapeHtml(demo.software_name)}</strong><small style="margin-top:8px">Demo key</small><div class="orders-key-box"><span class="key-value">${escapeHtml(demo.license_key)}</span></div>${Number(demo.validity_days)>0?`<small>${Number(demo.validity_days)} days demo</small>`:''}${link?`<a class="delivery-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(demo.software_name)}</a>`:''}<small>${emailSent?`A copy was sent to ${escapeHtml(email)}.`:`Your key is shown above. The email could not be sent: ${escapeHtml(errorMessage)}`}</small></div><button class="modal-primary" id="guest-demo-done" type="button">Done</button>`;
+      $('modal-body').innerHTML=`<div class="wallet-balance"><strong>${escapeHtml(demo.software_name)}</strong><small style="margin-top:8px">Demo key</small><div class="orders-key-box"><span class="key-value">${escapeHtml(demo.license_key)}</span></div>${Number(demo.validity_days)>0?`<small>${Number(demo.validity_days)} days demo</small>`:''}${link?`<a class="delivery-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(demo.software_name)}</a>`:''}<small>${emailSent?`A copy was sent to ${escapeHtml(email)}.`:`Your key is shown above. Email delivery failed; save your key and contact support.${errorMessage?` ${escapeHtml(errorMessage)}`:''}`}</small>${guestWhatsAppButton(demoOrder)}</div><button class="modal-primary" id="guest-demo-done" type="button">Done</button>`;
       $('guest-demo-done').addEventListener('click',closeModal);
       state.guestCheckout=null;
       if(state.guestMode)void refreshDemoKeys().catch(handleDemoKeysLoadError);
+    }
+
+    function guestWhatsAppButton(order){
+      const whatsappNumber=digits(state.settings?.whatsapp_number);
+      if(!whatsappNumber)return '';
+      const amount=Number(order.amount);
+      const message=[
+        `Order number: ${order.order_id?`#${order.order_id}`:order.order_type==='demo'?'N/A (demo key)':'—'}`,
+        `Product: ${order.product_name||order.software_name||''}`,
+        ...(order.software_plan_label?[`Plan: ${order.software_plan_label}`]:[]),
+        `Amount: ₹${Number.isFinite(amount)?money(amount):'0.00 (free demo)'}`,
+        `Type: ${order.order_type==='demo'?'Demo key':'Paid order'}`
+      ].join('\n');
+      const link=`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+      return `<a class="btn ghost" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Message us on WhatsApp</a>`;
     }
 
     function renderGuestOrderPayment(order){
@@ -1782,11 +1756,9 @@
       const upiUrl=`upi://pay?${params.toString()}`;
       $('modal-title').textContent='Pay with UPI';
       $('wallet-dialog').classList.add('checkout-dialog');
-      const whatsappNumber=String(state.settings.whatsapp_number||'').replace(/\D/g,'');
-      const whatsappMessage=encodeURIComponent(`Hello, I need help with payment for Order #${order.order_id}. Amount: ₹${money(amount)}.`);
-      const whatsappLink=whatsappNumber?`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`:'';
+      const whatsappLink=guestWhatsAppButton(order);
       const trackingHref=guestOrderTrackingHref(order.order_id,state.activeGuestOrder?.accessToken);
-      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(order.product_name)}</strong>${order.software_plan_label?`<p class="checkout-note">Plan: ${escapeHtml(order.software_plan_label)}</p>`:''}<div class="checkout-amounts"><span>Exact amount</span><strong>₹${money(amount)}</strong></div></div><p class="checkout-note">Order #${escapeHtml(order.order_id)} · The timer is for submitting the UTR, not cancellation. After paying, submit the 12-digit UTR.</p><div class="qr-box" id="guest-payment-qr" aria-label="Guest order UPI payment QR code"></div><a class="modal-primary" style="display:block;text-align:center;margin-top:12px" href="${escapeHtml(upiUrl)}">Open UPI app</a><label class="checkout-utr-label" for="guest-order-utr">UTR / Transaction ID (12 digits)</label><input class="checkout-utr" id="guest-order-utr" inputmode="text" autocomplete="off" maxlength="24" placeholder="Enter 12-digit UTR"><div class="modal-error" id="guest-order-error" role="status" aria-live="polite"></div><div class="checkout-rate-limit-countdown" id="guest-rate-limit-countdown" role="timer"></div><button class="modal-primary" id="guest-order-submit" type="button" disabled>Submit UTR for review</button><div class="checkout-payment-fallback" id="guest-payment-fallback">${whatsappLink?`<strong>Need help?</strong><a class="btn ghost" href="${whatsappLink}" target="_blank" rel="noopener">Contact on WhatsApp</a>`:''}<label class="checkout-utr-label" for="guest-payment-screenshot">Upload payment screenshot</label><input id="guest-payment-screenshot" type="file" accept="image/png,image/jpeg,image/webp"><button class="back" id="guest-upload-screenshot" type="button">Upload screenshot for manual verification</button></div><div class="checkout-utr-step"><a href="${escapeHtml(trackingHref)}">Track your order</a><p class="checkout-note">Verification pending? We will send the product to your email once confirmed.</p></div><div id="guest-order-status" role="status" aria-live="polite"></div>`;
+      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(order.product_name)}</strong>${order.software_plan_label?`<p class="checkout-note">Plan: ${escapeHtml(order.software_plan_label)}</p>`:''}<div class="checkout-amounts"><span>Exact amount</span><strong>₹${money(amount)}</strong></div></div><p class="checkout-note">Order #${escapeHtml(order.order_id)} · The timer is for submitting the UTR, not cancellation. After paying, submit the 12-digit UTR.</p><div class="qr-box" id="guest-payment-qr" aria-label="Guest order UPI payment QR code"></div><a class="modal-primary" style="display:block;text-align:center;margin-top:12px" href="${escapeHtml(upiUrl)}">Open UPI app</a><label class="checkout-utr-label" for="guest-order-utr">UTR / Transaction ID (12 digits)</label><input class="checkout-utr" id="guest-order-utr" inputmode="text" autocomplete="off" maxlength="24" placeholder="Enter 12-digit UTR"><div class="modal-error" id="guest-order-error" role="status" aria-live="polite"></div><div class="checkout-rate-limit-countdown" id="guest-rate-limit-countdown" role="timer"></div><button class="modal-primary" id="guest-order-submit" type="button" disabled>Submit UTR for review</button><div class="checkout-payment-fallback" id="guest-payment-fallback">${whatsappLink?`<strong>Need help?</strong>${whatsappLink}`:''}<label class="checkout-utr-label" for="guest-payment-screenshot">Upload payment screenshot</label><input id="guest-payment-screenshot" type="file" accept="image/png,image/jpeg,image/webp"><button class="back" id="guest-upload-screenshot" type="button">Upload screenshot for manual verification</button></div><div class="checkout-utr-step"><a href="${escapeHtml(trackingHref)}">Track your order</a><p class="checkout-note">Verification pending? We will send the product to your email once confirmed.</p></div><div id="guest-order-status" role="status" aria-live="polite"></div>`;
       new QRCode($('guest-payment-qr'),{text:upiUrl,width:230,height:230,colorDark:'#060b17',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
       $('guest-order-utr').addEventListener('input',event=>{
         event.currentTarget.value=event.currentTarget.value.replace(/\s/g,'').replace(/\D/g,'').slice(0,12);
@@ -1873,12 +1845,12 @@
           order.vps_storage_gb?['Storage',`${order.vps_storage_gb} GB`]:null
         ].filter(Boolean);
         const link=safeHttpUrl(order.download_link);
-        statusNode.innerHTML=`<div class="wallet-balance" style="margin-top:14px"><strong>Payment verified · Order complete</strong>${details.map(([label,value])=>`<div class="orders-key-box"><span class="key-label">${escapeHtml(label)} · </span><span class="key-value">${escapeHtml(value)}</span></div>`).join('')}${link?`<a class="delivery-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Open download / delivery link</a>`:''}<a class="delivery-link" href="${escapeHtml(guestOrderTrackingHref(guestOrder.orderId,guestOrder.accessToken))}">Track this order</a><small>${order.email_sent?'A copy was sent to your checkout email.':'Your delivery is shown here. The email is being sent; contact support if it does not arrive.'} Keep order #${escapeHtml(order.order_id)} for support.</small></div>`;
+        statusNode.innerHTML=`<div class="wallet-balance" style="margin-top:14px"><strong>Payment verified · Order complete</strong>${details.map(([label,value])=>`<div class="orders-key-box"><span class="key-label">${escapeHtml(label)} · </span><span class="key-value">${escapeHtml(value)}</span></div>`).join('')}${link?`<a class="delivery-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Open download / delivery link</a>`:''}<a class="delivery-link" href="${escapeHtml(guestOrderTrackingHref(guestOrder.orderId,guestOrder.accessToken))}">Track this order</a>${guestWhatsAppButton(order)}<small>${order.email_sent?'A copy was sent to your checkout email.':'Your delivery is shown here. The email is being sent; contact support if it does not arrive.'} Keep order #${escapeHtml(order.order_id)} for support.</small></div>`;
         $('guest-order-submit').classList.add('hidden');
       }else if(order.status==='rejected'){
         statusNode.innerHTML=`<div class="modal-error" style="margin-top:12px">Payment was rejected: ${escapeHtml(order.reject_reason||'Contact support with your order number.')}</div>`;
       }else if(guestOrder.submitted){
-        statusNode.innerHTML=`<p class="checkout-note" style="margin-top:12px">UTR received. Order #${escapeHtml(order.order_id)} is waiting for admin verification. Verification pending? We will send the product to your email once confirmed.</p><a class="delivery-link" href="${escapeHtml(guestOrderTrackingHref(guestOrder.orderId,guestOrder.accessToken))}">Track this order</a>`;
+        statusNode.innerHTML=`<p class="checkout-note" style="margin-top:12px">UTR received. Order #${escapeHtml(order.order_id)} is waiting for admin verification. Verification pending? We will send the product to your email once confirmed.</p><a class="delivery-link" href="${escapeHtml(guestOrderTrackingHref(guestOrder.orderId,guestOrder.accessToken))}">Track this order</a>${guestWhatsAppButton(order)}`;
         $('guest-order-submit').classList.add('hidden');
       }else{
         statusNode.innerHTML='';
@@ -3262,6 +3234,7 @@
       $('auth-guest-divider').classList.toggle('hidden',signup||forgot||reset);
       $('continue-as-guest').classList.toggle('hidden',signup||forgot||reset);
       $('auth-guest-note').classList.toggle('hidden',signup||forgot||reset);
+      $('auth-signup-note').classList.toggle('hidden',!signup);
       $('auth-switch').classList.toggle('hidden',reset);
       $('login-email').required=!reset;
       $('login-password').required=!forgot;
@@ -3319,12 +3292,11 @@
       try{
         if(state.rememberSession){
           localStorage.setItem(authRememberStorageKey,'true');
-          localStorage.setItem(authSessionExpiryStorageKey,String(Date.now()+30*24*60*60*1000));
         }
         else{
           localStorage.removeItem(authRememberStorageKey);
-          localStorage.removeItem(authSessionExpiryStorageKey);
         }
+        localStorage.removeItem(authSessionExpiryStorageKey);
       }catch(error){
         state.rememberSession=false;
         console.error('Could not save the Remember me preference:',error);
@@ -3407,6 +3379,7 @@
         }
         if(mode==='signup'){
           const fullName=$('login-name').value.trim();
+          setRememberSession($('auth-remember').checked);
           const {data,error}=await state.client.auth.signUp({
             email,password,
             options:{
@@ -3419,10 +3392,9 @@
             await updateSession(data.session);
             closeAuthPage(false);
           }else{
-            setAuthMessage('Account created. Check your email to confirm your address, then sign in.',true);
             setAuthMode('signin');
             $('login-email').value=email;
-            setAuthMessage('Account created. Check your email to confirm your address, then sign in.',true);
+            setAuthMessage('Account created. Sign in with your new credentials.',true);
           }
           return;
         }
@@ -3531,19 +3503,6 @@
     }
 
     async function updateSession(session){
-      if(session?.user&&state.rememberSession){
-        try{
-          const expiry=Number(localStorage.getItem(authSessionExpiryStorageKey));
-          if(expiry&&expiry<=Date.now()){
-            const {error}=await state.client.auth.signOut({scope:'local'});
-            if(error)throw error;
-            return;
-          }
-        }catch(error){
-          console.error('Could not validate the remembered session expiry:',error);
-          throw error;
-        }
-      }
       if(session?.user&&state.user?.id===session.user.id)return;
       if(session?.user)state.guestMode=false;
       state.user=session?.user||null;
@@ -5112,17 +5071,6 @@
     setTheme(document.documentElement.dataset.theme);
     renderBrandLogos();
     window.setInterval(updateOfferCountdowns,1000);
-    window.setInterval(()=>{
-      if(!state.client||!state.user||!state.rememberSession)return;
-      try{
-        const expiry=Number(localStorage.getItem(authSessionExpiryStorageKey));
-        if(expiry&&expiry<=Date.now()){
-          state.client.auth.signOut({scope:'local'}).then(({error})=>{
-            if(error)console.error('Could not expire the remembered session:',error);
-          }).catch(error=>console.error('Could not expire the remembered session:',error));
-        }
-      }catch(error){console.error('Could not check the remembered session expiry:',error)}
-    },60000);
     initPointerEffects();
     revealPage();
     $('year').textContent = new Date().getFullYear();
@@ -5155,7 +5103,7 @@
             return;
           }
           if(event==='SIGNED_OUT'){
-            state.rememberSession=false;
+            state.rememberSession=true;
             try{localStorage.removeItem(authRememberStorageKey)}
             catch(error){console.error('Could not clear the Remember me preference after sign out:',error)}
             try{localStorage.removeItem(authSessionExpiryStorageKey)}

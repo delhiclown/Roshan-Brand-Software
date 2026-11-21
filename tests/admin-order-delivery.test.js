@@ -137,6 +137,8 @@ test('expiry fix uses the live key columns and replaces only the three affected 
 
 test('guest delivery email uses the software name and delivery values saved on the order', async () => {
   assert.match(adminHtml, /if\(order\.guest_email\)\{\s*try\{\s*await sendGuestOrderEmail\(order\.id\)/);
+  assert.match(adminHtml, /data\.guest_email\?\[\['WhatsApp',data\.guest_whatsapp\|\|'—'\]\]:\[\]/);
+  assert.match(orderDeliveryExpiryFixMigration, /'guest_email', v_order\.guest_email, 'guest_whatsapp', v_order\.guest_whatsapp/);
   assert.match(splitMigration, /where o\.id = p_order_id and o\.guest_email is not null/);
   assert.match(monolithicMigration, /where o\.id = p_order_id and o\.guest_email is not null/);
   const savedEnv = {
