@@ -113,7 +113,7 @@
             addDeliveryRow('VPS username', order.vps_username, false);
             addDeliveryRow('VPS password', order.vps_password, false);
             addDeliveryRow('Rental access', order.rental_access, false);
-          } else if (order.status === 'pending_verification' || order.status === 'new') {
+          } else if (order.status === 'utr_submitted' || order.status === 'pending_verification' || order.status === 'new') {
             statusNode.textContent = 'Payment details received. Your order is pending verification. Verification pending? We will send the product to your email once confirmed.';
           } else if (order.status === 'expired') {
             statusNode.textContent = 'This payment window expired. If you already paid, please contact support with your order number.';

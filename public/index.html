@@ -1246,7 +1246,7 @@
       {id:'residential', title:'Residential Proxies', icon:'◎', description:'Residential IP options for your data and browsing needs.'},
       {id:'vps', title:'Windows VPS', icon:'▣', description:'Reliable Windows servers for projects that need room to grow.'}
     ];
-    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, checkoutTimer:null, usedKeys:[], usedKeysError:null, usedKeysLoading:true, demoKeys:[], demoKeysError:null, rentalProducts:[], rentalProductsError:null, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, pendingAuthRequest:null, authIntent:'', authMode:'signin', rememberSession:false, guestMode:false, activeGuestOrder:null, guestOrderPoll:null, offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
+    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, checkoutTimer:null, usedKeys:[], usedKeysError:null, usedKeysLoading:true, demoKeys:[], demoKeysError:null, demoKeysLoading:true, rentalProducts:[], rentalProductsError:null, rentalProductsLoading:true, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, pendingAuthRequest:null, authIntent:'', authMode:'signin', rememberSession:false, guestMode:false, activeGuestOrder:null, guestOrderPoll:null, offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
       const authRememberStorageKey='roshan-remember-me';
       const authSessionExpiryStorageKey='roshan-auth-session-expires-at';
       let authStorageKey='';
@@ -1313,7 +1313,7 @@
       }
     const $ = id => document.getElementById(id);
     const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-    const money = value => new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(Number(value)||0);
+    const money = value => new Intl.NumberFormat('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(value)||0);
     const digits = value => String(value||'').replace(/\D/g,'');
     const normalizeCategory = value => String(value ?? '').trim().toLowerCase();
     const isPlanCategory = category => ['vps','windows-vps','proxy','residential'].includes(normalizeCategory(category));
@@ -1435,6 +1435,27 @@
       document.querySelectorAll('[data-used-keys-count]').forEach(element=>element.textContent=usedKeysCountLabel());
     }
 
+    const COLLECTION_RPC_TIMEOUT_MS=15000;
+    function requestWithTimeout(request,requestName){
+     let timeoutId;
+     return Promise.race([
+       request,
+       new Promise((_,reject)=>{
+         timeoutId=window.setTimeout(()=>reject(new Error(`${requestName} timed out after ${COLLECTION_RPC_TIMEOUT_MS/1000} seconds`)),COLLECTION_RPC_TIMEOUT_MS);
+       })
+     ]).finally(()=>window.clearTimeout(timeoutId));
+    }
+
+    function collectionRpc(functionName){
+     return requestWithTimeout(state.client.rpc(functionName),functionName);
+    }
+
+    function renderCollectionLoadError(grid,message,retry){
+     grid.innerHTML=`<div class="empty" role="alert">${escapeHtml(message)}<br><button class="back" type="button" data-retry-collection>Retry</button></div>`;
+     grid.querySelector('[data-retry-collection]').addEventListener('click',retry);
+     revealPage(grid);
+    }
+
     function handleUsedKeysLoadError(error,context){
       state.usedKeysLoading=false;
       state.usedKeysError='Used Keys could not be loaded. Please try again.';
@@ -1445,11 +1466,8 @@
 
     function renderCategories(){
       $('hero-category-grid').innerHTML = categories.map(category => {
-        const productCount = state.products.filter(product => normalizeCategory(product.category) === normalizeCategory(category.id) && product.in_stock !== false).length;
-        const countLabel = category.id==='used-keys' ? escapeHtml(usedKeysCountLabel())
-          : category.id==='rental-software' ? '1 day rentals'
-          : category.id==='demo-keys' ? 'Free demo keys'
-          : state.productsLoading && !state.products.length ? 'Explore collection' : `${productCount} ${productCount === 1 ? 'product' : 'products'}`;
+        const productCount = state.products.filter(product => normalizeCategory(product.category) === normalizeCategory(category.id)).length;
+        const countLabel = categoryCountLabel(category,productCount,true);
         const categoryArt=category.id==='used-keys'?'<span class="hero-category-art" aria-hidden="true"><img src="/categories/used-keys-banner.png" alt="" decoding="async"></span>':category.id==='demo-keys'?'<span class="hero-category-art" aria-hidden="true"><img src="/categories/demo-keys-banner.png" alt="" decoding="async"></span>':category.id==='rental-software'?'<span class="hero-category-art" aria-hidden="true"><img src="/categories/rental-software-banner.png" alt="" decoding="async"></span>':category.id==='software'?'<span class="hero-category-art" aria-hidden="true"><img src="/categories/software-laptop-8k.webp" alt="" decoding="async"></span>':category.id==='vps'||category.id==='proxy'||category.id==='residential'?`<span class="hero-category-art" aria-hidden="true"><img src="${category.id==='vps'?'/categories/vps-datacenter.png':category.id==='proxy'?'/categories/proxy-logo-navy.png':'/assets/residential-proxies-banner-v3.svg?v=20261107'}" alt="" decoding="async"></span>`:'';
         const special=category.id==='used-keys'||category.id==='rental-software'||category.id==='demo-keys';
         const tone=category.id==='used-keys'||category.id==='rental-software'||category.id==='demo-keys'?'software':category.id;
@@ -1457,12 +1475,9 @@
       }).join('');
       revealPage($('hero-category-grid'));
       $('category-grid').innerHTML = categories.map(category => {
-        const productCount = state.products.filter(product => normalizeCategory(product.category) === normalizeCategory(category.id) && product.in_stock !== false).length;
-        const countLabel = category.id==='used-keys' ? escapeHtml(usedKeysCountLabel())
-          : category.id==='rental-software' ? '1 day rentals'
-          : category.id==='demo-keys' ? 'Free demo keys'
-          : state.productsLoading && !state.products.length ? 'Loading…' : `${productCount} ${productCount === 1 ? 'item' : 'items'}`;
-        const countBadge = state.productsError ? '' : `<span class="count badge-premium">${countLabel}</span>`;
+        const productCount = state.products.filter(product => normalizeCategory(product.category) === normalizeCategory(category.id)).length;
+        const countLabel = categoryCountLabel(category,productCount,false);
+        const countBadge = state.productsError&&!['used-keys','rental-software','demo-keys'].includes(category.id) ? '' : `<span class="count badge-premium" ${category.id==='used-keys'?'data-used-keys-count':''}>${countLabel}</span>`;
         const bannerImage = category.id === 'used-keys' ? '/categories/used-keys-banner.png' : category.id === 'demo-keys' ? '/categories/demo-keys-banner.png' : category.id === 'rental-software' ? '/categories/rental-software-banner.png' : category.id === 'vps' ? '/categories/vps-datacenter.png' : category.id === 'residential' ? '/assets/residential-proxies-banner-v3.svg?v=20261107' : category.id === 'proxy' ? '/categories/proxy-logo-navy.png' : category.id === 'software' ? '/categories/software-laptop-8k.webp' : '';
         const icon=categoryBannerIcons[category.id]||categoryBannerIcons['used-keys'];
         const special=category.id==='used-keys'||category.id==='rental-software'||category.id==='demo-keys';
@@ -1475,6 +1490,14 @@
       document.querySelectorAll('[data-collection]').forEach(button=>button.addEventListener('click',()=>openCollection(button.dataset.collection)));
     }
 
+    function categoryCountLabel(category,productCount,isHero){
+      if(category.id==='used-keys')return escapeHtml(usedKeysCountLabel());
+      if(category.id==='demo-keys')return state.demoKeysError?'Demos unavailable':state.demoKeysLoading?'Loading…':`${state.demoKeys.length} ${state.demoKeys.length===1?'demo key':'demo keys'}`;
+      if(category.id==='rental-software')return state.rentalProductsError?'Rentals unavailable':state.rentalProductsLoading?'Loading…':`${state.rentalProducts.length} ${state.rentalProducts.length===1?'rental':'rentals'}`;
+      if(state.productsLoading&&!state.products.length)return isHero?'Explore collection':'Loading…';
+      return `${productCount} ${productCount===1?(isHero?'product':'item'):(isHero?'products':'items')}`;
+    }
+
     function openCollection(collection){
       const sectionByCollection={'used-keys':'used-keys-view','rental-software':'rental-software-view','demo-keys':'demo-keys-view'};
       const sectionId=sectionByCollection[collection];
@@ -1484,7 +1507,10 @@
 
     function renderDemoKeys(){
       const grid=$('demo-keys-grid');
-      if(state.demoKeysError){grid.innerHTML=`<div class="empty">${escapeHtml(state.demoKeysError)}</div>`;return}
+      if(state.demoKeysError){
+        renderCollectionLoadError(grid,state.demoKeysError,()=>refreshDemoKeys().catch(handleDemoKeysLoadError));
+        return;
+      }
       grid.innerHTML=state.demoKeys.length?state.demoKeys.map(item=>{
         const image=safeHttpUrl(item.image_url)||USED_KEY_FALLBACK_IMAGE;
         const available=item.in_stock!==false;
@@ -1498,16 +1524,22 @@
 
     async function refreshDemoKeys(){
       if(!state.client)return;
+      state.demoKeysLoading=true;
       state.demoKeysError=null;
-      const {data,error}=await state.client.rpc('list_available_demo_keys');
+      renderCategories();
+      const {data,error}=await collectionRpc('list_available_demo_keys');
       if(error)throw error;
       state.demoKeys=Array.isArray(data)?data:[];
+      state.demoKeysLoading=false;
       renderDemoKeys();
+      renderCategories();
     }
 
     function handleDemoKeysLoadError(error){
+      state.demoKeysLoading=false;
       state.demoKeysError='Demo keys could not be loaded. Please try again.';
       console.error('Could not load Demo Keys:',error);
+      renderCategories();
       if(!$('demo-keys-view').classList.contains('hidden'))renderDemoKeys();
     }
 
@@ -1854,7 +1886,10 @@
 
     function renderRentalProducts(){
       const grid=$('rental-software-grid');
-      if(state.rentalProductsError){grid.innerHTML=`<div class="empty">${escapeHtml(state.rentalProductsError)}</div>`;return}
+      if(state.rentalProductsError){
+        renderCollectionLoadError(grid,state.rentalProductsError,()=>refreshRentalProducts().catch(error=>handleRentalProductsLoadError(error)));
+        return;
+      }
       grid.innerHTML=state.rentalProducts.length?state.rentalProducts.map(item=>{
         const image=safeHttpUrl(item.image_url)||USED_KEY_FALLBACK_IMAGE;
         const available=Number(item.available_count)||0;
@@ -1867,16 +1902,22 @@
 
     async function refreshRentalProducts(){
       if(!state.client)return;
+      state.rentalProductsLoading=true;
       state.rentalProductsError=null;
-      const {data,error}=await state.client.rpc('list_available_rental_products');
+      renderCategories();
+      const {data,error}=await collectionRpc('list_available_rental_products');
       if(error)throw error;
       state.rentalProducts=Array.isArray(data)?data:[];
+      state.rentalProductsLoading=false;
       renderRentalProducts();
+      renderCategories();
     }
 
     function handleRentalProductsLoadError(error){
+      state.rentalProductsLoading=false;
       state.rentalProductsError='Rental Software could not be loaded. Please try again.';
       console.error('Could not load Rental Software:',error);
+      renderCategories();
       if(!$('rental-software-view').classList.contains('hidden'))renderRentalProducts();
     }
 
@@ -2316,7 +2357,7 @@
     function renderUsedKeys(){
       const grid=$('used-keys-grid');
       if(state.usedKeysError){
-        grid.innerHTML=`<div class="empty">${escapeHtml(state.usedKeysError)}</div>`;
+        renderCollectionLoadError(grid,state.usedKeysError,()=>refreshUsedKeys().catch(error=>handleUsedKeysLoadError(error,'Could not retry Used Keys:')));
         return;
       }
       const sort=$('used-keys-sort')?.value||'validity';
@@ -2346,7 +2387,7 @@
       state.usedKeysLoading=true;
       state.usedKeysError=null;
       updateUsedKeysCountBadges();
-      const {data,error}=await state.client.rpc('list_available_used_keys');
+      const {data,error}=await collectionRpc('list_available_used_keys');
       if(error)throw error;
       state.usedKeys=Array.isArray(data)?data:[];
       state.usedKeysLoading=false;
@@ -2564,7 +2605,7 @@
       $('floating-links').innerHTML = links.join('');
       renderWheelLabels();
       renderCouponBanner();
-      hideNotice();
+      if(!state.productsError)hideNotice();
     }
 
     function showNotice(message){$('notice-message').textContent=message;$('notice-logo').classList.toggle('hidden',message!=='Loading products…');$('retry-products').classList.add('hidden');$('notice').classList.remove('hidden')}
@@ -2602,7 +2643,7 @@
         if(order.payment_status==='pending')return {label:'UTR Submitted - Verification Pending',className:'processing'};
         if(order.payment_status==='paid')return {label:status==='delivered'?'Approved · Delivered':'Approved',className:status==='delivered'?'delivered':'processing'};
       }
-      if(status==='pending_verification'||status==='new')return {label:'Verification Pending',className:'processing'};
+      if(status==='utr_submitted'||status==='pending_verification'||status==='new')return {label:'Verification Pending',className:'processing'};
       if(status==='pending'||status==='completed')return {label:'Processing',className:'processing'};
       if(status==='delivered'||status==='completed')return {label:'Completed',className:'delivered'};
       if(status==='refunded')return {label:'Refunded',className:'refunded'};
@@ -2880,7 +2921,7 @@
     }
 
     function renderOrdersTrigger(){
-      const hasProcessingOrder=Boolean(state.myOrders?.some(order=>isCustomerVisibleOrder(order)&&['pending','new','pending_verification','completed'].includes(order.status)));
+      const hasProcessingOrder=Boolean(state.myOrders?.some(order=>isCustomerVisibleOrder(order)&&['pending','new','utr_submitted','pending_verification','completed'].includes(order.status)));
       return `<button class="orders-trigger" data-card-tone="lime" id="orders-trigger" type="button" aria-label="My Orders" title="My Orders" aria-expanded="${state.ordersPanelOpen}"><span class="orders-icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>${hasProcessingOrder?'<span class="orders-dot" aria-label="Processing orders"></span>':''}</span><span class="orders-trigger-label">My Orders</span></button>`;
     }
 
@@ -4805,38 +4846,44 @@
 
     async function refreshStore(){
       setProductsLoading(!state.products.length);
-      const [products,settings,spinPrizes] = await Promise.all([
+      const productsRequest=requestWithTimeout(
         state.client.from('products').select('id,category,name,description,image_url,price,selling_price,original_price,rating,review_count,sold_count,show_stats,unit,in_stock,sort_order,pinned,plan_section,os_type,ip_series,data_size,specs,ip_count,validity,badge,stock_status,price_prefix,details,demo_only,plan_2_pnr_price,plan_2_pnr_mrp,plan_2_pnr_enabled,plan_4_pnr_price,plan_4_pnr_mrp,plan_4_pnr_enabled,plan_6_pnr_price,plan_6_pnr_mrp,plan_6_pnr_enabled').eq('demo_only',false)
           .order('sort_order',{ascending:true}).order('created_at',{ascending:true}),
+        'Products query'
+      ).then(products=>{
+        if(products.error)throw products.error;
+        state.products=(products.data||[]).map(product=>({
+          ...product,
+          selling_price:product.selling_price??product.price,
+          category:normalizeCategory(product.category),
+          in_stock:product.in_stock!==false&&(product.stock_status==null||product.stock_status==='available')
+        }));
+        state.productsLoading=false;
+        state.productsError=null;
+        if(state.selected)renderProducts();else renderCategories();
+      }).catch(showProductsError);
+      const settingsRequest=requestWithTimeout(
         state.client.from('settings').select('site_title,whatsapp_number,telegram_link,upi_id,upi_payee_name,upi_qr_image_url,enable_wallet_payments,enable_upi_qr,enable_upi_app').eq('id',true).maybeSingle(),
-        state.client.rpc('public_spin_prizes')
-      ]);
-      if(products.error){showProductsError(products.error);return}
-      if(spinPrizes.error){
-        console.error('Could not load server spin-prize settings:',spinPrizes.error);
-      }else{
-        state.spinPrizes=normalizeSpinPrizeCatalog(spinPrizes.data);
-      }
-      state.products = (products.data || []).map(product=>({
-        ...product,
-        selling_price:product.selling_price??product.price,
-        category:normalizeCategory(product.category),
-        in_stock:product.in_stock!==false&&(product.stock_status==null||product.stock_status==='available')
-      }));
-      state.productsLoading=false;
-      state.productsError=null;
-      if(settings.error){
-        console.error('Could not load store settings from Supabase:',settings.error);
+        'Store settings query'
+      ).then(settings=>{
+        if(settings.error)throw settings.error;
+        state.settings=settings.data||{};
+        renderSettings();
+      }).catch(error=>{
+        console.error('Could not load store settings from Supabase:',error);
         state.settings={};
-        $('notice-message').textContent='Products loaded, but store settings could not be loaded. Check the public settings SELECT policy.';
-        $('retry-products').classList.remove('hidden');
-        $('notice').classList.remove('hidden');
-      }else{
-        state.settings = settings.data || {};
-        hideNotice();
-      }
-      renderSettings();
-      if(state.selected) renderProducts(); else renderCategories();
+        if(!state.productsError){
+          $('notice-message').textContent='Products loaded, but store settings could not be loaded. Check the public settings SELECT policy.';
+          $('retry-products').classList.remove('hidden');
+          $('notice').classList.remove('hidden');
+        }
+      });
+      const spinPrizesRequest=requestWithTimeout(state.client.rpc('public_spin_prizes'),'Spin-prize settings RPC')
+        .then(spinPrizes=>{
+          if(spinPrizes.error)throw spinPrizes.error;
+          state.spinPrizes=normalizeSpinPrizeCatalog(spinPrizes.data);
+        }).catch(error=>console.error('Could not load server spin-prize settings:',error));
+      await Promise.all([productsRequest,settingsRequest,spinPrizesRequest]);
     }
 
     $('back-button').addEventListener('click',showCategories);
@@ -5068,8 +5115,10 @@
           console.error('Could not verify the customer session for password recovery:',error);
           showNotice('Could not verify your sign-in status. Please check your connection and try again.');
         });
-        await Promise.all([refreshStore(),state.authReadyPromise]);
         void refreshUsedKeys().catch(error=>handleUsedKeysLoadError(error,'Could not load Used Keys count:'));
+        void refreshDemoKeys().catch(handleDemoKeysLoadError);
+        void refreshRentalProducts().catch(handleRentalProductsLoadError);
+        await Promise.all([refreshStore(),state.authReadyPromise]);
         window.setTimeout(()=>refreshOffers(true).catch(error=>{
           console.error('Could not load active offers:',error);
           showNotice('Offers could not be loaded. Please try again later.');
