@@ -17,6 +17,10 @@ const orderDeliveryAutofillMigration = fs.readFileSync(
   path.join(root, 'supabase', 'migrations', '20261121210000_order_delivery_autofill.sql'),
   'utf8'
 );
+const orderDeliveryExpiryFixMigration = fs.readFileSync(
+  path.join(root, 'supabase', 'migrations', '20261121220000_fix_order_delivery_expiry_column.sql'),
+  'utf8'
+);
 
 test('admin order details prefer saved delivery values and fill catalog defaults', () => {
   assert.match(adminHtml, /request-software-name'\)\.value=data\.software_name\|\|data\.product_name/);
@@ -110,6 +114,25 @@ test('unused keys are previews only until an atomic skip-locked approval claim',
   assert.match(adminHtml, /p_software_plan_code:\$\('used-key-plan'\)\.value/);
   assert.match(orderDeliveryAutofillMigration, /admin_save_used_key_for_plan/);
   assert.match(orderDeliveryAutofillMigration, /admin_bulk_add_used_keys_for_plan/);
+});
+
+test('expiry fix uses the live key columns and replaces only the three affected functions', () => {
+  const functionNames = [...orderDeliveryExpiryFixMigration.matchAll(
+    /create or replace function public\.([a-z0-9_]+)\s*\(/gi
+  )].map(match => match[1]).sort();
+  assert.deepEqual(functionNames, [
+    'admin_complete_order',
+    'admin_get_request',
+    'admin_list_used_keys_with_plan'
+  ]);
+  assert.match(orderDeliveryExpiryFixMigration, /^begin;/i);
+  assert.match(orderDeliveryExpiryFixMigration, /commit;\s*$/i);
+  assert.doesNotMatch(orderDeliveryExpiryFixMigration, /expiry_at|sold_validity_days|private\.used_key_remaining_days/i);
+  assert.doesNotMatch(orderDeliveryExpiryFixMigration, /k\.in_stock/i);
+  assert.match(orderDeliveryExpiryFixMigration, /k\.expires_on >= \(timezone\('Asia\/Kolkata', clock_timestamp\(\)\)\)::date/i);
+  assert.match(orderDeliveryExpiryFixMigration, /greatest\(k\.expires_on - \(timezone\('Asia\/Kolkata', v_now\)\)::date, 0\)/i);
+  assert.match(orderDeliveryExpiryFixMigration, /for update of k skip locked/i);
+  assert.equal((orderDeliveryExpiryFixMigration.match(/#variable_conflict use_column/g) || []).length, 3);
 });
 
 test('guest delivery email uses the software name and delivery values saved on the order', async () => {
