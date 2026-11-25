@@ -33,7 +33,7 @@ function deliveryEmail(order) {
   ].join('\n');
   return {
     to: order.guest_email,
-    subject: `Your Roshan Brand order #${order.order_id} is ready`,
+    subject: `Your Tatkal X order #${order.order_id} is ready`,
     html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827"><h2>Your order is complete</h2><p>Order #${escapeHtml(order.order_id)} · ${escapeHtml(productName)}</p>${rows}<p>If you need help, share order #${escapeHtml(order.order_id)} with support.</p></div>`,
     text
   };

@@ -7,17 +7,26 @@ security definer
 set search_path = ''
 as $$
 declare
+  v_first_name text;
+  v_last_name text;
   v_name text;
 begin
   if coalesce(new.raw_app_meta_data ->> 'provider', '') = 'email' then
+    v_first_name := left(btrim(coalesce(new.raw_user_meta_data ->> 'first_name', '')), 50);
+    v_last_name := left(btrim(coalesce(new.raw_user_meta_data ->> 'last_name', '')), 50);
     v_name := left(btrim(coalesce(
+      nullif(concat_ws(' ', nullif(v_first_name, ''), nullif(v_last_name, '')), ''),
       new.raw_user_meta_data ->> 'full_name',
       new.raw_user_meta_data ->> 'name',
       ''
     )), 100);
     new.raw_user_meta_data := case
       when v_name = '' then '{}'::jsonb
-      else jsonb_build_object('full_name', v_name)
+      else jsonb_build_object(
+        'first_name', nullif(v_first_name, ''),
+        'last_name', nullif(v_last_name, ''),
+        'full_name', v_name
+      )
     end;
   end if;
   return new;
