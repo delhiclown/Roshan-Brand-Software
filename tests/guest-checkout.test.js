@@ -101,7 +101,7 @@ test('guest WhatsApp input requires 10 to 15 digits and server validates it too'
 });
 
 test('service worker does not cache page navigations and advances its cache version', () => {
-  assert.match(serviceWorker, /const CACHE_NAME = 'roshan-static-v6'/);
+  assert.match(serviceWorker, /const CACHE_NAME = 'tatkalx-static-v1'/);
   assert.match(serviceWorker, /if \(request\.mode === 'navigate'\) \{\s*if \(url\.pathname === '\/' \|\| url\.pathname === '\/index\.html'\) return;/);
 });
 

@@ -25,5 +25,5 @@
   <circle cx="96" cy="96" r="70" fill="url(#metal)" stroke="#e7f2ff" stroke-width="3" filter="url(#shadow)"/>
   <circle cx="96" cy="96" r="64" fill="none" stroke="#263b68" stroke-opacity=".6" stroke-width="2"/>
   <path d="M43 69c13-23 39-39 67-39-22 5-38 17-49 37z" fill="#fff" opacity=".22"/>
-  <text x="96" y="126" text-anchor="middle" fill="url(#letter)" stroke="#526b98" stroke-width="2" paint-order="stroke" font-family="Arial, Helvetica, sans-serif" font-size="94" font-weight="900">R</text>
+  <text x="96" y="126" text-anchor="middle" fill="url(#letter)" stroke="#526b98" stroke-width="2" paint-order="stroke" font-family="Arial, Helvetica, sans-serif" font-size="94" font-weight="900">T</text>
 </svg>

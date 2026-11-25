@@ -63,7 +63,7 @@ create table if not exists public.settings (
   id boolean primary key default true check (id),
   whatsapp_number text not null default '',
   telegram_link text not null default '',
-  site_title text not null default 'Roshan Brand',
+  site_title text not null default 'Tatkal X',
   upi_id text not null default '',
   upi_payee_name text not null default '',
   upi_qr_image_url text not null default '',
@@ -1648,7 +1648,7 @@ end
 $$;
 
 insert into public.settings (id, site_title)
-values (true, 'Roshan Brand')
+values (true, 'Tatkal X')
 on conflict (id) do nothing;
 
 insert into public.products (category, name, description, price, selling_price, unit, in_stock, sort_order, pinned)

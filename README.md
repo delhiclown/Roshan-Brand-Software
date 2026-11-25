@@ -1,4 +1,4 @@
-# Roshan Brand digital store
+# Tatkal X digital store
 
 Responsive storefront with Google customer sign-in, wallet and UPI product checkout, and an email/password admin dashboard at `/admin`.
 
@@ -69,13 +69,25 @@ Configure these server-only values in `.env` for local use and in each Vercel en
 
 - `GUEST_HASH_SECRET`: a randomly generated secret with at least 32 characters. It is used to HMAC email, device, and IP identifiers before storing demo-abuse records. If it is missing or too short, the server logs the configuration reason and customers see “Checkout is temporarily unavailable. Please contact support.”
 - `RESEND_API_KEY`: an API key from Resend.
-- `RESEND_FROM_EMAIL`: a sender address verified in Resend, for example `Roshan Brand <orders@your-verified-domain.example>`.
+- `RESEND_FROM_EMAIL`: a sender address verified in Resend, for example `Tatkal X <orders@your-verified-domain.example>`.
 - `PUBLIC_SITE_URL`: the public HTTPS origin used to build guest tracking links in payment confirmation emails.
 - `SUPABASE_SERVICE_ROLE_KEY`: required by the guest API and must remain server-only.
 
 Guest orders use UPI QR and UTR review. A token-protected tracking link is shown after payment details are submitted and emailed to the customer; delivery secrets appear on the tracking page only after completion. Guest orders are linked to an account only after the account email is confirmed. Free guest demos do not require a UTR and are sent after the daily eligibility checks. If an order email fails, the admin panel shows a retry action; the order remains recorded. Do not send the service-role key, Resend key, or hash secret to the browser.
 
-On the Login form, **Remember me** is unchecked by default. Without it, the auth session is stored for the current browser session; with it, the saved session expires after 30 days. Registration uses Full Name, Email, and Password (minimum 6 characters).
+The storefront is public-read: visitors can browse categories, products, prices, and details without signing in. Customers are asked to sign in or register only for account purchases and account features; guest checkout remains available from eligible Buy buttons. Email registration collects first and last name, email, password, and password confirmation (minimum 8 characters), then verifies the email with a six-digit OTP. After verification, the customer is signed in and returned to the product or account action they requested. The account menu displays the saved customer name.
+
+In Supabase, configure email OTP and custom SMTP:
+
+1. Open **Authentication → Sign In / Providers → Email** (called **Email** under **Authentication → Providers** in some dashboard versions). Keep the Email provider enabled and turn **Confirm email** on.
+2. Open **Authentication → Email Templates → Confirm signup**. Use `{{ .Token }}` in the message body so the customer receives the six-digit OTP; do not make this a confirmation-link-only template.
+3. In **Authentication → Sign In / Providers → Email**, set **Email OTP Expiration** to your desired validity window (Supabase's default is one hour). Match the template copy to this duration. The storefront's resend action has a 60-second cooldown and shows the remaining time.
+4. Open **Authentication → SMTP Settings** (the dashboard's `/auth/smtp` page). Enable **Custom SMTP** and enter your provider's SMTP host, port, username, password, sender email, and sender name. For Resend, use `smtp.resend.com`, username `resend`, and a Resend API key as the SMTP password; for Brevo, use `smtp-relay.brevo.com`, your Brevo SMTP login, and the SMTP key (not the general API key). Use the secure port/TLS mode recommended by the provider, verify the sender/domain there, and save. Keep credentials only in the Supabase dashboard, never in browser code.
+5. Add every store origin (including localhost for development) to **Authentication → URL Configuration → Redirect URLs** so OAuth and password-reset links continue to return to the site.
+
+Registration name metadata is sanitized by `security-admin-authorization-migration.sql`; rerun that migration in the SQL Editor for projects where it was previously applied so first and last names are retained.
+
+On the Login tab, **Remember me** remains checked by default. Without it, the auth session is stored for the current browser session; with it, the saved session expires after 30 days.
 
 ### Official channel popup settings
 

@@ -2,7 +2,7 @@
   if (typeof module === 'object' && module.exports) {
     module.exports = links;
   } else {
-    root.RoshanCommunityLinks = links;
+    root.TatkalXCommunityLinks = links;
   }
 })(globalThis, Object.freeze({
   whatsappGroup: 'https://chat.whatsapp.com/GFINiukTuvZ6ThUqQO7Ovc',

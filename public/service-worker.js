@@ -1,4 +1,4 @@
-const CACHE_NAME = 'roshan-static-v6';
+const CACHE_NAME = 'tatkalx-static-v1';
 const OFFLINE_URL = '/offline.html';
 const STATIC_FILE_PATTERN = /\.(?:css|png|jpe?g|gif|webp|svg|ico|woff2?|json)$/i;
 const NETWORK_ONLY_PATH_PATTERN = /^\/(?:api(?:\/|$)|admin(?:\.html)?(?:\/|$)|login(?:\/|$)|auth(?:\/|$)|checkout(?:\/|$)|orders?(?:\/|$)|payment(?:\/|$))/i;
@@ -17,7 +17,7 @@ self.addEventListener('activate', event => {
     caches.keys()
       .then(names => Promise.all(
         names
-          .filter(name => name.startsWith('roshan-static-') && name !== CACHE_NAME)
+          .filter(name => (name.startsWith('roshan-static-') || name.startsWith('tatkalx-static-')) && name !== CACHE_NAME)
           .map(name => caches.delete(name))
       ))
       .then(() => self.clients.claim())

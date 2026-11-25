@@ -19,10 +19,13 @@ test('homepage has complete share metadata and a social-sized preview image', ()
   assert.ok(title.length <= 60);
   assert.ok(description.length <= 150);
   assert.equal(metaContent('property', 'og:type'), 'website');
-  assert.equal(metaContent('property', 'og:url'), 'https://software.roshanbrand.online/');
-  assert.equal(metaContent('property', 'og:image'), 'https://software.roshanbrand.online/og-image.png');
+  assert.equal(metaContent('property', 'og:site_name'), 'Tatkal X');
+  assert.match(title, /^Tatkal X\b/);
+  assert.equal(metaContent('property', 'og:url'), 'https://tatkalx.com/');
+  assert.equal(metaContent('property', 'og:image'), 'https://tatkalx.com/og-image.png');
+  assert.match(homepage, /<link rel="canonical" href="https:\/\/tatkalx\.com\/">/);
   assert.equal(metaContent('name', 'twitter:card'), 'summary_large_image');
-  assert.equal(metaContent('name', 'twitter:image'), 'https://software.roshanbrand.online/og-image.png');
+  assert.equal(metaContent('name', 'twitter:image'), 'https://tatkalx.com/og-image.png');
 
   const image = fs.readFileSync(path.join(root, 'public', 'og-image.png'));
   assert.equal(image.toString('hex', 0, 8), '89504e470d0a1a0a');

@@ -10,11 +10,12 @@ const securityMigration = fs.readFileSync(
 );
 const homepage = fs.readFileSync(path.join(root, 'public', 'index.html'), 'utf8');
 
-test('signup accepts only name, email, and password and sends only the name as metadata', () => {
-  assert.match(homepage, /id="login-name" name="name" type="text"[^>]*maxlength="100"/);
-  assert.match(homepage, /data:\{full_name:fullName\}/);
+test('signup accepts first and last names and limits metadata to customer names', () => {
+  assert.match(homepage, /id="login-first-name" name="first_name" type="text"[^>]*maxlength="50"/);
+  assert.match(homepage, /id="login-last-name" name="last_name" type="text"[^>]*maxlength="50"/);
+  assert.match(homepage, /data:\{first_name:firstName,last_name:lastName,full_name:/);
   assert.doesNotMatch(homepage, /data:\{[^}]*is_admin|data:\{[^}]*role\s*:/i);
-  assert.match(securityMigration, /new\.raw_user_meta_data := case[\s\S]*jsonb_build_object\('full_name', v_name\)/i);
+  assert.match(securityMigration, /new\.raw_user_meta_data := case[\s\S]*'first_name', nullif\(v_first_name, ''\)[\s\S]*'last_name', nullif\(v_last_name, ''\)[\s\S]*'full_name', v_name/i);
   assert.doesNotMatch(securityMigration, /raw_user_meta_data\s*->>\s*'(?:is_admin|role)'/i);
 });
 

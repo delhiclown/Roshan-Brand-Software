@@ -1,5 +1,5 @@
 function brandLogoMarkup(sizeClass){
-  return `<span class="rb-logo ${sizeClass}" aria-hidden="true"><span class="rb-logo-face"><span class="rb-logo-letter">R</span></span></span>`;
+  return `<span class="rb-logo ${sizeClass}" aria-hidden="true"><span class="rb-logo-face"><span class="rb-logo-letter">T</span></span></span>`;
 }
 
 function renderBrandLogos(root=document){

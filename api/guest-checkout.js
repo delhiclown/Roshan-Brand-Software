@@ -104,7 +104,7 @@ function demoKeyEmail(data) {
   const link = String(data.download_link || '');
   const safeLink = /^https?:\/\/\S+$/i.test(link) ? link : '';
   return {
-    subject: 'Your Roshan Brand demo key is ready',
+    subject: 'Your Tatkal X demo key is ready',
     html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111827"><h2>Your free demo key is ready</h2><p>Software: <strong>${name}</strong></p><p>Demo key: <code>${key}</code></p>${safeLink ? `<p><a href="${escapeHtml(safeLink)}">Download ${name}</a></p>` : ''}<p>Keep this key private.</p></div>`,
     text: `Your free demo key is ready.\nSoftware: ${data.software_name}\nDemo key: ${data.license_key}${safeLink ? `\nDownload: ${safeLink}` : ''}`
   };
