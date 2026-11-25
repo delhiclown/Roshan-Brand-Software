@@ -349,7 +349,7 @@
         <div id="spin-prize-list" class="product-list"></div>
       </section>
       <section id="offers-panel" class="panel hidden" data-card-tone="support">
-        <div class="bar" style="margin-bottom:16px"><div><h2 class="title-premium">Offers</h2><p class="sub desc-premium">Create timed offers for a collection or a specific product. Claim Now sends customers to the selected destination.</p></div><button id="offer-new" class="btn ghost" type="button">New offer</button></div>
+        <div class="bar" style="margin-bottom:16px"><div><h2 class="title-premium">Offers</h2><p class="sub desc-premium">Create timed offers for a collection or a specific product. Claim Now opens the selected product's Buy flow.</p></div><button id="offer-new" class="btn ghost" type="button">New offer</button></div>
         <div class="admin-grid">
           <section class="panel" style="margin:0">
             <h3 id="offer-form-title">Create offer</h3>
@@ -360,10 +360,11 @@
               <div class="field"><label for="offer-collection">Collection</label><select id="offer-collection" required><option value="software">Software</option><option value="vps">Windows VPS</option><option value="proxy">Static Proxy</option><option value="residential">Residential Proxies</option></select></div>
               <div class="field"><label for="offer-product">Product (optional)</label><select id="offer-product"><option value="">Entire collection</option></select><small class="sub" style="display:block;margin:5px 0 0">Choose a product to take customers directly to it, or leave empty for the full collection.</small></div>
               <section class="offer-claim-settings">
-                <label class="check" for="offer-claim-enabled"><input id="offer-claim-enabled" type="checkbox"> Enable screenshot-verified claim and free-software transfer</label>
+                <label class="check" for="offer-claim-enabled"><input id="offer-claim-enabled" type="checkbox"> Enable Claim-to-Buy offer checkout</label>
                 <div id="offer-claim-fields" class="hidden">
-                  <p class="sub">Claim rewards are limited to Software. Customers choose one product; its current server price is captured when they claim.</p>
+                  <p class="sub">Claim rewards are limited to Software. Customers select a plan and pay for the paid quantity; free units are included in the order. The server calculates the amount.</p>
                   <div class="row"><div class="field"><label for="offer-paid-quantity">Paid software quantity</label><input id="offer-paid-quantity" type="number" min="1" max="100" value="2"></div><div class="field"><label for="offer-free-quantity">Free software quantity</label><input id="offer-free-quantity" type="number" min="1" max="100" value="1"></div></div>
+                  <div class="field"><label for="offer-customer-claim-limit">Maximum claims per customer</label><input id="offer-customer-claim-limit" type="number" min="1" max="100" value="1"></div>
                   <label class="check" for="offer-benefit-count-enabled"><input id="offer-benefit-count-enabled" type="checkbox"> Show admin-entered benefit count in offer popup</label>
                   <div class="row"><div class="field"><label for="offer-benefit-count">Display count</label><input id="offer-benefit-count" type="number" min="0" max="100000000" value="0"></div><div class="field"><label for="offer-benefit-minimum">Show only above minimum</label><input id="offer-benefit-minimum" type="number" min="1" max="100000000" value="10"></div></div>
                 </div>
@@ -1052,6 +1053,7 @@
       $('offer-enabled').checked=true;
       $('offer-paid-quantity').value='2';
       $('offer-free-quantity').value='1';
+      $('offer-customer-claim-limit').value='1';
       $('offer-benefit-count').value='0';
       $('offer-benefit-minimum').value='10';
       $('offer-starts-at').value=offerDateTimeInput(new Date());
@@ -1065,7 +1067,7 @@
     }
     async function renderOffers(){
       const [offersResult,productsResult]=await Promise.all([
-        state.client.from('offers').select('id,title,description,collection,product_id,starts_at,ends_at,enabled,claim_enabled,paid_quantity,free_quantity,benefit_count_enabled,benefit_count,benefit_count_minimum,created_at').order('created_at',{ascending:false}),
+        state.client.from('offers').select('id,title,description,collection,product_id,starts_at,ends_at,enabled,claim_enabled,paid_quantity,free_quantity,customer_claim_limit,benefit_count_enabled,benefit_count,benefit_count_minimum,created_at').order('created_at',{ascending:false}),
         state.client.from('products').select('id,name,category,price').eq('demo_only',false).order('category').order('name')
       ]);
       if(offersResult.error)throw offersResult.error;
@@ -1080,9 +1082,8 @@
         const status=active?'Live':!offer.enabled?'Disabled':starts>now?'Scheduled':'Expired';
         const product=state.offerProducts.find(item=>String(item.id)===String(offer.product_id));
         const collection=categories.find(item=>item.id===offer.collection)?.title||offer.collection;
-        const stats=state.offerReports.find(report=>report.offer_id===offer.id);
         const countLabel=offer.benefit_count_enabled?` · Admin display count: ${money(offer.benefit_count)} (minimum ${money(offer.benefit_count_minimum)}; ${Number(offer.benefit_count)>Number(offer.benefit_count_minimum)?'visible':'hidden'})`:'';
-        const claimLabel=offer.claim_enabled?` · Pay ${offer.paid_quantity}, free ${offer.free_quantity} · Claims ${stats?.claim_count||0} / paid ${stats?.paid_order_count||0} / free transferred ${stats?.free_software_count||0}${countLabel}`:'';
+        const claimLabel=offer.claim_enabled?` · Pay ${offer.paid_quantity}, free ${offer.free_quantity} · Max ${offer.customer_claim_limit||1} claims/customer${countLabel}`:'';
         return `<article class="product-row"><div><strong>${escapeHtml(offer.title)}</strong><small>${escapeHtml(offer.description||'No description')} · ${escapeHtml(product?`${collection} / ${product.name}`:`${collection} collection`)} · ${escapeHtml(formatDate(offer.starts_at))} – ${escapeHtml(formatDate(offer.ends_at))}${claimLabel}</small><div style="display:flex;gap:6px;margin-top:8px"><span class="pill ${active?'offer-active':''}">${status}</span>${offer.claim_enabled?'<span class="pill">Claim + free software</span>':''}</div></div><div class="actions"><button class="btn ${offer.enabled?'danger':'gold'}" type="button" data-offer-toggle="${escapeHtml(offer.id)}" data-enabled="${offer.enabled}">${offer.enabled?'Turn off':'Turn on'}</button><button class="btn ghost" type="button" data-offer-edit="${escapeHtml(offer.id)}">Edit</button><button class="btn danger" type="button" data-offer-delete="${escapeHtml(offer.id)}">Delete</button></div></article>`;
       }).join(''):'<div class="empty">No offers created yet.</div>';
       $('admin-offer-list').querySelectorAll('[data-offer-edit]').forEach(button=>button.addEventListener('click',()=>editOffer(button.dataset.offerEdit)));
@@ -1188,6 +1189,7 @@
       $('offer-claim-enabled').checked=offer.claim_enabled;
       $('offer-paid-quantity').value=offer.paid_quantity;
       $('offer-free-quantity').value=offer.free_quantity;
+      $('offer-customer-claim-limit').value=offer.customer_claim_limit||1;
       $('offer-benefit-count-enabled').checked=offer.benefit_count_enabled;
       $('offer-benefit-count').value=offer.benefit_count;
       $('offer-benefit-minimum').value=offer.benefit_count_minimum;
@@ -1213,11 +1215,13 @@
       if(!Number.isFinite(startsAt.getTime())||!Number.isFinite(endsAt.getTime())||endsAt<=startsAt){setError('offer-error','Choose valid offer dates. The end time must be after the start time.');return}
       const claimEnabled=$('offer-claim-enabled').checked;
       const paidQuantity=Number($('offer-paid-quantity').value),freeQuantity=Number($('offer-free-quantity').value);
+      const customerClaimLimit=Number($('offer-customer-claim-limit').value);
       const benefitCount=Number($('offer-benefit-count').value),benefitMinimum=Number($('offer-benefit-minimum').value);
       if(claimEnabled&&$('offer-collection').value!=='software'){setError('offer-error','Claim and free-software offers must use the Software collection.');return}
-      if(!Number.isInteger(paidQuantity)||paidQuantity<1||paidQuantity>100||!Number.isInteger(freeQuantity)||freeQuantity<1||freeQuantity>100){setError('offer-error','Paid and free quantities must be whole numbers from 1 to 100.');return}
+      if(!Number.isInteger(paidQuantity)||paidQuantity<1||paidQuantity>100||!Number.isInteger(freeQuantity)||freeQuantity<1||freeQuantity>100||paidQuantity+freeQuantity>100){setError('offer-error','Paid and free quantities must be whole numbers from 1 to 100 and total no more than 100.');return}
+      if(!Number.isInteger(customerClaimLimit)||customerClaimLimit<1||customerClaimLimit>100){setError('offer-error','Maximum claims per customer must be a whole number from 1 to 100.');return}
       if(!Number.isInteger(benefitCount)||benefitCount<0||benefitCount>100000000||!Number.isInteger(benefitMinimum)||benefitMinimum<1||benefitMinimum>100000000){setError('offer-error','Benefit display count and minimum must be valid whole numbers.');return}
-      const payload={title,description,collection:$('offer-collection').value,product_id:$('offer-product').value?Number($('offer-product').value):null,starts_at:startsAt.toISOString(),ends_at:endsAt.toISOString(),enabled:$('offer-enabled').checked,claim_enabled:claimEnabled,paid_quantity:paidQuantity,free_quantity:freeQuantity,benefit_count_enabled:$('offer-benefit-count-enabled').checked,benefit_count:benefitCount,benefit_count_minimum:benefitMinimum};
+      const payload={title,description,collection:$('offer-collection').value,product_id:$('offer-product').value?Number($('offer-product').value):null,starts_at:startsAt.toISOString(),ends_at:endsAt.toISOString(),enabled:$('offer-enabled').checked,claim_enabled:claimEnabled,paid_quantity:paidQuantity,free_quantity:freeQuantity,customer_claim_limit:customerClaimLimit,benefit_count_enabled:$('offer-benefit-count-enabled').checked,benefit_count:benefitCount,benefit_count_minimum:benefitMinimum};
       const offerId=$('offer-id').value;
       $('offer-save').disabled=true;
       try{
@@ -1902,6 +1906,18 @@
         return;
       }
       const requests=data||[];
+      let offerOrderDetails=[];
+      const orderIds=requests.filter(order=>order.type!=='topup').map(order=>Number(order.id)).filter(Number.isSafeInteger);
+      if(orderIds.length){
+        const {data:offerData,error:offerError}=await state.client.rpc('admin_list_offer_order_details',{p_order_ids:orderIds});
+        if(offerError){
+          $('order-request-list').innerHTML=`<div class="empty">${escapeHtml(offerError.message)}</div>`;
+          $('order-request-page').textContent='Could not load offer order details.';
+          return;
+        }
+        offerOrderDetails=Array.isArray(offerData)?offerData:[];
+      }
+      const offerDetailsByOrder=new Map(offerOrderDetails.map(item=>[String(item.order_id),item]));
       state.orderRequestCount=Number(requests[0]?.total_count)||0;
       if(requests[0]){
         state.orderRequestCounts={
@@ -1925,8 +1941,9 @@
           const actions=order.type==='topup'&&order.status==='utr_submitted'
             ?`<button type="button" class="btn gold" data-review-topup="${escapeHtml(order.id)}" data-review-action="approve">Approve</button><button type="button" class="btn danger" data-review-topup="${escapeHtml(order.id)}" data-review-action="reject">Reject</button>`
             :'—';
+          const offerDetails=offerDetailsByOrder.get(String(order.id));
           return `<tr tabindex="0" role="button" data-open-request="${escapeHtml(key)}">
-          <td>#${escapeHtml(order.id)}</td><td>${escapeHtml(order.customer_email||order.customer)}</td><td>${escapeHtml(order.product_name)}${order.software_plan_label?`<small>Plan: ${escapeHtml(order.software_plan_label)}</small>`:''}${order.used_key_id?`<small>Used Key #${escapeHtml(order.used_key_id)} · ${Number(order.used_key_remaining_days)} days left</small>`:''}</td>
+          <td>#${escapeHtml(order.id)}</td><td>${escapeHtml(order.customer_email||order.customer)}</td><td>${escapeHtml(order.product_name)}${order.software_plan_label?`<small>Plan: ${escapeHtml(order.software_plan_label)}</small>`:''}${offerDetails?`<small>Offer: ${escapeHtml(offerDetails.offer_title||'Offer')} · ${Number(offerDetails.offer_free_quantity)||0} free of ${Number(offerDetails.offer_paid_quantity||0)+Number(offerDetails.offer_free_quantity||0)}</small>`:''}${order.used_key_id?`<small>Used Key #${escapeHtml(order.used_key_id)} · ${Number(order.used_key_remaining_days)} days left</small>`:''}</td>
           <td>${typeLabel}</td><td class="amount">₹${money(order.amount)}</td>
           <td>${escapeHtml(order.utr_number||'—')}</td><td>${escapeHtml(formatDate(order.payment_time||order.payment_submitted_at||order.created_at))}</td>
           <td><span class="status-badge ${escapeHtml(order.status)}">${escapeHtml(order.status==='utr_submitted'?'UTR Submitted':order.status)}</span></td>
@@ -1951,13 +1968,22 @@
       $('order-request-drawer').classList.add('open');$('order-request-drawer').setAttribute('aria-hidden','false');
       document.body.style.overflow='hidden';
       try{
-        const {data,error}=await state.client.rpc('admin_get_request',{p_type:type,p_id:Number(id)});
+        const [{data,error},{data:offerData,error:offerError}]=await Promise.all([
+          state.client.rpc('admin_get_request',{p_type:type,p_id:Number(id)}),
+          type==='topup'
+            ?Promise.resolve({data:[],error:null})
+            :state.client.rpc('admin_list_offer_order_details',{p_order_ids:[Number(id)]})
+        ]);
         if(error)throw error;
+        if(offerError)throw offerError;
         if(!data?.ok)throw new Error(data?.message||'Request was not found.');
-        state.selectedOrderRequest=data;
+        const offerDetails=Array.isArray(offerData)?offerData[0]||{}:{};
+        const offerKeyCount=Number(offerDetails.offer_paid_quantity||0)+Number(offerDetails.offer_free_quantity||0);
+        state.selectedOrderRequest={...data,...offerDetails};
         const vps=data.product_type==='vps'||data.product_type==='windows-vps';
         $('order-request-payment').innerHTML=[
           ['Customer',data.customer||'Customer'],['Product',data.product_name],['Type',data.used_key_id?'USED KEY':vps?'Windows VPS':'Software'],
+          ...(offerDetails.offer_title?[['Offer',offerDetails.offer_title],['Paid quantity',offerDetails.offer_paid_quantity||0],['Free quantity',offerDetails.offer_free_quantity||0],['Total quantity',Number(offerDetails.offer_paid_quantity||0)+Number(offerDetails.offer_free_quantity||0)]]:[]),
           ...(data.guest_email?[['WhatsApp',data.guest_whatsapp||'—']]:[]),
           ...(data.software_plan_label?[[(data.product_type==='vps'||data.product_type==='windows-vps')?'VPS configuration':'Software plan',data.software_plan_label]]:[]),
           ...(data.used_key_id?[['Used Key ID',`#${data.used_key_id}`],['Key Name',data.license_key||'—']]:[]),['Amount',`₹${money(data.amount)}`],
@@ -1978,14 +2004,16 @@
         const catalogDownloadLink=String(data.catalog_download_link||'').trim();
         const savedDownloadLink=String(data.download_link||'').trim();
         $('request-software-name').value=data.software_name||data.product_name||'';
-        $('request-license-key').value=data.license_key||data.auto_license_key||'';
+        $('request-license-key').value=data.license_key||(offerKeyCount?'':data.auto_license_key||'');
         $('request-download-link').value=savedDownloadLink||catalogDownloadLink;
         $('request-software-name-hint').textContent=data.software_name&&data.software_name!==data.product_name
           ?'Saved for this order':'Auto-filled from product';
-        $('request-license-key-hint').textContent=data.license_key&&data.license_key!==data.auto_license_key
-          ?'Saved for this order'
-          :data.auto_license_key?'Auto-filled from the matching product and plan key pool'
-            :'No unused key found for this product and plan';
+        $('request-license-key-hint').textContent=offerKeyCount
+          ?`Enter exactly ${offerKeyCount} license keys, one per line (${Number(offerDetails.offer_paid_quantity)||0} paid + ${Number(offerDetails.offer_free_quantity)||0} free).`
+          :data.license_key&&data.license_key!==data.auto_license_key
+            ?'Saved for this order'
+            :data.auto_license_key?'Auto-filled from the matching product and plan key pool'
+              :'No unused key found for this product and plan';
         $('request-license-key-hint').classList.remove('hidden');
         $('request-download-link-source-hint').textContent=savedDownloadLink&&savedDownloadLink!==catalogDownloadLink
           ?'Saved for this order'
@@ -2005,7 +2033,7 @@
         $('request-rejection-reason').disabled=!editable;
         const generalProduct=!['software','used_key','vps','windows-vps'].includes(data.product_type);
         $('request-software-name').labels[0].textContent=generalProduct?'Product / service name':'Software Name';
-        $('request-license-key').labels[0].textContent=generalProduct?'Delivery details / access':'License Key';
+        $('request-license-key').labels[0].textContent=generalProduct?'Delivery details / access':offerKeyCount?`License Keys (${offerKeyCount})`:'License Key';
         $('request-software-name').disabled=!editable||fixedUsedKey;$('request-license-key').disabled=!editable||fixedUsedKey;$('request-download-link').disabled=!editable||fixedUsedKey;
         document.querySelectorAll('[data-request-reset]').forEach(button=>button.disabled=!editable||fixedUsedKey);
         const downloadField=$('request-download-link-field');
@@ -2068,6 +2096,14 @@
         if(missing.length){
           $('order-request-error').textContent=`Required field${missing.length===1?'':'s'}: ${missing.join(', ')}.`;
           return;
+        }
+        const offerKeyCount=Number(order.offer_paid_quantity||0)+Number(order.offer_free_quantity||0);
+        if(offerKeyCount){
+          const suppliedKeys=details.license_key.split(/\r?\n/).map(key=>key.trim()).filter(Boolean).length;
+          if(suppliedKeys!==offerKeyCount){
+            $('order-request-error').textContent=`This offer includes ${offerKeyCount} keys. Enter exactly that many keys, one per line, before completing the order.`;
+            return;
+          }
         }
       }
       if(link&&!/^https?:\/\/\S+$/i.test(link)){
