@@ -133,7 +133,7 @@
     .orders-copy:hover{border-color:var(--gold);color:var(--gold);background:#151d32}
     .orders-key-box{display:flex;align-items:center;gap:8px;min-width:0;padding:8px 9px;border:1px solid var(--line);border-radius:9px;background:#080f20;color:var(--text)}
     .orders-key-label,.key-label{flex:none;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.03em}
-    .orders-key-value,.key-value{min-width:0;flex:1;font-weight:700;color:var(--text);overflow-wrap:anywhere}
+    .orders-key-value,.key-value{min-width:0;flex:1;font-weight:700;color:var(--text);overflow-wrap:anywhere;white-space:pre-wrap}
     .orders-copy-key{flex:none;min-height:30px;padding:0 9px;border-color:#f5b82e;background:#f5b82e;color:#171204;font-size:10px;white-space:nowrap}
     .orders-copy-key:hover{border-color:#ffd460;background:#ffd460;color:#171204}
     .orders-item-detail .key-name-label{font:inherit;text-transform:uppercase}
@@ -1282,7 +1282,7 @@
           <p class="desc-premium">Spin the wheel for a chance to unlock a discount coupon on your next software purchase.</p>
           <ul>
             <li>Your reward depends on where the wheel lands.</li>
-            <li>Won coupons are saved on this device for 30 days.</li>
+            <li>One spin every 24 hours; copied coupon codes are hidden.</li>
           </ul>
         </div>
       </div>
@@ -1306,7 +1306,7 @@
       {id:'residential', title:'Residential Proxies', icon:'◎', description:'Residential IP options for your data and browsing needs.'},
       {id:'vps', title:'Windows VPS', icon:'▣', description:'Reliable Windows servers for projects that need room to grow.'}
     ];
-    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, checkoutTimer:null, usedKeys:[], usedKeysError:null, usedKeysLoading:true, demoKeys:[], demoKeysError:null, demoKeysLoading:true, rentalProducts:[], rentalProductsError:null, rentalProductsLoading:true, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, pendingAuthRequest:null, authIntent:'', authMode:'signin', rememberSession:true, guestMode:false, activeGuestOrder:null, guestOrderPoll:null, offers:[], offerPopupOffers:[], autoPopupOfferIds:new Set(), offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
+    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, myOfferOrders:[], ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, checkoutTimer:null, usedKeys:[], usedKeysError:null, usedKeysLoading:true, demoKeys:[], demoKeysError:null, demoKeysLoading:true, rentalProducts:[], rentalProductsError:null, rentalProductsLoading:true, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, pendingAuthRequest:null, authIntent:'', authMode:'signin', rememberSession:true, guestMode:false, activeGuestOrder:null, guestOrderPoll:null, offers:[], offerPopupOffers:[], autoPopupOfferIds:new Set(), offersChannel:null,myOfferClaims:[],activeClaimOffer:null,activeOfferCheckoutId:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
       let authOtpEmail='';
       let authOtpCooldownUntil=0;
       let authOtpCooldownTimer=null;
@@ -2151,9 +2151,10 @@
       if(!product){showNotice('This Software product is no longer available.');return}
       const plans=softwarePlansForProduct(product);
       const available=plans.filter(plan=>plan.enabled&&plan.price>0);
+      const activeOffer=state.offers.find(item=>String(item.id)===String(state.activeOfferCheckoutId)&&item.claim_enabled);
       const imageUrl=safeHttpUrl(product.image_url);
       $('modal-title').textContent=product.name;
-      $('modal-body').innerHTML=`${imageUrl?`<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}" style="display:block;width:100%;max-height:220px;object-fit:contain;border-radius:12px;margin-bottom:14px">`:''}<div class="checkout-product"><strong>${escapeHtml(product.name)}</strong>${product.description?`<p class="checkout-note">${escapeHtml(product.description)}</p>`:''}</div><div class="software-plan-picker modal-field" id="software-plan-picker"><label id="software-plan-label">Choose an option</label><button class="software-plan-trigger" id="software-plan-trigger" type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="software-plan-list" aria-labelledby="software-plan-label software-plan-trigger-text"><span class="software-plan-trigger-text placeholder" id="software-plan-trigger-text">Choose an option</span><svg class="software-plan-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="software-plan-list" id="software-plan-list" role="listbox" aria-labelledby="software-plan-label" hidden>${plans.map(plan=>`<button class="software-plan-option" type="button" role="option" data-plan-code="${plan.code}" aria-selected="false" ${plan.enabled&&plan.price>0?'':'disabled'}>${plan.label}${plan.enabled&&plan.price>0?'':' — Unavailable'}</button>`).join('')}</div></div><button class="modal-primary" id="software-plan-buy" type="button" disabled>BUY NOW</button>`;
+      $('modal-body').innerHTML=`${imageUrl?`<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(product.name)}" style="display:block;width:100%;max-height:220px;object-fit:contain;border-radius:12px;margin-bottom:14px">`:''}<div class="checkout-product"><strong>${escapeHtml(product.name)}</strong>${product.description?`<p class="checkout-note">${escapeHtml(product.description)}</p>`:''}${activeOffer?`<p class="checkout-note">${escapeHtml(activeOffer.title)} · Pay for ${Number(activeOffer.paid_quantity)} · ${Number(activeOffer.free_quantity)} free · ${Number(activeOffer.paid_quantity)+Number(activeOffer.free_quantity)} total</p>`:''}</div><div class="software-plan-picker modal-field" id="software-plan-picker"><label id="software-plan-label">Choose an option</label><button class="software-plan-trigger" id="software-plan-trigger" type="button" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="software-plan-list" aria-labelledby="software-plan-label software-plan-trigger-text"><span class="software-plan-trigger-text placeholder" id="software-plan-trigger-text">Choose an option</span><svg class="software-plan-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="software-plan-list" id="software-plan-list" role="listbox" aria-labelledby="software-plan-label" hidden>${plans.map(plan=>`<button class="software-plan-option" type="button" role="option" data-plan-code="${plan.code}" aria-selected="false" ${plan.enabled&&plan.price>0?'':'disabled'}>${plan.label}${plan.enabled&&plan.price>0?'':' — Unavailable'}</button>`).join('')}</div></div><button class="modal-primary" id="software-plan-buy" type="button" disabled>${activeOffer?'CLAIM & BUY':'BUY NOW'}</button>`;
       openModal();
       const picker=$('software-plan-picker');
       const trigger=$('software-plan-trigger');
@@ -2291,10 +2292,11 @@
       buyButton.addEventListener('click',()=>{
         const plan=available.find(item=>item.code===selectedPlanCode);
         if(!plan||buyButton.disabled)return;
+        const selectedOfferId=activeOffer?.id||null;
         setListOpen(false);
         document.removeEventListener('pointerdown',closeOnOutsideClick);
         closeModal();
-        buyProduct(product.id,plan.code).catch(error=>showNotice(`Could not start checkout: ${error.message||'Please try again.'}`));
+        buyProduct(product.id,plan.code,selectedOfferId).catch(error=>showNotice(`Could not start checkout: ${error.message||'Please try again.'}`));
       });
     }
 
@@ -2571,13 +2573,50 @@
       const codeText = state.spinCoupon.type === 'tryAgain' ? '' : `<span class="coupon-code-group"><span class="reward-code">${escapeHtml(state.spinCoupon.code)}</span><button class="coupon-copy" id="copy-spin-coupon" type="button" aria-label="Copy coupon code">Copy</button></span>`;
       banner.classList.remove('hidden');
       banner.innerHTML = `<strong>🎉 Reward:</strong><span class="reward-value">${amountText}</span>${codeText}`;
-      $('copy-spin-coupon')?.addEventListener('click',()=>copyCustomerValue(state.spinCoupon.code,'Coupon code'));
+      $('copy-spin-coupon')?.addEventListener('click',copySpinCoupon);
+    }
+
+    function getCopiedSpinCouponIds(userId){
+      try{
+        const saved=JSON.parse(localStorage.getItem(`roshan-spin-copied-coupons:${userId}`)||'[]');
+        return new Set(Array.isArray(saved)?saved.filter(id=>typeof id==='string') : []);
+      }catch(error){
+        console.error('Could not read copied spin coupon markers:',error);
+        return new Set();
+      }
+    }
+
+    async function copySpinCoupon(){
+      const coupon=state.spinCoupon;
+      const button=$('copy-spin-coupon');
+      if(!coupon||!button)return;
+      const copied=await copyCustomerValue(coupon.code,'Coupon code',button);
+      if(!copied)return;
+      state.spinCoupon=null;
+      renderCouponBanner();
+      if(coupon.id&&state.user){
+        try{
+          const key=`roshan-spin-copied-coupons:${state.user.id}`;
+          const copiedIds=getCopiedSpinCouponIds(state.user.id);
+          copiedIds.add(String(coupon.id));
+          localStorage.setItem(key,JSON.stringify([...copiedIds]));
+        }catch(error){
+          console.error('Could not save the copied spin coupon marker:',error);
+        }
+        const {data,error}=await state.client.rpc('mark_spin_coupon_copied',{p_coupon_code:coupon.code});
+        if(error||!data?.ok){
+          console.error('Could not save the copied coupon status:',error||data);
+          showNotice('Coupon copied and hidden, but its copied status could not be saved to your account.');
+          return;
+        }
+      }
+      showNotice('Coupon copied and hidden. You can spin again after 24 hours.');
     }
 
     async function refreshMyCoupons(){
       if(!state.client||!state.user){state.myCoupons=[];return}
       const {data,error}=await state.client.from('coupons')
-        .select('id,code,discount_percent,max_discount_amount,status,created_at,expires_at,used_at,used_order_id')
+        .select('id,code,discount_percent,max_discount_amount,status,created_at,expires_at,used_at,used_order_id,copied_at')
         .eq('user_id',state.user.id).order('created_at',{ascending:false}).limit(50);
       if(error)throw error;
       state.myCoupons=(data||[]).map(coupon=>({
@@ -2588,7 +2627,8 @@
         expiresAt:coupon.expires_at
       }));
       if(!state.spinCoupon){
-        state.spinCoupon=state.myCoupons.find(coupon=>coupon.status==='unused'&&Date.parse(coupon.expires_at)>Date.now())||null;
+        const copiedIds=getCopiedSpinCouponIds(state.user.id);
+        state.spinCoupon=state.myCoupons.find(coupon=>coupon.status==='unused'&&!coupon.copied_at&&!copiedIds.has(String(coupon.id))&&Date.parse(coupon.expires_at)>Date.now())||null;
       }
       renderCouponBanner();
       if(state.ordersPanelOpen)renderOrdersPanel();
@@ -2634,10 +2674,11 @@
             if(state.user?.id!==spinningUserId)return;
             if(reward.type==='tryAgain'){
               state.spinCoupon=null;
-              showNotice('No prize this time — try again tomorrow.');
+              showNotice('No prize this time — try again 24 hours after your spin.');
             }else{
               state.spinCoupon={
                 ...reward,
+                id:data.coupon_id,
                 code:data.coupon_code,
                 value:Number(data.discount_percent),
                 expiresAt:data.expires_at
@@ -2770,10 +2811,13 @@
         const target=product?`${collection} · ${product.name}`:`${collection} collection`;
         const existing=state.myOfferClaims.find(claim=>claim.offer_id===offer.id);
         const rejected=existing?.status==='rejected';
-        const alreadyClaimed=existing&&existing.status!=='rejected';
-        const buttonText=alreadyClaimed?existing.status==='approved'?'✓ Approved · Pay in My Orders':existing.status==='transferred'?'✓ Reward transferred':existing.status==='expired'?'Offer claim expired':'✓ Sent for review':rejected?'Resubmit screenshot':'Claim Now';
+        const alreadyClaimed=!offer.claim_enabled&&existing&&existing.status!=='rejected';
+        const claimsUsed=state.myOfferOrders.filter(claim=>String(claim.offer_id)===String(offer.id)&&claim.counts_toward_limit).length;
+        const claimLimit=Math.max(1,Number(offer.customer_claim_limit)||1);
+        const claimLimitReached=offer.claim_enabled&&claimsUsed>=claimLimit;
+        const buttonText=offer.claim_enabled?(claimLimitReached?'Claim limit reached':'Claim Now'):alreadyClaimed?existing.status==='approved'?'✓ Approved · Pay in My Orders':existing.status==='transferred'?'✓ Reward transferred':existing.status==='expired'?'Offer claim expired':'✓ Sent for review':rejected?'Resubmit screenshot':'Claim Now';
         const buttonClass=alreadyClaimed?'offer-claim':'offer-claim claim-available';
-        const disabled=Boolean(alreadyClaimed);
+        const disabled=Boolean(alreadyClaimed||claimLimitReached);
         const benefitCount=offer.benefit_count_enabled&&Number(offer.benefit_count)>Number(offer.benefit_count_minimum)
           ?`<p class="offer-benefit-count">अब तक ${escapeHtml(money(offer.benefit_count))} लोगों ने इस ऑफ़र का फ़ायदा उठाया।</p>`:'';
         return `<article class="offer-card"><span class="offer-target">${escapeHtml(target)}</span><h3>${escapeHtml(offer.title)}</h3><p>${escapeHtml(offer.description)}</p>${benefitCount}<div class="offer-card-bottom"><span class="offer-countdown" data-offer-countdown data-ends-at="${escapeHtml(offer.ends_at)}">${countdownLabel(offer.ends_at)}</span><button class="${buttonClass}" type="button" data-claim-offer="${escapeHtml(offer.id)}" ${disabled?'disabled':''}>${buttonText}</button></div>${rejected?`<p class="offer-claim-error">Claim rejected: ${escapeHtml(existing.rejection_reason||'Please upload a new screenshot.')}</p>`:''}</article>`;
@@ -2815,7 +2859,7 @@
       if(!state.client)return;
       const now=new Date().toISOString();
       const {data,error}=await state.client.from('offers')
-        .select('id,title,description,collection,product_id,starts_at,ends_at,created_at,claim_enabled,paid_quantity,free_quantity,benefit_count_enabled,benefit_count,benefit_count_minimum')
+        .select('id,title,description,collection,product_id,starts_at,ends_at,created_at,claim_enabled,paid_quantity,free_quantity,customer_claim_limit,benefit_count_enabled,benefit_count,benefit_count_minimum')
         .eq('enabled',true).lte('starts_at',now).gt('ends_at',now)
         .order('created_at',{ascending:false});
       if(error)throw error;
@@ -2833,8 +2877,8 @@
       const offer=state.offers.find(item=>String(item.id)===String(offerId));
       if(!offer||!offerIsActive(offer))return closeOffersModal();
       if(offer.claim_enabled){
-        const rejectedClaim=state.myOfferClaims.find(claim=>claim.offer_id===offerId&&claim.status==='rejected');
-        openOfferClaim(offerId,rejectedClaim||null);
+        closeOffersModal();
+        openOfferCheckout(offer);
         return;
       }
       closeOffersModal();
@@ -2848,6 +2892,34 @@
           setTimeout(()=>target.classList.remove('offer-product-highlight'),2600);
         },80);
       }
+    }
+
+    function openOfferCheckout(offer){
+      state.activeOfferCheckoutId=String(offer.id);
+      if(offer.product_id){
+        const product=state.products.find(item=>String(item.id)===String(offer.product_id));
+        if(!product||product.in_stock===false){
+          showNotice('The product in this offer is currently unavailable.');
+          return;
+        }
+        openSoftwareProduct(product.id);
+        return;
+      }
+      const products=state.products.filter(product=>product.category==='software'&&product.in_stock!==false&&availableSoftwarePlans(product).length);
+      if(!products.length){
+        showNotice('No available Software products match this offer right now.');
+        return;
+      }
+      $('modal-title').textContent=offer.title;
+      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(offer.title)}</strong><p class="checkout-note">Pay for ${Number(offer.paid_quantity)} · ${Number(offer.free_quantity)} free · ${Number(offer.paid_quantity)+Number(offer.free_quantity)} total.</p></div><div class="modal-field"><label for="offer-buy-product">Choose a Software product</label><select id="offer-buy-product" required>${products.map(product=>`<option value="${escapeHtml(product.id)}">${escapeHtml(product.name)}</option>`).join('')}</select></div><button class="modal-primary" id="offer-buy-continue" type="button">Continue to Buy</button>`;
+      openModal();
+      $('offer-buy-continue').addEventListener('click',()=>{
+        const productId=$('offer-buy-product').value;
+        const offerId=String(offer.id);
+        closeModal();
+        state.activeOfferCheckoutId=offerId;
+        openSoftwareProduct(productId);
+      });
     }
 
     async function refreshMyOfferClaims(){
@@ -2983,7 +3055,7 @@
     }
 
     function isCustomerVisibleOrder(order){
-      return order.payment_status==='paid'||['unpaid','pending_payment','new','pending_verification','completed','delivered','rejected','expired'].includes(order.status);
+      return order.payment_status==='paid'||['unpaid','pending_payment','new','pending_verification','utr_submitted','completed','delivered','rejected','expired'].includes(order.status);
     }
 
     function renderOrdersTrigger(){
@@ -3015,12 +3087,13 @@
         const delivered=['delivered','completed'].includes(order.status);
         const link=delivered?safeHttpUrl(order.download_link||order.delivery_link):'';
         const licenseKey=String(order.license_key??'');
-        const orderInfo=order.is_demo_key?`<p>Demo key · ${escapeHtml(order.software_name)}</p>`:`<p>Order #${escapeHtml(order.id)} · ${escapeHtml(order.product_type||'Product')} · Quantity ${Number(order.quantity)||1}${order.software_plan_label?` · ${escapeHtml(order.software_plan_label)}`:''}${order.is_offer_free?' · Free offer item':''}</p>`;
+        const offerDetails=state.myOfferOrders.find(item=>String(item.order_id)===String(order.id));
+        const orderInfo=order.is_demo_key?`<p>Demo key · ${escapeHtml(order.software_name)}</p>`:`<p>Order #${escapeHtml(order.id)} · ${escapeHtml(order.product_type||'Product')} · Quantity ${Number(order.quantity)||1}${order.software_plan_label?` · ${escapeHtml(order.software_plan_label)}`:''}${offerDetails?` · ${escapeHtml(offerDetails.offer_title||'Offer')} · ${Number(offerDetails.offer_free_quantity)||0} free item(s)`:''}${order.is_offer_free?' · Free offer item':''}</p>`;
         const vpsOrder=order.product_type==='vps'||order.product_type==='windows-vps';
         const delivery=delivered
           ? `${orderInfo}${vpsOrder
             ? `<p>IP:Port: <strong>${escapeHtml(order.vps_ip||'')}:${escapeHtml(order.vps_port||'')}</strong></p><p>Username: <strong>${escapeHtml(order.vps_username||'')}</strong></p><p>Password: <strong data-vps-password="${escapeHtml(order.id)}">••••••••</strong> <button class="orders-copy" type="button" data-show-vps-password="${escapeHtml(order.id)}">Show</button> <button class="orders-copy" type="button" data-copy-vps-password="${escapeHtml(order.id)}">Copy</button></p><p>Storage: ${escapeHtml(order.vps_storage_gb||'')} GB</p>`
-            : `<p>Software: <strong>${escapeHtml(order.software_name||order.product_name)}</strong></p>${order.is_demo_key&&Number(order.demo_validity_days)>0?`<p>${Number(order.demo_validity_days)} days demo</p>`:''}${licenseKey?`<div class="orders-key-box"><span class="key-label">KEY NAME - </span><span class="key-value">${escapeHtml(licenseKey)}</span><button class="orders-copy orders-copy-key" type="button" data-copy-license="${escapeHtml(order.id)}" data-copy-kind="key" data-copy-value="${escapeHtml(licenseKey)}" aria-live="polite">Copy Key</button></div>`:''}${link?`<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(order.software_name||order.product_name)}</a>`:''}`}
+            : `<p>Software: <strong>${escapeHtml(order.software_name||order.product_name)}</strong></p>${order.is_demo_key&&Number(order.demo_validity_days)>0?`<p>${Number(order.demo_validity_days)} days demo</p>`:''}${licenseKey?`<div class="orders-key-box"><span class="key-label">${offerDetails?'LICENSE KEYS - ':'KEY NAME - '}</span><span class="key-value">${escapeHtml(licenseKey)}</span><button class="orders-copy orders-copy-key" type="button" data-copy-license="${escapeHtml(order.id)}" data-copy-kind="key" data-copy-value="${escapeHtml(licenseKey)}" aria-live="polite">Copy ${offerDetails?'Keys':'Key'}</button></div>`:''}${link?`<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(order.software_name||order.product_name)}</a>`:''}`}
             ${order.is_rental&&order.rental_active===false?'<p>Rental period ended.</p>':''}
             ${order.is_rental&&order.rental_expires_at?`<p>Rental access until ${escapeHtml(formatDate(order.rental_expires_at))}</p>`:''}${order.delivery_note?`<p>${escapeHtml(order.delivery_note)}</p>`:''}${order.delivery_text?`<pre>${escapeHtml(order.delivery_text)}</pre>`:''}`
           : `${orderInfo}<p class="${order.payment_method&&order.payment_method!=='wallet'&&order.payment_status==='pending'?'orders-utr-submitted':''}">${order.payment_method&&order.payment_method!=='wallet'&&order.payment_status==='pending'?'Your UTR has been submitted. Please wait for verification.':order.late_payment?'Payment verification is pending.':order.status==='pending_payment'||order.status==='unpaid'?'Payment is due. Resume checkout to submit your UTR.':order.status==='expired'?'Payment time expired. If you already paid, submit your UTR for manual review.':order.status==='pending_verification'||order.status==='new'?'Payment verification pending.':status.label==='Processing'?'Your order is being processed.':`This order was ${status.label.toLowerCase()}.`}</p>${order.payment_method&&order.payment_method!=='wallet'?`<p>Payment: ${escapeHtml(order.payment_method==='upi_qr'?'Scan QR (UPI)':'UPI app')} · ₹${money(order.price)}</p>`:''}${order.coupon_code?`<p>Coupon ${escapeHtml(order.coupon_code)} · ${escapeHtml(order.discount_percent)}% off · Original ₹${money(order.original_price)} · Final ₹${money(order.price)}</p>`:''}${order.reject_reason?`<p>Reason: ${escapeHtml(order.reject_reason)}</p>`:''}${!order.is_guest_order&&['pending_payment','unpaid','expired'].includes(order.status)&&order.payment_method!=='wallet'&&!order.offer_claim_id?`<button class="orders-pay-button" type="button" data-resume-payment="${escapeHtml(order.id)}">Submit UTR / Resume Payment</button>`:''}${order.status==='rejected'&&order.payment_method!=='wallet'&&!order.is_guest_order?`<form class="orders-resubmit-form" data-resubmit-form="${escapeHtml(order.id)}"><label for="resubmit-utr-${escapeHtml(order.id)}">Submit a new 12-digit UTR</label><input id="resubmit-utr-${escapeHtml(order.id)}" data-resubmit-utr="${escapeHtml(order.id)}" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" required><button class="orders-pay-button" type="submit">Resubmit UTR</button><p class="modal-error" data-resubmit-error="${escapeHtml(order.id)}" aria-live="polite"></p></form>`:''}${order.status==='pending_payment'&&order.offer_claim_id?`<button class="orders-pay-button" type="button" data-pay-offer-order="${escapeHtml(order.id)}">Pay now</button><button class="orders-delete-button" type="button" data-delete-offer-order="${escapeHtml(order.id)}">Delete unpaid order</button>`:''}`;
@@ -3120,21 +3193,23 @@
     }
 
     async function refreshMyOrders(){
-      if(!state.client||!state.user){state.myOrders=[];state.myOrdersError=null;state.myOrdersLoading=false;renderHeader();if(state.ordersPanelOpen)renderOrdersPanel();return}
+      if(!state.client||!state.user){state.myOrders=[];state.myOfferOrders=[];state.myOrdersError=null;state.myOrdersLoading=false;renderHeader();if(state.ordersPanelOpen)renderOrdersPanel();return}
       state.myOrdersLoading=state.myOrders===null;
       state.myOrdersError=null;
       if(state.ordersPanelOpen)renderOrdersPanel();
       try{
-        const [ordersResult,demoKeysResult,rentalOrdersResult,claimsResult]=await Promise.all([
+        const [ordersResult,demoKeysResult,rentalOrdersResult,claimsResult,offerOrdersResult]=await Promise.all([
           state.client.rpc('my_orders'),
           state.client.rpc('my_demo_keys'),
           state.client.rpc('my_rental_orders'),
-          state.client.rpc('my_offer_claims')
+          state.client.rpc('my_offer_claims'),
+          state.client.rpc('my_offer_order_details')
         ]);
         if(ordersResult.error)throw ordersResult.error;
         if(demoKeysResult.error)throw demoKeysResult.error;
         if(rentalOrdersResult.error)throw rentalOrdersResult.error;
         if(claimsResult.error)throw claimsResult.error;
+        if(offerOrdersResult.error)throw offerOrdersResult.error;
         const demoOrders=(Array.isArray(demoKeysResult.data)?demoKeysResult.data:[]).map(item=>({
           id:`demo-${item.claim_id}`,product_name:item.software_name,software_name:item.software_name,
           product_type:'demo',status:'completed',payment_status:'paid',payment_method:'free',price:0,
@@ -3152,6 +3227,7 @@
         const paidOrders=(Array.isArray(ordersResult.data)?ordersResult.data:[]).filter(order=>order.product_type!=='rental');
         state.myOrders=[...paidOrders,...demoOrders,...rentalOrders];
         state.myOfferClaims=Array.isArray(claimsResult.data)?claimsResult.data:[];
+        state.myOfferOrders=Array.isArray(offerOrdersResult.data)?offerOrdersResult.data:[];
         state.myOrdersError=null;
       }catch(error){
         console.error('Could not load customer orders:',error);
@@ -3740,6 +3816,7 @@
       if(state.user){
         state.myOrders=null;
         state.myOrdersError=null;
+        state.myOfferOrders=[];
         state.spinCoupon=null;
         await refreshWalletBalance();
         state.walletChannel=state.client.channel(`wallet-balance-${state.user.id}`)
@@ -3762,6 +3839,7 @@
       }else{
         state.balance=0;
         state.myOrders=[];
+        state.myOfferOrders=[];
         state.myCoupons=[];
         state.spinCoupon=null;
         state.myOfferClaims=[];
@@ -3813,13 +3891,25 @@
           openWallet('wallet');
         },0);
       }
+      const pendingOfferCheckout=sessionStorage.getItem('pending_offer_checkout');
+      if(state.user&&pendingOfferCheckout&&state.authMode!=='reset'){
+        sessionStorage.removeItem('pending_offer_checkout');
+        setTimeout(async()=>{
+          if(!$('auth-page').classList.contains('hidden'))closeAuthPage(false);
+          try{
+            const pending=JSON.parse(pendingOfferCheckout);
+            if(!state.offers.some(offer=>String(offer.id)===String(pending.offerId)))await refreshOffers(false);
+            await buyProduct(pending.productId,pending.planCode,pending.offerId);
+          }catch(error){showNotice(`Could not resume the offer checkout: ${error.message}`)}
+        },0);
+      }
       const pendingOffer=sessionStorage.getItem('pending_offer_claim');
       if(state.user&&pendingOffer&&state.authMode!=='reset'){
         sessionStorage.removeItem('pending_offer_claim');
         setTimeout(async()=>{
           if(!$('auth-page').classList.contains('hidden'))closeAuthPage(false);
           try{
-            if(!state.offers.some(offer=>offer.id===pendingOffer))await refreshOffers(false);
+            if(!state.offers.some(offer=>String(offer.id)===String(pendingOffer)))await refreshOffers(false);
             openOfferClaim(pendingOffer);
           }catch(error){showNotice(`Could not reopen the offer claim: ${error.message}`)}
         },0);
@@ -3834,8 +3924,10 @@
       state.balance=Number(data?.balance||0);
       renderHeader();
       if(state.checkout&&previousBalance!==state.balance){
-        const methods=availableCheckoutMethods();
-        state.checkout.method=checkoutDefaultMethod(methods,state.balance,Number(state.checkout.product.price),isCheckoutMobile());
+        if(!state.checkout.offer){
+          const methods=availableCheckoutMethods();
+          state.checkout.method=checkoutDefaultMethod(methods,state.balance,Number(state.checkout.product.price),isCheckoutMobile());
+        }
         state.checkout.paymentError='';
         renderCheckout();
       }
@@ -3849,6 +3941,7 @@
       $('wallet-modal').classList.remove('open');$('wallet-dialog').classList.remove('checkout-dialog');
       document.body.style.overflow=state.ordersPanelOpen?'hidden':'';
       state.checkout=null;
+      state.activeOfferCheckoutId=null;
       try{
         sessionStorage.removeItem('active_upi_product');sessionStorage.removeItem('active_upi_software_plan');
         sessionStorage.removeItem('active_upi_used_key');
@@ -3907,6 +4000,7 @@
           clearTimeout(copyFeedbackTimers.get(button));
           copyFeedbackTimers.set(button,setTimeout(()=>{if(button.isConnected)button.textContent=defaultButtonText},isKeyCopy?1500:2000));
         }else showNotice(`${label} copied.`);
+        return true;
       }catch(error){
         console.error(`Could not copy ${label.toLowerCase()}:`,error);
         if(button){
@@ -3916,6 +4010,7 @@
           copyFeedbackTimers.set(button,setTimeout(()=>{if(button.isConnected)button.textContent=defaultButtonText},isKeyCopy?1500:2000));
         }
         showNotice(`Could not copy ${label.toLowerCase()}.`);
+        return false;
       }
     }
 
@@ -4165,7 +4260,7 @@
     }
     function checkoutPaymentSignature(checkout){
       const pricing=checkoutPrice();
-      return [checkout.usedKey?.id||checkout.product.id,checkout.softwarePlanCode||'',checkout.method,pricing.finalPrice,pricing.originalPrice,checkout.coupon?.code||''].join('|');
+      return [checkout.usedKey?.id||checkout.product.id,checkout.offer?.id||'',checkout.softwarePlanCode||'',checkout.method,pricing.finalPrice,pricing.originalPrice,checkout.coupon?.code||''].join('|');
     }
 
     function formatPaymentCountdown(milliseconds){
@@ -4213,9 +4308,10 @@
         if(checkout.paymentCreationFailed)return `<div class="payment-countdown expired" role="alert"><strong>${escapeHtml(checkout.paymentError||'Payment details could not be prepared.')}</strong><button class="modal-primary" type="button" data-retry-payment-creation>Retry</button></div>`;
         return '<div class="payment-countdown" role="status"><span>Preparing secure payment order…</span></div>';
       }
-      if(['pending_verification','completed','delivered'].includes(order.status)){
-        const label=order.status==='pending_verification'?'Payment Pending Verification':'Payment confirmed';
-        return `<div class="payment-countdown expired" role="status"><strong>${label}</strong><span>Order #${escapeHtml(order.order_id)} · ${order.status==='pending_verification'?'We will confirm shortly.':'No further payment is needed.'}</span></div>`;
+      if(['pending_verification','utr_submitted','completed','delivered'].includes(order.status)){
+        const pendingVerification=['pending_verification','utr_submitted'].includes(order.status);
+        const label=pendingVerification?'Payment Pending Verification':'Payment confirmed';
+        return `<div class="payment-countdown expired" role="status"><strong>${label}</strong><span>Order #${escapeHtml(order.order_id)} · ${pendingVerification?'We will confirm shortly.':'No further payment is needed.'}</span></div>`;
       }
       const expiry=parseServerTimestamp(order.payment_expires_at);
       const serverNow=checkoutServerNow(checkout);
@@ -4242,7 +4338,7 @@
         const submit=$('checkout-submit-payment');
         const countdown=$('checkout-rate-limit-countdown');
         const alreadySubmitted=checkout.utrSubmitState==='success'||checkout.utrSubmitState==='already'
-          ||checkout.paymentOrder?.status==='pending_verification';
+          ||['pending_verification','utr_submitted'].includes(checkout.paymentOrder?.status);
         if(remaining<=0){
           checkout.rateLimitUntilMs=0;
           if(countdown)countdown.textContent='';
@@ -4304,7 +4400,7 @@
     async function ensureCheckoutPaymentOrder(){
       const checkout=state.checkout;
       if(!checkout||checkout.method==='wallet'||checkout.preparingPayment||checkout.paymentCreationFailed
-        ||checkout.paymentOrder?.status==='pending_verification')return;
+        ||['pending_verification','utr_submitted'].includes(checkout.paymentOrder?.status))return;
       const existingExpiry=checkout.paymentOrder?parseServerTimestamp(checkout.paymentOrder.payment_expires_at):NaN;
       if(checkout.paymentOrder&&(checkout.paymentOrder.status==='expired'||!Number.isFinite(existingExpiry)||existingExpiry<=checkoutServerNow(checkout)))return;
       const pricing=checkoutPrice();
@@ -4316,7 +4412,14 @@
       try{
         const orderId=checkout.paymentOrder?.status==='pending_payment'&&existingExpiry>checkoutServerNow(checkout)
           ?checkout.paymentOrder.order_id:null;
-        const paymentRequest=checkout.usedKey
+          const paymentRequest=checkout.offer
+            ?state.client.rpc('prepare_offer_product_payment',{
+              p_order_id:orderId,
+              p_offer_id:checkout.offer.id,
+              p_product_id:Number(checkout.product.id),
+              p_plan_code:checkout.softwarePlanCode
+            })
+            :checkout.usedKey
           ?state.client.rpc('prepare_used_key_payment',{
             p_used_key_id:Number(checkout.usedKey.id),p_order_id:orderId
           })
@@ -4358,12 +4461,18 @@
         if(state.checkout!==checkout)return;
         anchorCheckoutServerTime(checkout,data.server_now,data.order_id);
         const paymentExpiry=parseServerTimestamp(data.payment_expires_at);
-        if(!Number.isFinite(paymentExpiry)||paymentExpiry<=checkoutServerNow(checkout)
-            ||!['unpaid','pending_payment'].includes(data.status)){
+        if(!Number.isFinite(paymentExpiry)||(!['pending_verification','utr_submitted'].includes(data.status)&&paymentExpiry<=checkoutServerNow(checkout))
+            ||!(checkout.offer?['unpaid','pending_payment','pending_verification','utr_submitted'].includes(data.status):['unpaid','pending_payment'].includes(data.status))){
           throw new Error('The server returned a payment order that is not active. Please retry.');
         }
         if(!checkout.softwarePlanCode)checkout.product.price=Number(data.price);
-        else checkout.product.price=Number(data.original_price??checkout.product.price);
+        else checkout.product.price=Number(checkout.offer?data.unit_price??checkout.product.price:data.original_price??checkout.product.price);
+        if(checkout.offer){
+          checkout.offer.title=data.offer_title||checkout.offer.title;
+          checkout.offer.paidQuantity=Number(data.offer_paid_quantity)||checkout.offer.paidQuantity;
+          checkout.offer.freeQuantity=Number(data.offer_free_quantity)||checkout.offer.freeQuantity;
+          if(['pending_verification','utr_submitted'].includes(data.status))checkout.utrSubmitState='success';
+        }
         checkout.paymentOrder={
           order_id:data.order_id,
           product_id:data.product_id,
@@ -4384,6 +4493,7 @@
           ?`pending-used-key:${state.user.id}:${checkout.usedKey.id}`
           :checkoutStorageKey(state.user.id,checkout),String(data.order_id))}
         catch(error){console.warn('Could not persist the pending payment order in local storage:',error)}
+        if(checkout.offer)void refreshMyOrders();
       }catch(error){
         console.error('Could not prepare checkout payment details:',error);
         if(state.checkout===checkout){
@@ -4400,17 +4510,26 @@
       const checkout=state.checkout;
       if(!checkout)return;
       startCheckoutPaymentTimer();
+      if(checkout.offer&&(checkout.utrSubmitState==='success'||checkout.utrSubmitState==='already'
+          ||['pending_verification','utr_submitted'].includes(checkout.paymentOrder?.status))){
+        $('modal-title').textContent='Order created';
+        $('wallet-dialog').classList.add('checkout-dialog');
+        $('modal-body').innerHTML=`<div class="wallet-balance"><strong style="font-size:18px">Payment verification pending</strong><small style="margin-top:9px">${escapeHtml(checkout.offer.title)} · ${escapeHtml(checkout.product.name)}</small><small>${checkout.offer.paidQuantity} paid · ${checkout.offer.freeQuantity} free · ${checkout.offer.paidQuantity+checkout.offer.freeQuantity} total</small><small>Order #${escapeHtml(checkout.paymentOrder?.order_id||'')}</small><p class="checkout-note">Your UTR has been submitted. The order will be delivered only after admin verification.</p></div><button class="modal-primary" id="offer-order-view-orders" type="button">View My Orders</button><button class="back" id="offer-order-done" type="button">Done</button>`;
+        $('offer-order-view-orders').addEventListener('click',()=>{closeModal();openOrdersPanel()});
+        $('offer-order-done').addEventListener('click',closeModal);
+        return;
+      }
       const product=checkout.product;
       const upiId=String(state.settings.upi_id||'').trim();
       const payee=String(state.settings.upi_payee_name||'').trim();
-      const methods=checkout.usedKey?['upi_qr']:availableCheckoutMethods();
+      const methods=checkout.usedKey||checkout.offer?['upi_qr']:availableCheckoutMethods();
       if(!methods.includes(checkout.method))checkout.method=checkoutDefaultMethod(methods,state.balance,Number(product.price),isCheckoutMobile());
       const method=checkout.method;
       const pricing=checkoutPrice();
       const paymentOrder=checkout.paymentOrder;
       const qrAmount=paymentOrder?Number(paymentOrder.price):pricing.finalPrice;
       const validUpiConfiguration=isValidCheckoutUpiId(upiId)&&Boolean(payee);
-      const qrNote=`${getDisplaySiteTitle()} ${product.name}${checkout.softwarePlanLabel?` ${checkout.softwarePlanLabel}`:''}`
+      const qrNote=`${getDisplaySiteTitle()} ${checkout.offer?checkout.offer.title:product.name}${checkout.softwarePlanLabel?` ${checkout.softwarePlanLabel}`:''}`
         .replace(/[^A-Za-z0-9 ]/g,' ').replace(/\s+/g,' ').trim().slice(0,40);
       const qrParams=new URLSearchParams({pa:upiId,pn:payee,am:qrAmount.toFixed(2),cu:'INR',tn:qrNote});
       const qrMarkup='<div class="qr-box" id="product-payment-qr" aria-label="UPI payment QR code"></div>';
@@ -4418,19 +4537,19 @@
       const desiredPaymentSignature=checkoutPaymentSignature(checkout);
       const paymentOrderReady=Boolean(paymentOrder&&!checkout.preparingPayment&&(method==='wallet'||checkout.paymentOrderSignature===desiredPaymentSignature));
       const paymentOrderExpiry=paymentOrder?parseServerTimestamp(paymentOrder.payment_expires_at):NaN;
-      const paymentVerificationPending=['pending_verification','completed','delivered'].includes(paymentOrder?.status);
+      const paymentVerificationPending=['pending_verification','utr_submitted','completed','delivered'].includes(paymentOrder?.status);
       const paymentOrderExpired=Boolean(paymentOrder&&(paymentOrder.status==='expired'||!Number.isFinite(paymentOrderExpiry)||paymentOrderExpiry<=checkoutServerNow(checkout)));
       const utrValid=/^\d{12}$/.test(String(checkout.utr||''));
-      const utrSubmitted=checkout.utrSubmitState==='success'||checkout.utrSubmitState==='already'||paymentOrder?.status==='pending_verification';
+      const utrSubmitted=checkout.utrSubmitState==='success'||checkout.utrSubmitState==='already'||['pending_verification','utr_submitted'].includes(paymentOrder?.status);
       const utrSubmitMessage=checkout.utrSubmitState==='success'
-        ?'<div class="checkout-utr-result success" role="status">Your UTR has been submitted. Please wait for verification.</div>'
+        ?`<div class="checkout-utr-result success" role="status">Order #${escapeHtml(paymentOrder?.order_id||'')} created. Payment verification is pending.${checkout.offer?` ${escapeHtml(checkout.offer.title)} · ${checkout.offer.freeQuantity} free item(s).`:''}</div>`
         :utrSubmitted?'<div class="checkout-utr-result already" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 4h.01"/></svg>Please wait, your UTR is already submitted.</div>':'';
       const utrRateLimited=Number(checkout.rateLimitUntilMs||0)>Date.now();
       const whatsappNumber=String(state.settings.whatsapp_number||'').replace(/\D/g,'');
       const whatsappMessage=encodeURIComponent(`Hello, I need help with payment for Order #${paymentOrder?.order_id||''}. Amount: ₹${money(qrAmount)}.`);
       const whatsappLink=whatsappNumber?`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`:'';
       const fallbackOptions=checkout.paymentError?`<div class="checkout-payment-fallback"><strong>Need help?</strong>${whatsappLink?`<a class="btn ghost" href="${whatsappLink}" target="_blank" rel="noopener">Contact on WhatsApp</a>`:''}<label class="checkout-utr-label" for="checkout-payment-screenshot">Upload payment screenshot</label><input id="checkout-payment-screenshot" type="file" accept="image/png,image/jpeg,image/webp"><button class="back" id="checkout-upload-screenshot" type="button">Upload screenshot</button></div>`:'';
-      const showSubmittedUtrForm=paymentOrder?.status==='pending_verification'||checkout.utrSubmitState==='success'||checkout.utrSubmitState==='already';
+      const showSubmittedUtrForm=['pending_verification','utr_submitted'].includes(paymentOrder?.status)||checkout.utrSubmitState==='success'||checkout.utrSubmitState==='already';
       const utrForm=paymentOrderReady&&(!paymentVerificationPending||showSubmittedUtrForm)?`<div class="checkout-utr-step"><strong>${utrSubmitted?'UTR status':paymentOrderExpired?'Already paid? Submit UTR':'After payment'}</strong><p class="checkout-note">${utrSubmitted?'Your payment details are being reviewed.':paymentOrderExpired?'The QR timer only controls payment details. Support can verify late payments.':'Enter the 12-digit UTR / transaction ID to submit your order for verification.'}</p>${utrSubmitMessage}<label class="checkout-utr-label" for="checkout-utr">UTR / Transaction ID</label><input class="checkout-utr" id="checkout-utr" type="text" inputmode="numeric" autocomplete="off" maxlength="12" pattern="[0-9]{12}" placeholder="Enter 12-digit UTR" value="${escapeHtml(checkout.utr||'')}" ${utrSubmitted?'disabled':''}><div class="modal-error" id="checkout-payment-error" aria-live="polite">${escapeHtml(checkout.paymentError||'')}</div><div class="checkout-rate-limit-countdown" id="checkout-rate-limit-countdown" role="timer"></div><button class="modal-primary checkout-submit" id="checkout-submit-payment" type="button" ${(!utrValid||utrRateLimited||checkout.submittingPayment||utrSubmitted)?'disabled':''}>${checkout.submittingPayment?'Submitting...':utrRateLimited?`Try again in ${formatPaymentCountdown(checkout.rateLimitUntilMs-Date.now())}`:'Submit UTR for review'}</button>${fallbackOptions}</div>`:'';
       const latePaymentForms=(checkout.latePaymentOrders||[]).map(order=>{
         const orderRateLimited=Number(checkout.rateLimitUntilByOrder?.[order.order_id]||0)>Date.now();
@@ -4442,7 +4561,7 @@
         const canPay=state.balance>=pricing.originalPrice;
         paymentPanel=`<section class="checkout-panel"><h3>Pay from Wallet</h3><p class="checkout-note">Coupons apply to QR / UPI payments only.</p><div class="wallet-balance"><small>Available wallet balance</small><strong>₹${money(state.balance)}</strong></div>${canPay?`<button class="modal-primary checkout-submit" id="checkout-wallet-pay" type="button">Pay with Wallet · ₹${money(pricing.originalPrice)}</button>`:`<div class="modal-error">Insufficient balance. Add money to your wallet to continue.</div><button class="modal-primary checkout-submit" id="checkout-add-money" type="button">Add money to wallet</button>`}${checkout.paymentOrder?`<p class="checkout-note">UPI order #${escapeHtml(checkout.paymentOrder.order_id)} amount: ₹${money(checkout.paymentOrder.price)}. UTR submitted here will apply to this UPI order.</p>${utrForm}`:''}</section>`;
       }else if(method==='upi_qr'){
-        paymentPanel=`<section class="checkout-panel"><h3>Scan QR (UPI)</h3>${paymentVerificationPending?`<p class="checkout-note">${paymentOrder.status==='pending_verification'?'Payment Pending Verification':'Payment confirmed'} · Order #${escapeHtml(paymentOrder.order_id)}. ${paymentOrder.status==='pending_verification'?'We will confirm shortly.':'No further payment is needed.'}</p>`:checkout.paymentCreationFailed&&!paymentOrder?'':!paymentOrderReady?'<p class="checkout-note">Preparing payment details…</p>':paymentOrderExpired?'<p class="checkout-note">Time is up. Generate a new QR to pay.</p>':`${validUpiConfiguration||savedQrUrl?`<p class="checkout-note">Scan with a UPI app and pay exactly ₹${money(pricing.finalPrice)}.</p>`:'<p class="modal-error">UPI QR is unavailable. Please contact the store.</p>'}${qrMarkup}`}${utrForm}${latePaymentSection}</section>`;
+        paymentPanel=`<section class="checkout-panel"><h3>Scan QR (UPI)</h3>${paymentVerificationPending?`<p class="checkout-note">${['pending_verification','utr_submitted'].includes(paymentOrder.status)?'Payment Pending Verification':'Payment confirmed'} · Order #${escapeHtml(paymentOrder.order_id)}. ${['pending_verification','utr_submitted'].includes(paymentOrder.status)?'We will confirm shortly.':'No further payment is needed.'}</p>`:checkout.paymentCreationFailed&&!paymentOrder?'':!paymentOrderReady?'<p class="checkout-note">Preparing payment details…</p>':paymentOrderExpired?'<p class="checkout-note">Time is up. Generate a new QR to pay.</p>':`${validUpiConfiguration||savedQrUrl?`<p class="checkout-note">Scan with a UPI app and pay exactly ₹${money(pricing.finalPrice)}.</p>`:'<p class="modal-error">UPI QR is unavailable. Please contact the store.</p>'}${qrMarkup}`}${utrForm}${latePaymentSection}</section>`;
       }else if(method==='upi_app'){
         const appButtons=[
           ['Google Pay','gpay://upi/pay','<svg class="checkout-app-logo" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#4285f4"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">G</text></svg><span>Google Pay</span>'],
@@ -4453,7 +4572,7 @@
         const qrFallback=methods.includes('upi_qr')?'<button class="btn ghost" type="button" data-checkout-method="upi_qr">Scan QR instead</button>':'';
         const upiConfigurationMessage='<div class="modal-error" role="alert">UPI ID not configured, please use Scan QR</div>';
         const desktopAppMessage='<p class="checkout-note">App payments are available on mobile. Use Scan QR (UPI) on desktop.</p>';
-        const appContent=paymentVerificationPending?`<p class="checkout-note">${paymentOrder.status==='pending_verification'?'Payment Pending Verification':'Payment confirmed'} · Order #${escapeHtml(paymentOrder.order_id)}. ${paymentOrder.status==='pending_verification'?'We will confirm shortly.':'No further payment is needed.'}</p>`:checkout.paymentCreationFailed&&!paymentOrder?'':!paymentOrderReady?'<p class="checkout-note">Preparing payment details…</p>':paymentOrderExpired?'<p class="checkout-note">Time is up. Generate a new QR to pay.</p>':`<div class="checkout-upi-id"><strong>${escapeHtml(upiId||'UPI ID not configured')}</strong><button class="btn ghost" id="copy-checkout-upi" type="button" ${upiId?'':'disabled'}>Copy UPI ID</button></div>${!validUpiConfiguration?`${upiConfigurationMessage}${qrFallback}`:!isCheckoutMobile()?`${desktopAppMessage}${qrFallback}`:`<div class="checkout-app-links">${appButtons}</div><div class="checkout-upi-feedback" id="checkout-upi-feedback" aria-live="polite" hidden><div class="modal-error">App not found. Copy the UPI ID or scan the QR code instead</div><button class="btn ghost" id="copy-checkout-upi-fallback" type="button">Copy UPI ID</button>${qrFallback}</div><p class="checkout-note">Pay exactly ₹${money(pricing.finalPrice)} using your UPI app.</p>`}`;
+        const appContent=paymentVerificationPending?`<p class="checkout-note">${['pending_verification','utr_submitted'].includes(paymentOrder.status)?'Payment Pending Verification':'Payment confirmed'} · Order #${escapeHtml(paymentOrder.order_id)}. ${['pending_verification','utr_submitted'].includes(paymentOrder.status)?'We will confirm shortly.':'No further payment is needed.'}</p>`:checkout.paymentCreationFailed&&!paymentOrder?'':!paymentOrderReady?'<p class="checkout-note">Preparing payment details…</p>':paymentOrderExpired?'<p class="checkout-note">Time is up. Generate a new QR to pay.</p>':`<div class="checkout-upi-id"><strong>${escapeHtml(upiId||'UPI ID not configured')}</strong><button class="btn ghost" id="copy-checkout-upi" type="button" ${upiId?'':'disabled'}>Copy UPI ID</button></div>${!validUpiConfiguration?`${upiConfigurationMessage}${qrFallback}`:!isCheckoutMobile()?`${desktopAppMessage}${qrFallback}`: `<div class="checkout-app-links">${appButtons}</div><div class="checkout-upi-feedback" id="checkout-upi-feedback" aria-live="polite" hidden><div class="modal-error">App not found. Copy the UPI ID or scan the QR code instead</div><button class="btn ghost" id="copy-checkout-upi-fallback" type="button">Copy UPI ID</button>${qrFallback}</div><p class="checkout-note">Pay exactly ₹${money(pricing.finalPrice)} using your UPI app.</p>`}`;
         paymentPanel=`<section class="checkout-panel"><h3>Pay with UPI ID / UPI App</h3>${appContent}${utrForm}${latePaymentSection}</section>`;
       }else{
         paymentPanel='<section class="checkout-panel"><p class="modal-error">No payment methods are currently available. Please contact the store.</p></section>';
@@ -4463,8 +4582,8 @@
       const methodLabels={wallet:'Pay from Wallet',upi_qr:'Scan QR (UPI)',upi_app:'UPI ID / App'};
       const tabs=methods.length?`<div class="checkout-tabs" role="tablist" aria-label="Payment method">${methods.map(item=>`<button type="button" class="checkout-tab ${method===item?'active':''}" data-checkout-method="${item}" role="tab" aria-selected="${method===item}">${methodLabels[item]}</button>`).join('')}</div>`:'';
       const timer=method!=='wallet'||paymentOrder?`<div class="checkout-timer-wrap">${paymentTimerMarkup(checkout)}</div>`:'';
-      const couponMarkup=checkout.usedKey?'':`<div class="checkout-coupon"><label for="checkout-coupon">Have a coupon code?</label><input id="checkout-coupon" autocomplete="off" placeholder="Enter coupon code, e.g. RB20-ABC123" value="${escapeHtml(checkout.couponInput||'')}"><button class="modal-primary" id="apply-checkout-coupon" type="button">Apply</button><div class="checkout-coupon-message ${checkout.couponMessageType||''}" id="checkout-coupon-message">${escapeHtml(checkout.couponMessage||'')}</div></div>`;
-      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(product.name)}</strong>${checkout.softwarePlanLabel?`<p class="checkout-note">Plan: ${escapeHtml(checkout.softwarePlanLabel)}</p>`:''}<div class="checkout-amounts"><span>${pricing.discountAmount?`Original ₹${money(pricing.originalPrice)} · Discount −₹${money(pricing.discountAmount)}`:'Amount due'}</span><strong>₹${money(paymentOrder?paymentOrder.price:pricing.finalPrice)}</strong></div></div>${couponMarkup}${tabs}${timer}${paymentPanel}`;
+      const couponMarkup=checkout.usedKey||checkout.offer?'':`<div class="checkout-coupon"><label for="checkout-coupon">Have a coupon code?</label><input id="checkout-coupon" autocomplete="off" placeholder="Enter coupon code, e.g. RB20-ABC123" value="${escapeHtml(checkout.couponInput||'')}"><button class="modal-primary" id="apply-checkout-coupon" type="button">Apply</button><div class="checkout-coupon-message ${checkout.couponMessageType||''}" id="checkout-coupon-message">${escapeHtml(checkout.couponMessage||'')}</div></div>`;
+      $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(checkout.offer?checkout.offer.title:product.name)}</strong>${checkout.offer?`<p class="checkout-note">${escapeHtml(product.name)} · ${checkout.offer.paidQuantity} paid · ${checkout.offer.freeQuantity} free · ${checkout.offer.paidQuantity+checkout.offer.freeQuantity} total</p>`:''}${checkout.softwarePlanLabel?`<p class="checkout-note">Plan: ${escapeHtml(checkout.softwarePlanLabel)}</p>`:''}<div class="checkout-amounts"><span>${checkout.offer?'Offer amount · server calculated':pricing.discountAmount?`Original ₹${money(pricing.originalPrice)} · Discount −₹${money(pricing.discountAmount)}`:'Amount due'}</span><strong>₹${money(paymentOrder?paymentOrder.price:pricing.finalPrice)}</strong></div></div>${couponMarkup}${tabs}${timer}${paymentPanel}`;
       $('modal-body').querySelectorAll('[data-checkout-method]').forEach(button=>button.addEventListener('click',()=>{
         if(state.checkout.method!==button.dataset.checkoutMethod&&state.checkout.coupon){
           state.checkout.coupon=null;
@@ -4548,7 +4667,7 @@
         event.currentTarget.value=checkout.utr;
         const submit=$('checkout-submit-payment');
         if(submit)submit.disabled=checkout.utr.length!==12||Number(checkout.rateLimitUntilMs||0)>Date.now()
-          ||checkout.submittingPayment||Boolean(checkout.utrSubmitState)||checkout.paymentOrder?.status==='pending_verification';
+          ||checkout.submittingPayment||Boolean(checkout.utrSubmitState)||['pending_verification','utr_submitted'].includes(checkout.paymentOrder?.status);
       });
       $('checkout-wallet-pay')?.addEventListener('click',purchaseWithWallet);
       $('checkout-add-money')?.addEventListener('click',openWalletTopup);
@@ -4619,7 +4738,8 @@
 
     function checkoutStorageKey(userId,checkout){
       const base=`pending-payment:${userId}:${checkout.product.id}`;
-      return checkout.softwarePlanCode?`${base}:${checkout.softwarePlanCode}`:base;
+      const offer=checkout.offer?`:offer-${checkout.offer.id}`:'';
+      return checkout.softwarePlanCode?`${base}:${checkout.softwarePlanCode}${offer}`:`${base}${offer}`;
     }
     function latePaymentStorageKey(userId,checkout){
       return `late-payment-orders:${userId}:${checkout.usedKey?`used-key-${checkout.usedKey.id}`:checkout.product.id}:${checkout.softwarePlanCode||''}`;
@@ -4688,7 +4808,7 @@
       if(state.checkout!==checkout||checkout.preparingPayment||checkout.expiringPayment)return;
       checkout.expiringPayment=true;
       checkout.preparingPayment=true;
-      if(expiredOrder?.order_id&&!['pending_verification','completed','delivered'].includes(expiredOrder.status)){
+      if(expiredOrder?.order_id&&!['pending_verification','utr_submitted','completed','delivered'].includes(expiredOrder.status)){
         checkout.latePaymentOrders=checkout.latePaymentOrders||[];
         if(!checkout.latePaymentOrders.some(order=>String(order.order_id)===String(expiredOrder.order_id))){
           checkout.latePaymentOrders.push({...expiredOrder,utr:checkout.utr||'',lateStoredAt:Date.now()});
@@ -4701,11 +4821,11 @@
       }
       checkout.paymentError='';
       renderCheckout();
-      if(expiredOrder?.order_id&&!['pending_verification','completed','delivered'].includes(expiredOrder.status)){
+      if(expiredOrder?.order_id&&!['pending_verification','utr_submitted','completed','delivered'].includes(expiredOrder.status)){
         try{
           const {data,error}=await checkoutRpcWithTimeout(state.client.rpc('expire_my_payment_order',{p_order_id:expiredOrder.order_id}),'Expiring the old payment');
           if(error||!data?.ok)throw error||new Error(data?.message||'Could not expire the previous payment order.');
-          if(['pending_verification','completed','delivered'].includes(data.status)){
+          if(['pending_verification','utr_submitted','completed','delivered'].includes(data.status)){
             checkout.latePaymentOrders=checkout.latePaymentOrders.filter(order=>String(order.order_id)!==String(expiredOrder.order_id));
             persistLatePaymentOrders(checkout);
             checkout.paymentOrder={...expiredOrder,status:data.status};
@@ -4742,13 +4862,30 @@
       renderCheckout();
       void ensureCheckoutPaymentOrder();
     }
-    async function buyProduct(productId,softwarePlanCode=null){
+    async function buyProduct(productId,softwarePlanCode=null,offerId=null){
       if(state.authReadyPromise)await state.authReadyPromise;
       console.log('[buy-debug] session state', {initialized:state.authInitialized,authenticated:Boolean(state.user)});
-      const product=state.products.find(item=>String(item.id)===String(productId));
+      let offer=null;
+      if(offerId){
+        offer=state.offers.find(item=>String(item.id)===String(offerId));
+        if(!offer){await refreshOffers(false);offer=state.offers.find(item=>String(item.id)===String(offerId))}
+        if(!offer||!offerIsActive(offer)||!offer.claim_enabled){
+          showNotice('This offer is no longer available.');
+          return;
+        }
+      }
+      let product=state.products.find(item=>String(item.id)===String(productId));
+      if(!product&&offer){
+        await refreshStore();
+        product=state.products.find(item=>String(item.id)===String(productId));
+      }
       if(!product||!product.in_stock){
         console.error('Cannot open checkout: product is missing or out of stock.',{productId});
         showNotice('This product is no longer available.');
+        return;
+      }
+      if(offer&&(product.category!=='software'||(offer.product_id&&String(offer.product_id)!==String(product.id)))){
+        showNotice('This product does not match the selected offer.');
         return;
       }
       const isSoftware=normalizeCategory(product.category)==='software';
@@ -4775,7 +4912,18 @@
         software_plan_price:selectedPlan.price,
         software_plan_mrp:selectedPlan.mrp||null
       }:product;
+      if(offer&&(!selectedPlan||!['2_pnr_30_days','4_pnr_30_days','6_pnr_30_days'].includes(selectedPlan.code))){
+        showNotice('Choose an available Software plan for this offer.');
+        return;
+      }
       if(!state.user){
+        if(offer){
+          sessionStorage.setItem('pending_offer_checkout',JSON.stringify({
+            offerId:String(offer.id),productId:String(product.id),planCode:selectedPlan.code
+          }));
+          openAuthPage('signin','offer');
+          return;
+        }
         if(state.guestMode){
           openGuestCheckout('product',checkoutProduct);
           return;
@@ -4784,6 +4932,11 @@
         if(selectedPlan)sessionStorage.setItem('wallet_pending_software_plan',selectedPlan.code);
         else sessionStorage.removeItem('wallet_pending_software_plan');
         openAuthPage('signin','product');
+        return;
+      }
+      if(offer&&(state.settings.enable_upi_qr!==true||!String(state.settings.upi_id||'').trim()
+        ||!String(state.settings.upi_payee_name||'').trim()||!window.QRCode)){
+        showNotice('Offer checkout needs an enabled UPI QR payment method. Please contact the store.');
         return;
       }
       if(!availableCheckoutMethods().length){
@@ -4795,10 +4948,14 @@
       const methods=availableCheckoutMethods();
       state.checkout={
         product:checkoutProduct,
+        offer:offer?{
+          id:String(offer.id),title:offer.title,
+          paidQuantity:Number(offer.paid_quantity),freeQuantity:Number(offer.free_quantity)
+        }:null,
         softwarePlanCode:selectedPlan?.code||null,
         softwarePlanLabel:selectedPlan?.label||'',
         softwarePlanMrp:selectedPlan?.mrp||null,
-        method:checkoutDefaultMethod(methods,state.balance,Number(checkoutProduct.price),isCheckoutMobile()),
+        method:offer?'upi_qr':checkoutDefaultMethod(methods,state.balance,Number(checkoutProduct.price),isCheckoutMobile()),
         coupon:null,
         couponInput:'',
         couponMessage:'',
@@ -4807,7 +4964,7 @@
         paymentError:''
       };
       const checkout=state.checkout;
-      const latePaymentRestore=restoreLatePaymentOrders(checkout);
+      const latePaymentRestore=offer?Promise.resolve([]):restoreLatePaymentOrders(checkout);
       const storageKey=checkoutStorageKey(state.user.id,state.checkout);
       let pendingOrderId=null;
       try{
@@ -4815,7 +4972,7 @@
         if(!pendingOrderId&&selectedPlan){
           const legacyStorageKey=`pending-payment:${state.user.id}:${product.id}`;
           pendingOrderId=localStorage.getItem(legacyStorageKey);
-          if(pendingOrderId){
+          if(pendingOrderId&&!offer){
             localStorage.setItem(storageKey,pendingOrderId);
             localStorage.removeItem(legacyStorageKey);
           }
