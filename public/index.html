@@ -320,6 +320,7 @@
     .category{width:100%;text-align:left;color:inherit;cursor:pointer;background:linear-gradient(145deg,#0d1730,var(--card));border:1px solid var(--line);border-radius:20px;padding:0;min-height:202px;overflow:hidden;transition:transform .22s,border-color .22s,background .22s}
     .category:hover{transform:translateY(-4px);border-color:var(--gold);background:linear-gradient(145deg,#111d39,#0a1226)}
     .category-banner{position:relative;display:block;width:100%;height:140px;overflow:hidden;border-radius:20px 20px 0 0;background:linear-gradient(110deg,#0a1226 8%,#15213a 18%,#0a1226 33%);background-size:220% 100%;animation:banner-shimmer 1.5s linear infinite;isolation:isolate}
+    .category[data-collection="demo-keys"] .category-banner,.category[data-collection="rental-software"] .category-banner{height:auto;aspect-ratio:1200 / 630}
     @keyframes banner-shimmer{to{background-position-x:-220%}}
     .category-banner.loaded{animation:none;background:#0a1226}
     .category-banner-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1);transition:opacity .3s ease,transform .45s ease}
