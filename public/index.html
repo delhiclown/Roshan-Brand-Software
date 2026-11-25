@@ -259,7 +259,7 @@
     :root[data-theme="light"] .auth-google{border-color:#d3ddeb;background:linear-gradient(145deg,#fff,#edf2f9);color:#273852}
     :root[data-theme="light"] .auth-message.success{color:#405c83}
     @media(max-width:639.98px){.auth-page{align-items:center;padding:18px 14px calc(18px + env(safe-area-inset-bottom,0px))}.auth-card{padding:27px 21px;border-radius:20px}.auth-brand{margin-bottom:19px}.auth-subtitle{margin-bottom:20px}}
-    @media(max-width:639.98px){.offers-modal{align-items:flex-end;padding:10px}.offers-dialog{max-height:min(91dvh,820px);border-radius:22px 22px 12px 12px}.offers-head{padding:20px 17px 13px}.offers-content{padding:7px 14px 18px}.offer-card-bottom{align-items:stretch;flex-direction:column}.offer-claim{width:100%;min-height:46px}.offers-trigger{min-height:36px;padding:0 9px;font-size:10px}.offer-claim-modal{align-items:flex-end;padding:8px}.offer-claim-dialog{max-height:92dvh;border-radius:20px 20px 12px 12px;padding:17px}.offer-notification{left:10px;bottom:10px;width:min(330px,calc(100vw - 20px))}}
+    @media(max-width:639.98px){.offers-modal{align-items:center;padding:10px}.offers-dialog{max-height:min(91dvh,820px);border-radius:22px}.offers-head{padding:20px 17px 13px}.offers-content{padding:7px 14px 18px}.offer-card-bottom{align-items:stretch;flex-direction:column}.offer-claim{width:100%;min-height:46px}.offers-trigger{min-height:36px;padding:0 9px;font-size:10px}.offer-claim-modal{align-items:flex-end;padding:8px}.offer-claim-dialog{max-height:92dvh;border-radius:20px 20px 12px 12px;padding:17px}.offer-notification{left:10px;bottom:10px;width:min(330px,calc(100vw - 20px))}}
     main{padding:0 0 90px}
     .hero{padding:74px 0 70px;text-align:center}
     .hero-pill{display:inline-flex;align-items:center;padding:7px 16px;border:1px solid #3a2c0a;border-radius:999px;color:#ffdf8a;font-size:11px;letter-spacing:2px;background:rgba(245,196,81,.07)}
@@ -1306,7 +1306,7 @@
       {id:'residential', title:'Residential Proxies', icon:'◎', description:'Residential IP options for your data and browsing needs.'},
       {id:'vps', title:'Windows VPS', icon:'▣', description:'Reliable Windows servers for projects that need room to grow.'}
     ];
-    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, checkoutTimer:null, usedKeys:[], usedKeysError:null, usedKeysLoading:true, demoKeys:[], demoKeysError:null, demoKeysLoading:true, rentalProducts:[], rentalProductsError:null, rentalProductsLoading:true, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, pendingAuthRequest:null, authIntent:'', authMode:'signin', rememberSession:true, guestMode:false, activeGuestOrder:null, guestOrderPoll:null, offers:[], offerPopupOffers:[], offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
+    const state = {client:null, products:[], settings:{}, selected:null, user:null, balance:0, modalMode:'wallet', walletChannel:null, ordersChannel:null, myOrders:null, myOrdersError:null, myOrdersLoading:false, ordersPanelOpen:false, productsLoading:true, productsError:null, spinCoupon:null, spinPrizes:null, myCoupons:[], isSpinning:false, checkout:null, checkoutTimer:null, usedKeys:[], usedKeysError:null, usedKeysLoading:true, demoKeys:[], demoKeysError:null, demoKeysLoading:true, rentalProducts:[], rentalProductsError:null, rentalProductsLoading:true, vpsOsFilter:'all', vpsSearch:'', authReadyPromise:null, authInitialized:false, pendingAuthRequest:null, authIntent:'', authMode:'signin', rememberSession:true, guestMode:false, activeGuestOrder:null, guestOrderPoll:null, offers:[], offerPopupOffers:[], autoPopupOfferIds:new Set(), offersChannel:null,myOfferClaims:[],activeClaimOffer:null,offerNotificationInterval:30,offerNotificationTimer:null,offerNotificationHideTimer:null};
       let authOtpEmail='';
       let authOtpCooldownUntil=0;
       let authOtpCooldownTimer=null;
@@ -2734,25 +2734,8 @@
       return {label:'Rejected',className:'rejected'};
     }
 
-    const seenOffersStorageKey='roshan-brand-seen-offers';
-    function getSeenOfferIds(){
-      try{
-        const saved=JSON.parse(localStorage.getItem(seenOffersStorageKey)||'[]');
-        return new Set(Array.isArray(saved)?saved.filter(id=>typeof id==='string') : []);
-      }catch(error){
-        console.error('Could not read viewed offer IDs:',error);
-        showNotice('Offers could not be remembered on this device. Check your browser storage settings.');
-        return new Set();
-      }
-    }
     function markOffersSeen(offers){
-      const seen=getSeenOfferIds();
-      offers.forEach(offer=>seen.add(String(offer.id)));
-      try{localStorage.setItem(seenOffersStorageKey,JSON.stringify([...seen]))}
-      catch(error){
-        console.error('Could not save viewed offer IDs:',error);
-        showNotice('Offers were shown, but this browser could not save which ones you have seen.');
-      }
+      offers.forEach(offer=>state.autoPopupOfferIds.add(String(offer.id)));
     }
     function offerIsActive(offer,now=Date.now()){
       const startsAt=Date.parse(offer.starts_at);
@@ -2839,8 +2822,7 @@
       state.offers=(data||[]).filter(offer=>offerIsActive(offer));
       renderHeader();
       if(showUnseen&&$('auth-page').classList.contains('hidden')){
-        const seen=getSeenOfferIds();
-        const unseen=state.offers.filter(offer=>!seen.has(String(offer.id)));
+        const unseen=state.offers.filter(offer=>!state.autoPopupOfferIds.has(String(offer.id)));
         if(unseen.length)openOffersModal(unseen);
       }else if(!$('offers-modal').classList.contains('hidden')){
         state.offerPopupOffers=state.offers;
@@ -5345,7 +5327,7 @@
       const menu=$('profile-menu');
       if(menu&&!menu.classList.contains('hidden')&&!menu.contains(event.target)&&!event.target.closest('.avatar-wrap')){menu.classList.add('hidden');$('avatar-button')?.setAttribute('aria-expanded','false')}
       if(state.ordersPanelOpen&&!event.target.closest('#orders-panel')&&!event.target.closest('#orders-trigger')&&!menu?.contains(event.target))closeOrdersPanel();
-      if(!$('offers-modal').classList.contains('hidden')&&!event.target.closest('.offers-dialog')&&!event.target.closest('.offer-claim-dialog'))closeOffersModal();
+      if(!$('offers-modal').classList.contains('hidden')&&!event.target.closest('.offers-dialog')&&!event.target.closest('.offer-claim-dialog')&&!event.target.closest('#offers-trigger'))closeOffersModal();
       const drawer=$('mobile-drawer');
       if(drawer&&drawer.classList.contains('open')&&!event.target.closest('#mobile-drawer')&&!event.target.closest('#menu-toggle')){
         closeMobileMenu();
