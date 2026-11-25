@@ -43,6 +43,7 @@
     .field .manual-download-hint{display:block;color:var(--gold);font-size:11px;margin-top:6px}
     input,textarea,select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#080f20;color:var(--text);outline:none}
     #software-plan-fields input[type=number]{min-width:8em}
+    #windows-vps-options-fields .pnr-plan-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     input:focus,textarea:focus,select:focus{border-color:var(--gold)}textarea{min-height:76px;resize:vertical}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.pnr-plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:600;font-size:12px}
     .gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#191200}.ghost{background:#111b32;border:1px solid var(--line);color:var(--text)}.danger{background:#371922;color:#ffb5bb}.btn:hover{filter:brightness(1.1)}
@@ -120,6 +121,7 @@
     @media(max-width:520px){.wrap{width:calc(100% - 26px)}main{padding-top:22px}.panel{padding:16px}.row{grid-template-columns:1fr}.product-row,.finance-row{grid-template-columns:1fr}.actions,.finance-controls{justify-content:start}.finance-controls input,.finance-controls .note-input{width:100%}.bar{flex-wrap:wrap}.bar h1{font-size:18px;flex:1;text-align:right}}
     @media(max-width:1000px){#software-plan-fields .pnr-plan-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:520px){#software-plan-fields .pnr-plan-grid{grid-template-columns:1fr}}
+    @media(max-width:520px){#windows-vps-options-fields .pnr-plan-grid{grid-template-columns:1fr}}
     .offer-datetime-row{grid-template-columns:minmax(0,1fr)}
     .offer-datetime-row>.field{min-width:0}
     .offer-datetime-row input[type="datetime-local"]{width:100%;min-width:0;max-width:100%}
@@ -290,6 +292,16 @@
                   <div class="offer-claim-settings"><strong>2 PNR · 30 days</strong><div class="field" style="margin-top:10px"><label for="plan-2-price">Price (₹)</label><input id="plan-2-price" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-2-mrp">MRP (₹, optional)</label><input id="plan-2-mrp" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-2-download-url">Plan download link (optional)</label><input id="plan-2-download-url" type="url" maxlength="2048" placeholder="Uses product link when blank"></div><label class="check"><input id="plan-2-enabled" type="checkbox" checked> Plan enabled</label></div>
                   <div class="offer-claim-settings"><strong>4 PNR · 30 days</strong><div class="field" style="margin-top:10px"><label for="plan-4-price">Price (₹)</label><input id="plan-4-price" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-4-mrp">MRP (₹, optional)</label><input id="plan-4-mrp" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-4-download-url">Plan download link (optional)</label><input id="plan-4-download-url" type="url" maxlength="2048" placeholder="Uses product link when blank"></div><label class="check"><input id="plan-4-enabled" type="checkbox" checked> Plan enabled</label></div>
                   <div class="offer-claim-settings"><strong>6 PNR · 30 days</strong><div class="field" style="margin-top:10px"><label for="plan-6-price">Price (₹)</label><input id="plan-6-price" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-6-mrp">MRP (₹, optional)</label><input id="plan-6-mrp" type="number" min="0.01" step="0.01"></div><div class="field"><label for="plan-6-download-url">Plan download link (optional)</label><input id="plan-6-download-url" type="url" maxlength="2048" placeholder="Uses product link when blank"></div><label class="check"><input id="plan-6-enabled" type="checkbox" checked> Plan enabled</label></div>
+                </div>
+              </section>
+              <section id="windows-vps-options-fields" class="hidden" style="border:1px solid var(--line);border-radius:12px;padding:13px;margin:12px 0">
+                <h3 style="margin-bottom:5px">Windows VPS RAM options</h3>
+                <p class="sub" style="margin:0 0 12px">Set a price and enable each configuration you want customers to be able to purchase.</p>
+                <div class="pnr-plan-grid">
+                  <div class="offer-claim-settings"><strong>4 GB RAM</strong><div class="field" style="margin-top:10px"><label for="windows-vps-4-price">Price (₹)</label><input id="windows-vps-4-price" type="number" min="0.01" step="0.01"></div><label class="check"><input id="windows-vps-4-enabled" type="checkbox"> Available to customers</label></div>
+                  <div class="offer-claim-settings"><strong>8 GB RAM</strong><div class="field" style="margin-top:10px"><label for="windows-vps-8-price">Price (₹)</label><input id="windows-vps-8-price" type="number" min="0.01" step="0.01"></div><label class="check"><input id="windows-vps-8-enabled" type="checkbox"> Available to customers</label></div>
+                  <div class="offer-claim-settings"><strong>16 GB RAM</strong><div class="field" style="margin-top:10px"><label for="windows-vps-16-price">Price (₹)</label><input id="windows-vps-16-price" type="number" min="0.01" step="0.01"></div><label class="check"><input id="windows-vps-16-enabled" type="checkbox"> Available to customers</label></div>
+                  <div class="offer-claim-settings"><strong>32 GB RAM</strong><div class="field" style="margin-top:10px"><label for="windows-vps-32-price">Price (₹)</label><input id="windows-vps-32-price" type="number" min="0.01" step="0.01"></div><label class="check"><input id="windows-vps-32-enabled" type="checkbox"> Available to customers</label></div>
                 </div>
               </section>
               <div class="field"><label for="unit">Optional unit</label><input id="unit" placeholder="month, IP, GB" maxlength="30"></div>
@@ -609,8 +621,10 @@
       const isVps=isVpsCategory(state.category);
       const isProxy=isProxyCategory(state.category);
       const isSoftware=state.category==='software';
-      $('single-price-fields').classList.toggle('hidden',isSoftware);
+      const isWindowsVps=isVps&&$('os-type').value==='Windows';
+      $('single-price-fields').classList.toggle('hidden',isSoftware||isWindowsVps);
       $('software-plan-fields').classList.toggle('hidden',!isSoftware);
+      $('windows-vps-options-fields').classList.toggle('hidden',!isWindowsVps);
       ['2','4','6'].forEach(plan=>{
         $(`plan-${plan}-price`).required=isSoftware&&$(`plan-${plan}-enabled`).checked;
       });
@@ -1391,6 +1405,12 @@
         $(`plan-${plan}-enabled`).checked=product[enabledKey]!==false;
         $(`plan-${plan}-download-url`).value='';
       });
+      ['4','8','16','32'].forEach(ram=>{
+        const option=(Array.isArray(product.windows_vps_options)?product.windows_vps_options:[])
+          .find(item=>Number(item.ram_gb)===Number(ram));
+        $(`windows-vps-${ram}-price`).value=option?.price??'';
+        $(`windows-vps-${ram}-enabled`).checked=option?.enabled===true;
+      });
       const savedSection=product.plan_section||'Advance';
       const presetSections=['Advance','New Launch','Flex','Custom'];
       $('plan-section').value=presetSections.includes(savedSection)?savedSection:'__custom__';
@@ -1436,6 +1456,7 @@
       const downloadUrl=isPlanCategory(state.category)?'':$('download-url').value.trim();
       if(downloadUrl){try{const url=new URL(downloadUrl);if(!['http:','https:'].includes(url.protocol))throw new Error();}catch{setError('product-error','Enter a valid HTTP or HTTPS download link.');return}}
       const isSoftware=state.category==='software';
+      const isWindowsVps=isVpsCategory(state.category)&&$('os-type').value==='Windows';
       const softwarePlanDownloadLinks={};
       if(isSoftware){
         for(const plan of ['2','4','6']){
@@ -1473,14 +1494,33 @@
         sellingPrice=startingPlan.price;
         originalPrice=startingPlan.mrp;
       }
+      const windowsVpsOptions=[];
+      if(isWindowsVps){
+        for(const ram of ['4','8','16','32']){
+          const priceText=$(`windows-vps-${ram}-price`).value.trim();
+          const enabled=$(`windows-vps-${ram}-enabled`).checked;
+          const price=priceText===''?null:Number(priceText);
+          if(enabled&&(!priceText||!Number.isFinite(price)||price<=0)){
+            setError('product-error',`${ram} GB RAM price must be a positive number while that option is enabled.`);return
+          }
+          if(priceText&&(!Number.isFinite(price)||price<=0)){
+            setError('product-error',`${ram} GB RAM price must be a positive number or left blank.`);return
+          }
+          windowsVpsOptions.push({ram_gb:Number(ram),price,enabled});
+        }
+        const enabledOptions=windowsVpsOptions.filter(option=>option.enabled);
+        if(!enabledOptions.length){setError('product-error','Enable at least one Windows VPS RAM option.');return}
+        sellingPrice=Math.min(...enabledOptions.map(option=>option.price));
+        originalPrice=null;
+      }
       const ratingInput=$('product-rating').value.trim();
       const rating=Number(ratingInput);
       const reviewCountInput=$('review-count').value.trim();
       const reviewCount=Number(reviewCountInput);
       const soldCountInput=$('sold-count').value.trim();
       const soldCount=Number(soldCountInput);
-      if(!isSoftware&&(!sellingPriceInput||!Number.isFinite(sellingPrice)||sellingPrice<=0)){setError('product-error','Selling price must be a positive number.');return}
-      if(!isSoftware&&originalPriceInput!==''&&(!Number.isFinite(originalPrice)||originalPrice<=0)){setError('product-error','Original price must be a positive number or left blank.');return}
+      if(!isSoftware&&!isWindowsVps&&(!sellingPriceInput||!Number.isFinite(sellingPrice)||sellingPrice<=0)){setError('product-error','Selling price must be a positive number.');return}
+      if(!isSoftware&&!isWindowsVps&&originalPriceInput!==''&&(!Number.isFinite(originalPrice)||originalPrice<=0)){setError('product-error','Original price must be a positive number or left blank.');return}
       if(!ratingInput||!Number.isFinite(rating)||rating<0||rating>5){setError('product-error','Rating must be a number from 0 to 5.');return}
       if(!reviewCountInput||!Number.isInteger(reviewCount)||reviewCount<0){setError('product-error','Total reviews must be a whole number (0 or more).');return}
       if(!soldCountInput||!Number.isInteger(soldCount)||soldCount<0){setError('product-error','Sold count must be a whole number (0 or more).');return}
@@ -1492,6 +1532,9 @@
           product[`plan_${plan}_pnr_mrp`]=mrp;
           product[`plan_${plan}_pnr_enabled`]=enabled;
         }
+      }
+      if(isVpsCategory(state.category)){
+        product.windows_vps_options=isWindowsVps?windowsVpsOptions:null;
       }
       if(isPlanCategory(state.category)){
         const selectedSection=$('plan-section').value;
@@ -1521,7 +1564,7 @@
         if(isEditing){
           const numericFields=new Set(['price','selling_price','original_price','rating','review_count','sold_count',
             'plan_2_pnr_price','plan_2_pnr_mrp','plan_4_pnr_price','plan_4_pnr_mrp','plan_6_pnr_price','plan_6_pnr_mrp']);
-          const changedFields=Object.fromEntries(Object.entries(product).filter(([key,value])=>numericFields.has(key)?(value===null?existing[key]!==null&&existing[key]!==undefined:Number(value)!==Number(existing[key]??0)):value!==existing[key]));
+          const changedFields=Object.fromEntries(Object.entries(product).filter(([key,value])=>numericFields.has(key)?(value===null?existing[key]!==null&&existing[key]!==undefined:Number(value)!==Number(existing[key]??0)):key==='windows_vps_options'?JSON.stringify(value)!==JSON.stringify(existing[key]??null):value!==existing[key]));
           if(Object.keys(changedFields).length){
             const result=await state.client.from('products').update(changedFields).eq('id',state.editing).select('*').single();
             if(result.error)throw result.error;
@@ -1916,7 +1959,7 @@
         $('order-request-payment').innerHTML=[
           ['Customer',data.customer||'Customer'],['Product',data.product_name],['Type',data.used_key_id?'USED KEY':vps?'Windows VPS':'Software'],
           ...(data.guest_email?[['WhatsApp',data.guest_whatsapp||'—']]:[]),
-          ...(data.software_plan_label?[['Software plan',data.software_plan_label]]:[]),
+          ...(data.software_plan_label?[[(data.product_type==='vps'||data.product_type==='windows-vps')?'VPS configuration':'Software plan',data.software_plan_label]]:[]),
           ...(data.used_key_id?[['Used Key ID',`#${data.used_key_id}`],['Key Name',data.license_key||'—']]:[]),['Amount',`₹${money(data.amount)}`],
           ['UTR Number',data.utr_number||'—'],['Payment time',formatDate(data.payment_time||data.payment_submitted_at)],
           ['Status',data.status],...(data.reject_reason?[['Rejection reason',data.reject_reason]]:[])
@@ -2153,7 +2196,7 @@
       const detailRows=[
         ['Customer',order.user_email||'—'],['Payment method',order.payment_method==='upi_qr'?'Scan QR (UPI)':order.payment_method==='upi_app'?'UPI app':'Wallet'],
         ['UTR',order.utr||'Not applicable · wallet purchase'],['Product',order.product_name],['Product type',order.product_type||'—'],
-        ...(order.software_plan_label?[['Software plan',order.software_plan_label]]:[]),
+        ...(order.software_plan_label?[[(order.product_type==='vps'||order.product_type==='windows-vps')?'VPS configuration':'Software plan',order.software_plan_label]]:[]),
         ['Original amount',`₹${money(order.original_price??order.price)}`],['Discount',order.coupon_code?`${order.discount_percent}% · ${order.coupon_code}`:'None'],
         ['Final amount',`₹${money(order.price)}`],['Quantity',order.quantity||1],['Payment status',order.payment_status||'paid'],['Placed',indianDate(order.created_at)],
         ...(order.payment_expires_at?[['Payment expires',indianDate(order.payment_expires_at)]]:[]),
@@ -2381,6 +2424,7 @@
     $('send-guest-order-email').addEventListener('click',resendGuestOrderEmail);
     $('reject-order-request').addEventListener('click',rejectOrderRequest);
     $('plan-section').addEventListener('change',syncPlanFields);
+    $('os-type').addEventListener('change',syncPlanFields);
     ['2','4','6'].forEach(plan=>$(`plan-${plan}-enabled`).addEventListener('change',syncPlanFields));
     $('cancel-edit').addEventListener('click',resetForm);
     $('offer-form').addEventListener('submit',saveOffer);

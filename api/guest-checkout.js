@@ -159,17 +159,28 @@ module.exports = async function guestCheckout(req, res) {
         ? normalizeSoftwarePlanCode(body.software_plan_code)
         : null;
       const accessHash = hashAccessToken(accessTokenValue);
-      const data = await callRpc('guest_create_order', {
-        p_type: type,
-        p_product_id: type === 'product' ? productId : null,
-        p_used_key_id: type === 'used_key' ? productId : null,
-        p_plan_code: softwarePlanCode,
-        p_email: email,
-        p_whatsapp: whatsapp,
-        p_access_hash: accessHash,
-        p_device_hash: deviceHash,
-        p_ip_hash: ipHash
-      });
+      const windowsVpsPlan = softwarePlanCode?.startsWith('windows_vps_') === true;
+      const data = windowsVpsPlan
+        ? await callRpc('guest_create_windows_vps_order', {
+          p_product_id: productId,
+          p_plan_code: softwarePlanCode,
+          p_email: email,
+          p_whatsapp: whatsapp,
+          p_access_hash: accessHash,
+          p_device_hash: deviceHash,
+          p_ip_hash: ipHash
+        })
+        : await callRpc('guest_create_order', {
+          p_type: type,
+          p_product_id: type === 'product' ? productId : null,
+          p_used_key_id: type === 'used_key' ? productId : null,
+          p_plan_code: softwarePlanCode,
+          p_email: email,
+          p_whatsapp: whatsapp,
+          p_access_hash: accessHash,
+          p_device_hash: deviceHash,
+          p_ip_hash: ipHash
+        });
       if (!data?.ok) return sendJson(res, 400, { error: data?.message || 'Could not start guest checkout.' });
       return sendJson(res, 201, { ok: true, order: data, access_token: accessTokenValue });
     }

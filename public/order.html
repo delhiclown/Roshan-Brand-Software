@@ -108,6 +108,7 @@
             addDeliveryRow('Software', order.software_name || order.product_name, false);
             addDeliveryRow('License key', order.license_key, false);
             addDeliveryRow('Download link', order.download_link, true);
+            addDeliveryRow('VPS configuration', order.software_plan_label, false);
             addDeliveryRow('VPS IP', order.vps_ip, false);
             addDeliveryRow('VPS port', order.vps_port == null ? '' : String(order.vps_port), false);
             addDeliveryRow('VPS username', order.vps_username, false);
