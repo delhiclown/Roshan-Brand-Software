@@ -20,6 +20,13 @@ test('checkout fits mobile viewports and keeps its form scrollable above safe ar
   assert.match(homepage, /\.checkout-dialog input\{font-size:16px\}/);
 });
 
+test('guest payment controls use concise screenshot text and center the UTR submit button responsively', () => {
+  assert.match(homepage, /guest-order-submit[^}]*width:min\(100%,260px\);margin:12px auto 0;text-align:center/);
+  assert.match(homepage, /class="modal-primary guest-order-submit" id="guest-order-submit"[^>]*>Submit UTR for review<\/button>/);
+  assert.match(homepage, /id="guest-upload-screenshot" type="button">Upload screenshot<\/button>/);
+  assert.doesNotMatch(homepage, /Upload screenshot for manual verification/);
+});
+
 test('UTR submission has visible progress, clear success and duplicate states, and logs RPC errors', () => {
   assert.match(homepage, /inputmode="numeric" autocomplete="off" maxlength="12" pattern="\[0-9\]\{12\}"/);
   assert.match(homepage, /checkout\.submittingPayment=true;[\s\S]*?submit\.disabled=true;submit\.textContent='Submitting\.\.\.'/);
