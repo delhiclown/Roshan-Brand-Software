@@ -392,10 +392,13 @@ test('checkout back and reopen creates an active QR and keeps expired orders sec
   assert.match(expiryRecoveryMigration, /Late-payment UTR grace period in minutes \(default 5\)/);
 });
 
-test('guest Software checkout accepts only the three database plan IDs', () => {
+test('guest checkout accepts only supported Software and Windows VPS plan IDs', () => {
   assert.equal(normalizeSoftwarePlanCode('2_PNR_30_DAYS'), '2_pnr_30_days');
   assert.equal(normalizeSoftwarePlanCode(' 4_pnr_30_days '), '4_pnr_30_days');
   assert.equal(normalizeSoftwarePlanCode('6_pnr_30_days'), '6_pnr_30_days');
+  for (const code of ['windows_vps_4gb', 'windows_vps_8gb', 'windows_vps_16gb', 'windows_vps_32gb']) {
+    assert.equal(normalizeSoftwarePlanCode(code), code);
+  }
   assert.equal(normalizeSoftwarePlanCode(''), null);
   assert.throws(() => normalizeSoftwarePlanCode('999_pnr_30_days'), /valid 30-day software pnr plan/i);
 });

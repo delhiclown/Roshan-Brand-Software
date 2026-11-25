@@ -450,6 +450,10 @@
     .software-plan-option:disabled{color:#747f92;cursor:not-allowed;opacity:.72}
     .software-plan-option:disabled:hover,.software-plan-option:disabled.active{border-color:transparent;background:transparent;color:#747f92}
     .software-plan-option:focus-visible,.software-plan-trigger:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+    .windows-vps-option{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;margin:8px 0;border:1px solid rgba(146,169,207,.28);border-radius:12px;background:#10182a;color:var(--text);font:inherit;text-align:left}
+    .windows-vps-option strong{display:block;font-size:14px}
+    .windows-vps-option span{color:var(--muted);font-size:12px}
+    .windows-vps-option:disabled{opacity:.55}
     @media(max-width:560px){.software-plan-trigger{min-height:54px}.software-plan-option{min-height:46px}}
     .transaction-list{display:grid;gap:7px;margin-top:10px}
     .transaction-row{display:flex;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:11px}
@@ -1595,6 +1599,11 @@
           showGuestCheckoutError(new Error('The selected plan is no longer available. Please choose a plan again.'));
           return;
         }
+        if(isWindowsVpsProduct(product)
+          &&!availableWindowsVpsPlans(product).some(plan=>plan.code===pendingSoftwarePlan)){
+          showGuestCheckoutError(new Error('The selected Windows VPS option is no longer available. Please choose a plan again.'));
+          return;
+        }
         buyProduct(pendingProductId,pendingSoftwarePlan||null).catch(error=>{
           showGuestCheckoutError(error);
         });
@@ -2042,6 +2051,41 @@
     function availableSoftwarePlans(product){
       return softwarePlansForProduct(product).filter(plan=>plan.enabled&&plan.price>0);
     }
+    const windowsVpsRamOptions=[4,8,16,32];
+    function windowsVpsPlansForProduct(product){
+      const options=Array.isArray(product?.windows_vps_options)?product.windows_vps_options:[];
+      return windowsVpsRamOptions.map(ramGb=>{
+        const option=options.find(item=>Number(item.ram_gb)===ramGb);
+        return {
+          code:`windows_vps_${ramGb}gb`,
+          label:`${ramGb}GB RAM`,
+          ramGb,
+          price:Number(option?.price)||0,
+          enabled:option?.enabled===true
+        };
+      });
+    }
+    function availableWindowsVpsPlans(product){
+      return windowsVpsPlansForProduct(product).filter(plan=>plan.enabled&&plan.price>0);
+    }
+    function isWindowsVpsProduct(product){
+      return isPlanCategory(product?.category)&&String(product?.os_type||'').toLowerCase()==='windows';
+    }
+    function openWindowsVpsOptions(productId){
+      const product=state.products.find(item=>String(item.id)===String(productId));
+      if(!product){showNotice('This Windows VPS is no longer available.');return}
+      const plans=windowsVpsPlansForProduct(product);
+      $('modal-title').textContent=product.name;
+      $('modal-body').innerHTML=`<div class="checkout-product"><strong>Choose your Windows VPS RAM</strong><p class="checkout-note">Select an available configuration to continue.</p></div>${plans.map(plan=>`<button class="windows-vps-option" type="button" data-windows-vps-plan="${plan.code}" ${plan.enabled&&plan.price>0&&product.in_stock!==false?'':'disabled'}><span><strong>${plan.ramGb}GB RAM</strong>${plan.enabled&&plan.price>0?'Windows VPS configuration':'Currently unavailable'}</span><strong>${plan.enabled&&plan.price>0?`₹${productMoney(plan.price)}`:'Unavailable'}</strong></button>`).join('')}`;
+      openModal();
+      $('modal-body').querySelectorAll('[data-windows-vps-plan]').forEach(button=>button.addEventListener('click',()=>{
+        if(button.disabled)return;
+        const plan=plans.find(item=>item.code===button.dataset.windowsVpsPlan);
+        if(!plan)return;
+        closeModal();
+        buyProduct(product.id,plan.code).catch(error=>showNotice(`Could not start checkout: ${error.message||'Please try again.'}`));
+      }));
+    }
     function renderProducts(){
       if(isPlanCategory(state.selected)){
         $('product-grid').classList.add('hidden');
@@ -2295,6 +2339,11 @@
         const sectionId=`vps-group-${index}-${slug(group.section)}-${slug(group.os||selectedCategory)}`;
         const rows=group.products.map(product=>{
           const inStock=available(product);
+          const windowsPlans=isVps&&normalizedOs(product)==='Windows'?availableWindowsVpsPlans(product):[];
+          const canBuy=inStock&&checkoutAvailable&&(!isVps||normalizedOs(product)!=='Windows'||windowsPlans.length>0);
+          const priceProduct=windowsPlans.length
+            ?{...product,price:Math.min(...windowsPlans.map(plan=>plan.price)),selling_price:Math.min(...windowsPlans.map(plan=>plan.price)),original_price:null}
+            :product;
           const rowIcon=isVps?serverIcon:selectedCategory==='proxy'?proxyIcon:residentialIcon;
           const osLogo=isVps?(group.os==='Windows'?windowsIcon:'<span aria-label="Linux">🐧</span>'):selectedCategory==='proxy'?'<span aria-label="Proxy">IP</span>':'<span aria-label="Residential proxy">R</span>';
           const info=[product.ip_series?`IP ${escapeHtml(product.ip_series)}`:'',product.data_size?escapeHtml(product.data_size):'',product.specs?escapeHtml(product.specs):'',product.ip_count?escapeHtml(product.ip_count):'',product.validity?escapeHtml(product.validity):''].filter(Boolean).join(' · ');
@@ -2302,7 +2351,7 @@
           const prefix=String(product.price_prefix||'From').trim();
           const purchasedOrder=state.myOrders?.find(order=>String(order.product_id)===String(product.id)&&order.status==='delivered'&&safeHttpUrl(order.delivery_link));
           const downloadUrl=purchasedOrder?safeHttpUrl(purchasedOrder.delivery_link):'';
-          return `<article class="vps-plan" data-product-id="${escapeHtml(product.id)}"><span>${rowIcon}</span><span class="vps-os-logo">${osLogo}</span><div class="vps-plan-copy"><h3 class="vps-plan-title ${inStock?'':'sold-out'}">${escapeHtml(product.name)}${product.badge?`<span class="vps-plan-badge">${escapeHtml(product.badge)}</span>`:''}</h3>${info?`<div class="vps-plan-ip">${info}</div>`:''}${productStatsMarkup(product)}<span class="vps-stock ${inStock?'':'out'}">${inStock?'Available':'Out of stock'}</span></div><div class="vps-plan-actions">${productPricingMarkup(product,'',prefix)}<button class="vps-cart" type="button" data-buy="${escapeHtml(product.id)}" ${inStock&&checkoutAvailable?'':'disabled'} aria-label="Add ${escapeHtml(product.name)} to cart" title="Add to cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.4L22 8H6"/><circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/></svg></button><button class="vps-buy" type="button" data-buy="${escapeHtml(product.id)}" ${inStock&&checkoutAvailable?'':'disabled'}>${!inStock?'Sold out':checkoutAvailable?'Buy Now':'Payment unavailable'}</button></div><details class="vps-details"><summary>Plan details</summary>${details?`<div>${escapeHtml(details)}</div>`:'<div>Contact us for more plan details.</div>'}${downloadUrl?`<a class="product-download" href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(product.name)}</a>`:''}</details></article>`;
+          return `<article class="vps-plan" data-product-id="${escapeHtml(product.id)}"><span>${rowIcon}</span><span class="vps-os-logo">${osLogo}</span><div class="vps-plan-copy"><h3 class="vps-plan-title ${inStock?'':'sold-out'}">${escapeHtml(product.name)}${product.badge?`<span class="vps-plan-badge">${escapeHtml(product.badge)}</span>`:''}</h3>${info?`<div class="vps-plan-ip">${info}</div>`:''}${productStatsMarkup(product)}<span class="vps-stock ${inStock?'':'out'}">${inStock?'Available':'Out of stock'}</span></div><div class="vps-plan-actions">${isVps&&normalizedOs(product)==='Windows'&&!windowsPlans.length?'<span class="vps-price">Options unavailable</span>':productPricingMarkup(priceProduct,'',prefix)}<button class="vps-cart" type="button" data-buy="${escapeHtml(product.id)}" ${canBuy?'':'disabled'} aria-label="Choose configuration for ${escapeHtml(product.name)}" title="Choose configuration"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.4L22 8H6"/><circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/></svg></button><button class="vps-buy" type="button" data-buy="${escapeHtml(product.id)}" ${canBuy?'':'disabled'}>${!inStock?'Sold out':!checkoutAvailable?'Payment unavailable':isVps&&normalizedOs(product)==='Windows'&&!windowsPlans.length?'No options available':'Buy Now'}</button></div><details class="vps-details"><summary>Plan details</summary>${details?`<div>${escapeHtml(details)}</div>`:'<div>Contact us for more plan details.</div>'}${downloadUrl?`<a class="product-download" href="${escapeHtml(downloadUrl)}" target="_blank" rel="noopener noreferrer">Download ${escapeHtml(product.name)}</a>`:''}</details></article>`;
         }).join('');
         return `<section class="vps-plan-section" id="${sectionId}" data-vps-section><h3 class="vps-section-heading">${escapeHtml(group.section)} Plans${group.os?` - ${escapeHtml(group.os)}`:''} <span>(${group.products.length})</span></h3><div class="vps-plan-list">${rows}</div></section>`;
       }).join(''):`<div class="empty vps-empty">No ${escapeHtml(categories.find(item=>item.id===selectedCategory)?.title||'')} plans match these filters. Please check back soon.</div>`;
@@ -4290,7 +4339,15 @@
             p_used_key_id:Number(checkout.usedKey.id),p_order_id:orderId
           })
           :checkout.softwarePlanCode
-          ?state.client.rpc('prepare_software_plan_payment',{
+          ?isWindowsVpsProduct(checkout.product)
+            ?state.client.rpc('prepare_windows_vps_payment',{
+              p_order_id:orderId,
+              p_product_id:checkout.product.id,
+              p_plan_code:checkout.softwarePlanCode,
+              p_coupon_code:checkout.coupon?.code||null,
+              p_payment_method:checkout.method
+            })
+            :state.client.rpc('prepare_software_plan_payment',{
             p_order_id:orderId,
             p_product_id:checkout.product.id,
             p_plan_code:checkout.softwarePlanCode,
@@ -4713,15 +4770,17 @@
         return;
       }
       const isSoftware=normalizeCategory(product.category)==='software';
+      const isWindowsVps=isWindowsVpsProduct(product);
       const selectedPlan=isSoftware
         ?availableSoftwarePlans(product).find(plan=>plan.code===softwarePlanCode)
-        :null;
-      if(isSoftware&&!softwarePlanCode){
-        openSoftwareProduct(product.id);
+        :isWindowsVps?availableWindowsVpsPlans(product).find(plan=>plan.code===softwarePlanCode):null;
+      if((isSoftware||isWindowsVps)&&!softwarePlanCode){
+        if(isWindowsVps)openWindowsVpsOptions(product.id);
+        else openSoftwareProduct(product.id);
         return;
       }
-      if(isSoftware&&!selectedPlan){
-        showNotice('Choose an available PNR plan before checkout.');
+      if((isSoftware||isWindowsVps)&&!selectedPlan){
+        showNotice(isWindowsVps?'Choose an available Windows VPS RAM option before checkout.':'Choose an available PNR plan before checkout.');
         return;
       }
       const checkoutProduct=selectedPlan?{
@@ -4937,7 +4996,11 @@
       let result;
       try{
         result=checkout.softwarePlanCode
-          ?await state.client.rpc('purchase_software_plan',{
+          ?isWindowsVpsProduct(product)
+            ?await state.client.rpc('purchase_windows_vps',{
+              p_product_id:product.id,p_plan_code:checkout.softwarePlanCode
+            })
+            :await state.client.rpc('purchase_software_plan',{
             p_product_id:product.id,p_plan_code:checkout.softwarePlanCode
           })
           :await state.client.rpc('purchase_product',{
@@ -5104,7 +5167,7 @@
     async function refreshStore(){
       setProductsLoading(!state.products.length);
       const productsRequest=requestWithTimeout(
-        state.client.from('products').select('id,category,name,description,image_url,price,selling_price,original_price,rating,review_count,sold_count,show_stats,unit,in_stock,sort_order,pinned,plan_section,os_type,ip_series,data_size,specs,ip_count,validity,badge,stock_status,price_prefix,details,demo_only,plan_2_pnr_price,plan_2_pnr_mrp,plan_2_pnr_enabled,plan_4_pnr_price,plan_4_pnr_mrp,plan_4_pnr_enabled,plan_6_pnr_price,plan_6_pnr_mrp,plan_6_pnr_enabled').eq('demo_only',false)
+        state.client.from('products').select('id,category,name,description,image_url,price,selling_price,original_price,rating,review_count,sold_count,show_stats,unit,in_stock,sort_order,pinned,plan_section,os_type,ip_series,data_size,specs,ip_count,validity,badge,stock_status,price_prefix,details,demo_only,windows_vps_options,plan_2_pnr_price,plan_2_pnr_mrp,plan_2_pnr_enabled,plan_4_pnr_price,plan_4_pnr_mrp,plan_4_pnr_enabled,plan_6_pnr_price,plan_6_pnr_mrp,plan_6_pnr_enabled').eq('demo_only',false)
           .order('sort_order',{ascending:true}).order('created_at',{ascending:true}),
         'Products query'
       ).then(products=>{

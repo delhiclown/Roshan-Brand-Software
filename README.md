@@ -56,6 +56,10 @@ After the guest-checkout prerequisites above except guest checkout itself, run [
 
 Signed-in UPI and wallet purchases, plus guest UPI checkout, read the selected plan's amount from the database. Orders retain the plan label and price snapshot; admin order lists show the selected plan, and existing payment verification and key-delivery controls remain in place.
 
+### Windows VPS RAM options
+
+After installing the Software PNR plan migration and one guest-checkout route, run [`supabase/windows-vps-ram-options-migration.sql`](./supabase/windows-vps-ram-options-migration.sql). In **Admin → Windows VPS**, select Windows and set the price and availability for each 4 GB, 8 GB, 16 GB, and 32 GB option. Customers can choose an enabled, priced RAM size when they purchase; signed-in, wallet, and guest checkout use the current database price and save the selected RAM size on the order.
+
 ### Guest checkout and delivery
 
 After the setup, order-request, Used Key, Rental, Demo Key, and Software PNR prerequisites above, install guest checkout using **one** of these alternatives:
@@ -161,11 +165,12 @@ For a fresh database, run the root-level SQL files below in the listed order fro
 14. [`supabase/demo-custom-software-migration.sql`](./supabase/demo-custom-software-migration.sql).
 15. [`supabase/software-pnr-plans-migration.sql`](./supabase/software-pnr-plans-migration.sql).
 16. Guest checkout: run either [`supabase/guest-checkout-migration.sql`](./supabase/guest-checkout-migration.sql) once, or run the split scripts [`supabase/guest-checkout-1-tables-trigger.sql`](./supabase/guest-checkout-1-tables-trigger.sql), [`supabase/guest-checkout-2-guest-functions.sql`](./supabase/guest-checkout-2-guest-functions.sql), [`supabase/guest-checkout-3-admin-functions.sql`](./supabase/guest-checkout-3-admin-functions.sql), and [`supabase/guest-checkout-4-reject-refund-grants.sql`](./supabase/guest-checkout-4-reject-refund-grants.sql) in that order. Never run both alternatives.
-17. [`supabase/inventory-stock-toggle-migration.sql`](./supabase/inventory-stock-toggle-migration.sql) — run after one guest-checkout route.
-18. [`supabase/channel-settings-migration.sql`](./supabase/channel-settings-migration.sql).
-19. [`supabase/telegram-order-alerts-migration.sql`](./supabase/telegram-order-alerts-migration.sql) — requires order requests.
-20. [`supabase/migrations/20261121054743_upi_utr_pending_verification_fix.sql`](./supabase/migrations/20261121054743_upi_utr_pending_verification_fix.sql) — guest UTR verification and screenshot flow.
-21. [`supabase/migrations/20261121065000_guest_order_tracking_account_linking.sql`](./supabase/migrations/20261121065000_guest_order_tracking_account_linking.sql) — secure guest tracking and verified-email order linking. Apply after the guest checkout SQL.
+17. [`supabase/windows-vps-ram-options-migration.sql`](./supabase/windows-vps-ram-options-migration.sql) — run after Software PNR and one guest-checkout route.
+18. [`supabase/inventory-stock-toggle-migration.sql`](./supabase/inventory-stock-toggle-migration.sql) — run after one guest-checkout route.
+19. [`supabase/channel-settings-migration.sql`](./supabase/channel-settings-migration.sql).
+20. [`supabase/telegram-order-alerts-migration.sql`](./supabase/telegram-order-alerts-migration.sql) — requires order requests.
+21. [`supabase/migrations/20261121054743_upi_utr_pending_verification_fix.sql`](./supabase/migrations/20261121054743_upi_utr_pending_verification_fix.sql) — guest UTR verification and screenshot flow.
+22. [`supabase/migrations/20261121065000_guest_order_tracking_account_linking.sql`](./supabase/migrations/20261121065000_guest_order_tracking_account_linking.sql) — secure guest tracking and verified-email order linking. Apply after the guest checkout SQL.
 
 [`supabase/product-pricing-stats-migration.sql`](./supabase/product-pricing-stats-migration.sql) is only needed for an existing database that does not already have those columns; fresh installs get them from `setup.sql`. [`supabase/migrations/20261112084600_used_key_utr_pending_payment_fix.sql`](./supabase/migrations/20261112084600_used_key_utr_pending_payment_fix.sql) is a targeted Used Key payment-recovery fix, not a standard fresh-install migration; apply it only when that specific recovery applies to the production data. Files in `supabase/backup/`, `supabase/scratch-run/`, and `supabase/tests/` are backup, test, or assembly scripts and are not part of this production execution list.
 
