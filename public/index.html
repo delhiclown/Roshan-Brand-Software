@@ -3810,8 +3810,8 @@
     async function updateSession(session){
       if(session?.user)state.guestMode=false;
       state.user=session?.user||null;
-      if(state.walletChannel){state.client.removeChannel(state.walletChannel);state.walletChannel=null}
-      if(state.ordersChannel){state.client.removeChannel(state.ordersChannel);state.ordersChannel=null}
+      if(state.walletChannel){await state.client.removeChannel(state.walletChannel);state.walletChannel=null}
+      if(state.ordersChannel){await state.client.removeChannel(state.ordersChannel);state.ordersChannel=null}
       if(state.user){
         state.myOrders=null;
         state.myOrdersError=null;

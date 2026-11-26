@@ -81,3 +81,14 @@ test('session refresh keeps sign-in active when account detail RPCs partially fa
   assert.match(publicIndex, /Could not refresh wallet balance/);
   assert.match(publicIndex, /Could not refresh account coupons/);
 });
+
+test('session refresh removes the previous wallet channel before subscribing a replacement', () => {
+  const updateSession = publicIndex.match(/async function updateSession\(session\)\{([\s\S]*?)\n    \}/)?.[1];
+  assert.ok(updateSession);
+
+  const removeChannelIndex = updateSession.indexOf('await state.client.removeChannel(state.walletChannel)');
+  const createChannelIndex = updateSession.indexOf('state.client.channel(`wallet-balance-${state.user.id}`)');
+  assert.ok(removeChannelIndex >= 0);
+  assert.ok(createChannelIndex > removeChannelIndex);
+  assert.match(updateSession, /state\.walletChannel=state\.client\.channel\(`wallet-balance-\$\{state\.user\.id\}`\)\s*\.on\([\s\S]*?\)\s*\.subscribe\(\);/);
+});
