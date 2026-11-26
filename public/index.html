@@ -3808,7 +3808,6 @@
     }
 
     async function updateSession(session){
-      if(session?.user&&state.user?.id===session.user.id)return;
       if(session?.user)state.guestMode=false;
       state.user=session?.user||null;
       if(state.walletChannel){state.client.removeChannel(state.walletChannel);state.walletChannel=null}
@@ -3818,7 +3817,10 @@
         state.myOrdersError=null;
         state.myOfferOrders=[];
         state.spinCoupon=null;
-        await refreshWalletBalance();
+        await Promise.allSettled([
+          refreshWalletBalance().catch(error=>console.error('Could not refresh wallet balance:',error)),
+          refreshMyCoupons().catch(error=>console.error('Could not refresh account coupons:',error))
+        ]);
         state.walletChannel=state.client.channel(`wallet-balance-${state.user.id}`)
           .on('postgres_changes',{event:'*',schema:'public',table:'wallets',filter:`user_id=eq.${state.user.id}`},()=>refreshWalletBalance().catch(error=>showNotice(error.message)))
           .subscribe();

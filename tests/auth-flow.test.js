@@ -74,3 +74,10 @@ test('profile menu My Orders stays inside click handling and uses the orders pan
     assert.match(publicIndex, new RegExp(`\\[data-menu="${action}"\\]`));
   }
 });
+
+test('session refresh keeps sign-in active when account detail RPCs partially fail', () => {
+  assert.doesNotMatch(publicIndex, /if\(session\?\.\user&&state\.user\?\.\id===session\.user\.id\)return/);
+  assert.match(publicIndex, /await Promise\.allSettled\([\s\S]*?refreshWalletBalance\(\)\.catch[\s\S]*?refreshMyCoupons\(\)\.catch/);
+  assert.match(publicIndex, /Could not refresh wallet balance/);
+  assert.match(publicIndex, /Could not refresh account coupons/);
+});
