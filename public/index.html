@@ -197,7 +197,8 @@
     .offers-trigger{position:relative;min-height:40px;padding:0 12px;border:1px solid rgba(245,192,74,.48);border-radius:999px;background:linear-gradient(135deg,rgba(245,192,74,.16),rgba(41,152,255,.12));color:#ffe49a;font-size:11px;font-weight:800;white-space:nowrap;cursor:pointer;box-shadow:0 0 16px rgba(245,192,74,.12);animation:offer-badge-glow 2.2s ease-in-out infinite}
     .offers-trigger:hover{border-color:var(--gold);filter:brightness(1.12)}
     @keyframes offer-badge-glow{0%,100%{box-shadow:0 0 8px rgba(245,192,74,.1)}50%{box-shadow:0 0 18px rgba(41,152,255,.27),0 0 20px rgba(245,192,74,.2)}}
-    .offers-modal{position:fixed;inset:0;z-index:320;display:grid;place-items:center;padding:20px;overflow:auto;background:rgba(3,7,17,.75);backdrop-filter:blur(14px)}
+    .offers-modal{position:fixed;inset:0;z-index:320;display:grid;place-items:center;padding:20px;overflow:auto;background:rgba(0,0,0,.45);backdrop-filter:blur(4px)}
+    .offers-modal>.orders-backdrop,.offer-claim-modal>.orders-backdrop{background:transparent}
     .offers-dialog{position:relative;width:min(760px,100%);max-height:min(86dvh,820px);overflow:auto;border:1px solid rgba(245,192,74,.4);border-radius:24px;background:linear-gradient(145deg,#111d34,#080f20);box-shadow:0 28px 90px rgba(0,0,0,.62),0 0 45px rgba(41,152,255,.12);animation:offer-card-in .7s cubic-bezier(.16,1,.3,1) both}
     .offers-dialog:before{content:"";position:absolute;inset:0 0 auto;height:150px;pointer-events:none;background:radial-gradient(circle at 8% 28%,#fff5b8 0 2px,transparent 3px),radial-gradient(circle at 18% 55%,#5db7ff 0 2px,transparent 3px),radial-gradient(circle at 32% 20%,#f5c04a 0 2px,transparent 3px),radial-gradient(circle at 68% 32%,#fff5b8 0 2px,transparent 3px),radial-gradient(circle at 84% 18%,#71c6ff 0 2px,transparent 3px),radial-gradient(circle at 92% 52%,#f5c04a 0 2px,transparent 3px);opacity:.7;animation:offer-sparkle-drift 4s ease-in-out infinite}
     @keyframes offer-card-in{0%{opacity:0;transform:translateY(25px) scale(.72)}68%{opacity:1;transform:translateY(-5px) scale(1.025)}100%{opacity:1;transform:translateY(0) scale(1)}}
@@ -223,7 +224,7 @@
     .offer-claim:disabled{animation:none;filter:grayscale(1);opacity:.55;cursor:not-allowed;box-shadow:none}
     @keyframes offer-claim-pulse{0%,100%{box-shadow:0 5px 14px rgba(245,192,74,.14)}50%{box-shadow:0 7px 22px rgba(245,192,74,.3),0 0 15px rgba(41,152,255,.13)}}
     .offer-benefit-count{margin:8px 0 0;color:#e4c974;font-size:11px;font-weight:650}
-    .offer-claim-modal{position:fixed;inset:0;z-index:330;display:grid;place-items:center;padding:18px;background:rgba(3,7,17,.78);backdrop-filter:blur(12px)}
+    .offer-claim-modal{position:fixed;inset:0;z-index:330;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.45);backdrop-filter:blur(4px)}
     .offer-claim-dialog{width:min(490px,100%);max-height:min(90dvh,740px);overflow:auto;padding:21px;border:1px solid rgba(245,192,74,.45);border-radius:21px;background:linear-gradient(150deg,#14213b,#081020);box-shadow:0 25px 80px #000b,0 0 34px rgba(41,152,255,.12);animation:offer-card-in .55s cubic-bezier(.16,1,.3,1) both}
     .offer-claim-dialog h2{margin:0 0 8px;color:#ffe7a2;font-size:19px}
     .offer-claim-dialog p{color:#c0cbe0;font-size:12px;line-height:1.55}
@@ -245,7 +246,7 @@
     .orders-pay-button,.orders-delete-button{min-height:38px;margin:6px 6px 0 0;padding:0 13px;border:1px solid var(--gold);border-radius:9px;background:linear-gradient(135deg,#ffe28c,#e7ad36);color:#211805;font-size:11px;font-weight:800;cursor:pointer}
     .orders-delete-button{border-color:#71303b;background:transparent;color:#ffb5bb}
     .offers-empty{padding:30px;text-align:center;color:var(--muted)}
-    :root[data-theme="light"] .offers-modal{background:rgba(225,232,244,.76)}
+    :root[data-theme="light"] .offers-modal{background:rgba(0,0,0,.45)}
     :root[data-theme="light"] .offers-dialog{background:linear-gradient(145deg,#fff,#edf3fc);box-shadow:0 28px 90px rgba(30,48,80,.3),0 0 45px rgba(41,152,255,.1)}
     :root[data-theme="light"] .offers-head h2,:root[data-theme="light"] .offer-card h3{color:#57400b}
     :root[data-theme="light"] .offer-card p{color:#34445f}
@@ -1184,8 +1185,9 @@
       <h2 id="offer-claim-title">Claim this offer</h2>
       <p id="offer-claim-description"></p>
       <form id="offer-claim-form">
-        <label for="offer-claim-product">Choose one software product</label>
+        <label id="offer-claim-product-label" for="offer-claim-product">Choose one software product</label>
         <select id="offer-claim-product" required></select>
+        <p id="offer-claim-selected-product" class="hidden" aria-live="polite"></p>
         <label for="offer-claim-screenshot">Upload WhatsApp share screenshot (PNG/JPG/WebP, up to 2 MB)</label>
         <input id="offer-claim-screenshot" type="file" accept="image/png,image/jpeg,image/webp" required>
         <label class="offer-share-consent" for="offer-claim-share-name"><input id="offer-claim-share-name" type="checkbox"> I agree that my name may appear in offer claim notifications.</label>
@@ -2923,6 +2925,10 @@
         showNotice('No available Software products match this offer right now.');
         return;
       }
+      if(products.length===1){
+        openSoftwareProduct(products[0].id);
+        return;
+      }
       $('modal-title').textContent=offer.title;
       $('modal-body').innerHTML=`<div class="checkout-product"><strong>${escapeHtml(offer.title)}</strong><p class="checkout-note">Pay for ${Number(offer.paid_quantity)} · ${Number(offer.free_quantity)} free · ${Number(offer.paid_quantity)+Number(offer.free_quantity)} total.</p></div><div class="modal-field"><label for="offer-buy-product">Choose a Software product</label><select id="offer-buy-product" required>${products.map(product=>`<option value="${escapeHtml(product.id)}">${escapeHtml(product.name)}</option>`).join('')}</select></div><button class="modal-primary" id="offer-buy-continue" type="button">Continue to Buy</button>`;
       openModal();
@@ -2957,10 +2963,21 @@
         openAuthPage('signin','offer');
         return;
       }
-      const eligibleProducts=state.products.filter(product=>product.category==='software'&&product.in_stock&&(!offer.product_id||String(product.id)===String(offer.product_id)));
-      $('offer-claim-product').innerHTML=eligibleProducts.map(product=>`<option value="${escapeHtml(product.id)}">${escapeHtml(product.name)} · ₹${money(product.price)}</option>`).join('');
-      if(existingClaim?.product_id)$('offer-claim-product').value=String(existingClaim.product_id);
-      $('offer-claim-product').disabled=Boolean(offer.product_id||existingClaim?.product_id);
+      const lockedProductId=offer.product_id||existingClaim?.product_id;
+      const eligibleProducts=state.products.filter(product=>product.category==='software'&&product.in_stock&&(!lockedProductId||String(product.id)===String(lockedProductId)));
+      const selectedProduct=lockedProductId
+        ?eligibleProducts.find(product=>String(product.id)===String(lockedProductId))
+        :eligibleProducts.length===1?eligibleProducts[0]:null;
+      const productSelect=$('offer-claim-product');
+      const productLabel=$('offer-claim-product-label');
+      const selectedProductLabel=$('offer-claim-selected-product');
+      productSelect.innerHTML=eligibleProducts.map(product=>`<option value="${escapeHtml(product.id)}">${escapeHtml(product.name)} · ₹${money(product.price)}</option>`).join('');
+      productSelect.value=selectedProduct?String(selectedProduct.id):'';
+      productSelect.disabled=Boolean(selectedProduct);
+      productSelect.classList.toggle('hidden',Boolean(selectedProduct));
+      productLabel.classList.toggle('hidden',Boolean(selectedProduct));
+      selectedProductLabel.textContent=selectedProduct?`Selected product: ${selectedProduct.name}`:'';
+      selectedProductLabel.classList.toggle('hidden',!selectedProduct);
       $('offer-claim-title').textContent=existingClaim?'Resubmit offer claim':`Claim ${offer.title}`;
       $('offer-claim-description').textContent=`Pay for ${offer.paid_quantity} unit(s) of one software product and receive ${offer.free_quantity} free unit(s) after payment approval. Upload a screenshot showing that you shared the offer on WhatsApp. Your amount is calculated and locked by the server.`;
       $('offer-claim-screenshot').value='';

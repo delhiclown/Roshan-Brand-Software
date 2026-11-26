@@ -40,3 +40,24 @@ test('offers popup stays centered on narrow mobile screens and has a close contr
   assert.match(homepage, /\.offers-modal\{align-items:center;padding:10px\}/);
   assert.match(homepage, /<button class="offers-close" id="offers-close" type="button" aria-label="Close offers">×<\/button>/);
 });
+
+test('offers and claim popups use a translucent blurred backdrop', () => {
+  assert.match(homepage, /\.offers-modal\{[^}]*background:rgba\(0,0,0,\.45\);backdrop-filter:blur\(4px\)\}/);
+  assert.match(homepage, /\.offer-claim-modal\{[^}]*background:rgba\(0,0,0,\.45\);backdrop-filter:blur\(4px\)\}/);
+  assert.match(homepage, /\.offers-modal>\.orders-backdrop,.offer-claim-modal>\.orders-backdrop\{background:transparent\}/);
+  assert.match(homepage, /:root\[data-theme="light"\] \.offers-modal\{background:rgba\(0,0,0,\.45\)\}/);
+});
+
+test('known and single-product offers skip product selection while multi-product offers keep it', () => {
+  const checkout = homepage.match(/function openOfferCheckout\(offer\)\{([\s\S]*?)\n    \}/)?.[1];
+  const claim = homepage.match(/function openOfferClaim\(offerId,existingClaim=null\)\{([\s\S]*?)\n    \}/)?.[1];
+  assert.ok(checkout);
+  assert.ok(claim);
+  assert.match(checkout, /if\(offer\.product_id\)\{[\s\S]*?openSoftwareProduct\(product\.id\)/);
+  assert.match(checkout, /if\(products\.length===1\)\{\s*openSoftwareProduct\(products\[0\]\.id\);\s*return;\s*\}/);
+  assert.match(checkout, /const productId=\$\('offer-buy-product'\)\.value;[\s\S]*?openSoftwareProduct\(productId\)/);
+  assert.match(claim, /const lockedProductId=offer\.product_id\|\|existingClaim\?\.product_id/);
+  assert.match(claim, /eligibleProducts\.length===1\?eligibleProducts\[0\]:null/);
+  assert.match(claim, /productSelect\.classList\.toggle\('hidden',Boolean\(selectedProduct\)\)/);
+  assert.match(claim, /selectedProductLabel\.textContent=selectedProduct\?`Selected product: \$\{selectedProduct\.name\}`:''/);
+});
