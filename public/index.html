@@ -2833,9 +2833,9 @@
       state.offerPopupOffers=active;
       markOffersSeen(active);
       renderOffersModal();
-      if($('offers-modal').classList.contains('hidden'))return;
       $('offers-modal').classList.remove('hidden');
       $('offers-modal').setAttribute('aria-hidden','false');
+      window.dispatchEvent(new Event('store:offer-modal-open'));
       document.body.style.overflow='hidden';
     }
     function closeOffersModal(){
@@ -2855,13 +2855,26 @@
         node.textContent=countdownLabel(node.dataset.endsAt);
       });
     }
+    function activeOffersQuery(now,includeCustomerClaimLimit=true){
+      const fields=['id','title','description','collection','product_id','starts_at','ends_at','created_at','claim_enabled','paid_quantity','free_quantity','customer_claim_limit','benefit_count_enabled','benefit_count','benefit_count_minimum']
+        .filter(field=>includeCustomerClaimLimit||field!=='customer_claim_limit')
+        .join(',');
+      return state.client.from('offers').select(fields)
+        .eq('enabled',true).lte('starts_at',now).gt('ends_at',now)
+        .order('created_at',{ascending:false});
+    }
+    function isMissingCustomerClaimLimit(error){
+      return ['42703','PGRST204'].includes(error?.code)
+        &&/\bcustomer_claim_limit\b/.test(error?.message||'');
+    }
     async function refreshOffers(showUnseen=false){
       if(!state.client)return;
       const now=new Date().toISOString();
-      const {data,error}=await state.client.from('offers')
-        .select('id,title,description,collection,product_id,starts_at,ends_at,created_at,claim_enabled,paid_quantity,free_quantity,customer_claim_limit,benefit_count_enabled,benefit_count,benefit_count_minimum')
-        .eq('enabled',true).lte('starts_at',now).gt('ends_at',now)
-        .order('created_at',{ascending:false});
+      let {data,error}=await activeOffersQuery(now);
+      if(isMissingCustomerClaimLimit(error)){
+        console.warn('Offer claim limits are unavailable; loading offers with the default claim limit until the database migration is applied.',error);
+        ({data,error}=await activeOffersQuery(now,false));
+      }
       if(error)throw error;
       state.offers=(data||[]).filter(offer=>offerIsActive(offer));
       renderHeader();
@@ -2960,6 +2973,7 @@
       }
       $('offer-claim-modal').classList.remove('hidden');
       $('offer-claim-modal').setAttribute('aria-hidden','false');
+      window.dispatchEvent(new Event('store:offer-modal-open'));
       document.body.style.overflow='hidden';
     }
 
@@ -5759,6 +5773,11 @@
         }
       };
 
+      const hasOfferModalOpen = () => ['offers-modal', 'offer-claim-modal'].some(id => {
+        const modal = document.getElementById(id);
+        return modal && !modal.classList.contains('hidden');
+      });
+
       const focusables = () => Array.from(dialog.querySelectorAll(
         'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
       )).filter(element => !element.hasAttribute('hidden'));
@@ -5813,9 +5832,9 @@
       }
 
       const openPopup = async () => {
-        if (popup.classList.contains('is-visible')) return;
+        if (popup.classList.contains('is-visible') || hasOfferModalOpen()) return;
         const channelStats = await loadChannelStats();
-        if (!channelStats || popup.classList.contains('is-visible')) return;
+        if (!channelStats || popup.classList.contains('is-visible') || hasOfferModalOpen()) return;
         renderChannelStats(channelStats);
         window.clearTimeout(closeTimer);
         previousFocus = document.activeElement;
@@ -5837,6 +5856,7 @@
       closeButton.addEventListener('click', dismissPopup);
       notNowButton.addEventListener('click', dismissPopup);
       popup.querySelector('[data-community-popup-dismiss]').addEventListener('click', dismissPopup);
+      window.addEventListener('store:offer-modal-open', closePopup);
       popup.querySelectorAll('[data-community-popup-join]').forEach(link => {
         link.addEventListener('click', () => {
           savePopupExpiry(30 * day);
