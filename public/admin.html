@@ -949,7 +949,7 @@
         const inStock=item.in_stock!==false;
         const canToggleStock=item.status!=='sold';
         const planLabel={'2_pnr_30_days':'2 PNR · 30 days','4_pnr_30_days':'4 PNR · 30 days','6_pnr_30_days':'6 PNR · 30 days'}[item.software_plan_code]||'Plan unassigned';
-        return `<article class="product-row"><div><strong>${escapeHtml(item.software_name)}</strong><small>Key #${escapeHtml(item.id)} · ${escapeHtml(item.license_key)}</small><small>${escapeHtml(planLabel)} · ₹${money(item.price)} · ${Number(item.validity_days)} day(s) validity · ${remainingLabel}</small><small>${escapeHtml(item.download_link)}</small></div><div class="stock-badges"><span class="pill">${escapeHtml(status)}</span><span class="pill ${inStock?'live':'out'}" data-stock-badge>${inStock?'AVAILABLE':'OUT OF STOCK'}</span></div><div class="product-row-actions"><button class="btn ghost" type="button" data-edit-used-key="${item.id}" ${editable?'':'disabled'}>Edit</button><button class="btn ghost" type="button" data-toggle-used-key="${item.id}" ${editable?'':'disabled'}>${visible?'Hide':'Show'}</button><button class="btn ${inStock?'stock-out':'stock-in'}" type="button" data-stock-toggle data-used-key-stock="${item.id}" data-next-stock="${inStock?'out_of_stock':'available'}" ${canToggleStock?'':'disabled'}>${inStock?'Mark out of stock':'Mark in stock'}</button><button class="btn danger" type="button" data-delete-used-key="${item.id}" ${editable?'':'disabled'}>Delete</button><small class="stock-message" data-stock-message aria-live="polite"></small></div></article>`;
+        return `<article class="product-row"><div><strong>${escapeHtml(item.software_name)}</strong><small>Key #${escapeHtml(item.id)} · ${escapeHtml(item.license_key)}</small><small>${escapeHtml(planLabel)} · ₹${money(item.price)} · ${Number(item.validity_days)} day(s) validity · ${remainingLabel}</small><small>${escapeHtml(item.download_link)}</small></div><div class="stock-badges"><span class="pill">${escapeHtml(status)}</span><span class="pill ${inStock?'live':'out'}" data-stock-badge>${inStock?'AVAILABLE':'OUT OF STOCK'}</span></div><div class="product-row-actions"><button class="btn ghost" type="button" data-edit-used-key="${item.id}" ${editable?'':'disabled'}>Edit</button><button class="btn ghost" type="button" data-toggle-used-key="${item.id}" ${editable?'':'disabled'}>${visible?'Hide':'Show'}</button><button class="btn ${inStock?'stock-out':'stock-in'}" type="button" data-stock-toggle data-used-key-stock="${item.id}" data-next-stock="${inStock?'out_of_stock':'available'}" ${canToggleStock?'':'disabled'}>${inStock?'Mark out of stock':'Mark in stock'}</button><button class="btn danger" type="button" data-delete-used-key="${item.id}">Delete</button><small class="stock-message" data-stock-message aria-live="polite"></small></div></article>`;
       }).join(''):'<div class="empty">No used keys in inventory.</div>';
       revealAdmin($('used-key-list'));
     }
@@ -1023,11 +1023,25 @@
         const {data,error}=await state.client.rpc('admin_set_used_key_visibility',{p_id:Number(item.id),p_is_visible:item.status!=='available'});
         if(error||!data?.ok){notify(error?.message||data?.message||'Could not update key visibility.');return}
         await renderUsedKeyInventory();
-      }else{
-        if(!await confirmAdminAction('Delete used key?','Delete this available or hidden license key from inventory? This cannot be undone.','Delete'))return;
-        const {data,error}=await state.client.rpc('admin_delete_used_key',{p_id:Number(item.id)});
-        if(error||!data?.ok){notify(error?.message||data?.message||'Could not delete this key.');return}
-        await renderUsedKeyInventory();notify('Used key deleted.');
+      }else if(button.matches('[data-delete-used-key]')){
+        const message=item.status==='reserved'
+          ?'Delete this key and reject its pending order? The rejected order record will remain in order history.'
+          :item.status==='sold'
+            ?'Permanently delete this sold key and all linked order records? This cannot be undone.'
+            :'Permanently delete this license key? Existing order history, if any, will be kept.';
+        if(!await confirmAdminAction('Delete used key?',message,'Delete'))return;
+        button.disabled=true;
+        try{
+          const {data,error}=await state.client.rpc('admin_delete_used_key',{p_id:Number(item.id)});
+          if(error)throw error;
+          if(!data?.ok)throw new Error(data?.message||'Could not delete this key.');
+          try{await renderUsedKeyInventory()}
+          catch(error){notify(`Used key was deleted, but inventory refresh failed: ${error.message}`);return}
+          if(item.status==='reserved')notify('Used key deleted and its pending order was rejected.');
+          else if(item.status==='sold')notify(`Used key and ${Number(data.deleted_orders)||0} linked order record(s) permanently deleted.`);
+          else notify('Used key deleted.');
+        }catch(error){notify(error.message||'Could not delete this key.')}
+        finally{if(button.isConnected)button.disabled=false}
       }
     }
     function offerDateTimeInput(value){
